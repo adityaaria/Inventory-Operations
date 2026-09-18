@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "mode": "read-only",
+  "constitution": ".rudis/memory/constitution.md",
+  "specs": "specs",
+  "adapter": ".agents/skills/rudis-adapter"
+}

@@ -1,0 +1,93 @@
+--- .spark/sdd/design-system/task-2-before/app.css	2026-09-11 22:14:26
++++ public/assets/css/app.css	2026-09-11 22:15:28
+@@ -258,5 +258,5 @@
+     border-color: var(--primary);
+     background: var(--primary);
+-    color: #ffffff;
++    color: var(--surface);
+     text-decoration: none;
+     box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+@@ -269,5 +269,5 @@
+     border-color: var(--primary-dark);
+     background: var(--primary-dark);
+-    color: #ffffff;
++    color: var(--surface);
+     transform: translateY(-1px);
+ }
+@@ -353,5 +353,5 @@
+     border: 1px solid var(--line);
+     border-radius: 10px;
+-    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
++    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+     box-shadow: var(--shadow-soft);
+ }
+@@ -374,5 +374,5 @@
+     border: 1px solid var(--line);
+     border-radius: var(--radius-md);
+-    background: linear-gradient(180deg, #ffffff, #f8fafc);
++    background: linear-gradient(180deg, var(--surface), #f8fafc);
+     box-shadow: var(--shadow-soft);
+ }
+@@ -526,5 +526,5 @@
+     border: 1px solid var(--line);
+     border-radius: 10px;
+-    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
++    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+     box-shadow: var(--shadow-soft);
+ }
+@@ -597,5 +597,5 @@
+     border: 1px solid var(--line);
+     border-radius: 10px;
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+@@ -622,5 +622,5 @@
+     border: 1px solid var(--line);
+     border-radius: 8px;
+-    background: #ffffff;
++    background: var(--surface);
+     color: var(--text);
+     font-weight: 560;
+@@ -677,5 +677,5 @@
+     border-radius: 8px;
+     background: var(--primary);
+-    color: #ffffff;
++    color: var(--surface);
+     font-weight: 650;
+ }
+@@ -736,5 +736,5 @@
+     border: 1px solid var(--line);
+     border-radius: 10px 10px 0 0;
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+@@ -804,5 +804,5 @@
+     border: 1px solid var(--line);
+     border-radius: 10px;
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+@@ -920,5 +920,5 @@
+     padding: 0.85rem 1rem;
+     border-radius: var(--radius-pill);
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow);
+     font-weight: 560;
+@@ -952,5 +952,5 @@
+     border: 1px solid var(--line);
+     border-radius: var(--radius-lg);
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow);
+     transform: scale(0.96);
+@@ -974,5 +974,5 @@
+     padding: var(--space-4);
+     border-bottom: 1px solid var(--line);
+-    background: #ffffff;
++    background: var(--surface);
+ }
+ 

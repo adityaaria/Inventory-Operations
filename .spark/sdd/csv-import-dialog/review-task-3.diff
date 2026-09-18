@@ -1,0 +1,52 @@
+--- .spark/sdd/csv-import-dialog/task-3-before/app.css	2026-09-11 20:48:55
++++ public/assets/css/app.css	2026-09-11 20:49:36
+@@ -875,29 +875,32 @@
+     background: #f3f7ff;
+     color: var(--primary-dark);
+ }
+ 
+ .page-loading,
+ .modal-backdrop,
+-.confirm-backdrop {
++.confirm-backdrop,
++.import-dialog {
+     position: fixed;
+     inset: 0;
+     z-index: 40;
+     display: grid;
+     place-items: center;
+     background: rgba(15, 23, 42, 0.32);
+ }
+ 
+ .modal-backdrop,
+-.confirm-backdrop {
++.confirm-backdrop,
++.import-dialog {
+     opacity: 0;
+     transition: opacity 0.18s ease;
+ }
+ 
+ .modal-backdrop.is-open,
+-.confirm-backdrop.is-open {
++.confirm-backdrop.is-open,
++.import-dialog.is-open {
+     opacity: 1;
+ }
+ 
+ .page-loading {
+     z-index: 30;
+     pointer-events: none;
+@@ -1015,12 +1018,13 @@
+     gap: 0.65rem;
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {
+     .modal-backdrop,
+     .confirm-backdrop,
++    .import-dialog,
+     .modal-panel,
+     .confirm-panel {
+         transition-duration: 0.01ms;
+     }
+ }
+ 

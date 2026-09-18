@@ -1,0 +1,184 @@
+# Review package (no-git): csv-import-dialog Task 2
+
+## Sample of script-tag insertion (3 representative files, to confirm the pattern before spot-checking the rest)
+--- views/auth/login.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/auth/login.php	2026-09-11 20:40:47
++++ views/auth/login.php	2026-09-11 20:42:24
+@@ -12,4 +12,5 @@
+     <script defer src="/assets/js/navigation.js"></script>
+     <script defer src="/assets/js/modal.js"></script>
++    <script defer src="/assets/js/dialog.js"></script>
+     <script defer src="/assets/js/charts.js"></script>
+     <script defer src="/assets/js/forms.js"></script>
+--- views/products/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/products/index.php	2026-09-11 20:40:47
++++ views/products/index.php	2026-09-11 20:43:35
+@@ -12,4 +12,5 @@
+     <script defer src="/assets/js/navigation.js"></script>
+     <script defer src="/assets/js/modal.js"></script>
++    <script defer src="/assets/js/dialog.js"></script>
+     <script defer src="/assets/js/charts.js"></script>
+     <script defer src="/assets/js/forms.js"></script>
+--- app/Controller/HomeController.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/app/Controller/HomeController.php	2026-09-11 20:40:47
++++ app/Controller/HomeController.php	2026-09-11 20:45:18
+@@ -26,4 +26,5 @@
+     <script defer src="/assets/js/navigation.js"></script>
+     <script defer src="/assets/js/modal.js"></script>
++    <script defer src="/assets/js/dialog.js"></script>
+     <script defer src="/assets/js/charts.js"></script>
+     <script defer src="/assets/js/forms.js"></script>
+
+## Full diff: app.js
+--- .spark/sdd/csv-import-dialog/task-2-before/app.js	2026-09-11 20:40:47
++++ public/assets/js/app.js	2026-09-11 20:45:26
+@@ -14,12 +14,13 @@
+         modal.ensureOverlays();
+         InventoryNavigation.buildShell();
+         tables.enhance();
+         InventoryCharts.render();
+         enhanceLinks();
+         enhanceCancelButtons();
++        InventoryDialog.enhance();
+         forms.enhanceForms();
+         modal.setEnhanceForms(forms.enhanceForms);
+     });
+ 
+     function enhanceLinks() {
+         document.addEventListener('click', (event) => {
+
+## Independently-verified counts (controller ran these fresh, not the implementer)
+Files with dialog.js tag: 29 (expected 29)
+Files with duplicate tag (count != 1): 0 (expected 0)
+
+## Diff for all remaining 26 files (confirming identical one-line insertion pattern)
+--- views/categories/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/categories/create.php	2026-09-11 20:40:47
++++ views/categories/create.php	2026-09-11 20:42:33
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/categories/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/categories/edit.php	2026-09-11 20:40:47
++++ views/categories/edit.php	2026-09-11 20:42:39
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/categories/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/categories/index.php	2026-09-11 20:40:47
++++ views/categories/index.php	2026-09-11 20:42:46
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/customers/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/customers/create.php	2026-09-11 20:40:47
++++ views/customers/create.php	2026-09-11 20:42:52
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/customers/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/customers/edit.php	2026-09-11 20:40:47
++++ views/customers/edit.php	2026-09-11 20:42:58
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/customers/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/customers/index.php	2026-09-11 20:40:47
++++ views/customers/index.php	2026-09-11 20:43:05
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/dashboard/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/dashboard/index.php	2026-09-11 20:40:47
++++ views/dashboard/index.php	2026-09-11 20:43:11
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/errors/403.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/errors/403.php	2026-09-11 20:40:47
++++ views/errors/403.php	2026-09-11 20:43:17
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/products/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/products/create.php	2026-09-11 20:40:47
++++ views/products/create.php	2026-09-11 20:43:23
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/products/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/products/edit.php	2026-09-11 20:40:47
++++ views/products/edit.php	2026-09-11 20:43:29
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/purchase-orders/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/purchase-orders/create.php	2026-09-11 20:40:47
++++ views/purchase-orders/create.php	2026-09-11 20:43:42
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/purchase-orders/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/purchase-orders/index.php	2026-09-11 20:40:47
++++ views/purchase-orders/index.php	2026-09-11 20:43:49
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/purchase-orders/show.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/purchase-orders/show.php	2026-09-11 20:40:47
++++ views/purchase-orders/show.php	2026-09-11 20:43:55
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/reports/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/reports/index.php	2026-09-11 20:40:47
++++ views/reports/index.php	2026-09-11 20:44:00
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/sales-orders/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/sales-orders/create.php	2026-09-11 20:40:47
++++ views/sales-orders/create.php	2026-09-11 20:44:06
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/sales-orders/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/sales-orders/index.php	2026-09-11 20:40:47
++++ views/sales-orders/index.php	2026-09-11 20:44:12
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/sales-orders/show.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/sales-orders/show.php	2026-09-11 20:40:47
++++ views/sales-orders/show.php	2026-09-11 20:44:18
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/suppliers/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/suppliers/create.php	2026-09-11 20:40:47
++++ views/suppliers/create.php	2026-09-11 20:44:24
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/suppliers/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/suppliers/edit.php	2026-09-11 20:40:47
++++ views/suppliers/edit.php	2026-09-11 20:44:30
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/suppliers/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/suppliers/index.php	2026-09-11 20:40:47
++++ views/suppliers/index.php	2026-09-11 20:44:36
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/users/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/users/create.php	2026-09-11 20:40:47
++++ views/users/create.php	2026-09-11 20:44:42
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/users/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/users/edit.php	2026-09-11 20:40:47
++++ views/users/edit.php	2026-09-11 20:44:48
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/users/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/users/index.php	2026-09-11 20:40:47
++++ views/users/index.php	2026-09-11 20:44:54
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/warehouses/create.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/warehouses/create.php	2026-09-11 20:40:47
++++ views/warehouses/create.php	2026-09-11 20:45:01
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/warehouses/edit.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/warehouses/edit.php	2026-09-11 20:40:47
++++ views/warehouses/edit.php	2026-09-11 20:45:06
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>
+--- views/warehouses/index.php ---
+--- .spark/sdd/csv-import-dialog/task-2-before/views/warehouses/index.php	2026-09-11 20:40:47
++++ views/warehouses/index.php	2026-09-11 20:45:12
+@@ -13,0 +14 @@
++    <script defer src="/assets/js/dialog.js"></script>

@@ -1,0 +1,134 @@
+# Review package (no-git): Task 2
+
+## Files changed
+Files .spark/sdd/task-2-before/app.css and public/assets/css/app.css differ
+
+## Diff (before -> after), unified, 6 lines context
+--- .spark/sdd/task-2-before/app.css	2026-09-11 19:51:47
++++ public/assets/css/app.css	2026-09-11 19:53:16
+@@ -229,13 +229,13 @@
+     align-items: center;
+     justify-content: center;
+     min-height: 2.45rem;
+     max-width: 100%;
+     padding: 0.5rem 0.85rem;
+     border: 1px solid var(--line-strong);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     background: var(--surface);
+     color: var(--text);
+     cursor: pointer;
+     font-weight: 560;
+     line-height: 1.2;
+     text-align: center;
+@@ -369,13 +369,13 @@
+ }
+ 
+ .metric-card {
+     min-height: 7.25rem;
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     background: linear-gradient(180deg, #ffffff, #f8fafc);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+ .metric-card p,
+ .metric-card span {
+@@ -401,22 +401,22 @@
+     min-width: 44rem;
+     border-collapse: separate;
+     border-spacing: 0;
+     margin: 1rem 0 1.25rem;
+     overflow: hidden;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+ th,
+ td,
+ .data-table th,
+ .data-table td {
+-    padding: 0.75rem;
++    padding: var(--space-3);
+     border: 0;
+     border-bottom: 1px solid var(--line);
+     text-align: left;
+     vertical-align: top;
+ }
+ 
+@@ -461,13 +461,13 @@
+     align-items: center;
+     justify-content: center;
+     min-height: 1.6rem;
+     max-width: 100%;
+     padding: 0.24rem 0.62rem;
+     border: 1px solid transparent;
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     font-size: 0.82rem;
+     font-weight: 560;
+     line-height: 1.15;
+     white-space: normal;
+ }
+ 
+@@ -901,13 +901,13 @@
+ .page-loading > *,
+ .loading-card {
+     display: inline-flex;
+     align-items: center;
+     gap: 0.7rem;
+     padding: 0.85rem 1rem;
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     background: #ffffff;
+     box-shadow: var(--shadow);
+     font-weight: 560;
+ }
+ 
+ .page-loading span,
+@@ -933,36 +933,36 @@
+ .modal-panel,
+ .confirm-panel {
+     width: min(40rem, calc(100% - 2rem));
+     max-height: min(86vh, 52rem);
+     overflow: auto;
+     border: 1px solid var(--line);
+-    border-radius: 12px;
++    border-radius: var(--radius-lg);
+     background: #ffffff;
+     box-shadow: var(--shadow);
+ }
+ 
+ .modal-header {
+     position: sticky;
+     top: 0;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+-    gap: 1rem;
+-    padding: 1rem;
++    gap: var(--space-4);
++    padding: var(--space-4);
+     border-bottom: 1px solid var(--line);
+     background: #ffffff;
+ }
+ 
+ .modal-header h2,
+ .confirm-panel h2 {
+     margin: 0;
+ }
+ 
+ .modal-body {
+-    padding: 1rem;
++    padding: var(--space-4);
+ }
+ 
+ .modal-backdrop[aria-busy="true"] .modal-panel {
+     cursor: progress;
+ }
+ 

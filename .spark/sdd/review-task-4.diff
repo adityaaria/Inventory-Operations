@@ -1,0 +1,38 @@
+# Review package (no-git): Task 4
+
+## Diff: ui-helpers.js
+--- .spark/sdd/task-4-before/ui-helpers.js	2026-09-11 20:07:07
++++ public/assets/js/ui-helpers.js	2026-09-11 20:07:54
+@@ -58,8 +58,12 @@
+             if (timerId !== null) timerApi.clearTimeout(timerId);
+             timerId = null;
+         };
+         return debounced;
+     }
+ 
+-    return {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation};
++    function resolveCancelTarget(cancelHref, isInsideModal) {
++        return isInsideModal ? {action: 'close-modal'} : {action: 'navigate', href: cancelHref};
++    }
++
++    return {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation, resolveCancelTarget};
+ });
+
+## Diff: ui-helpers.test.js
+--- .spark/sdd/task-4-before/ui-helpers.test.js	2026-09-11 20:07:07
++++ tests/JavaScript/ui-helpers.test.js	2026-09-11 20:07:40
+@@ -50,6 +50,14 @@
+     assert.deepEqual(calls, ['latest']);
+ 
+     debounced('cancelled');
+     debounced.cancel();
+     assert.equal(scheduled.size, 0);
+ });
++
++test('resolveCancelTarget closes the modal when the cancel button is inside one', () => {
++    assert.deepEqual(UiHelpers.resolveCancelTarget('/products', true), {action: 'close-modal'});
++});
++
++test('resolveCancelTarget navigates to the cancel href when not inside a modal', () => {
++    assert.deepEqual(UiHelpers.resolveCancelTarget('/products', false), {action: 'navigate', href: '/products'});
++});

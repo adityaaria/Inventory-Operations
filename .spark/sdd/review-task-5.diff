@@ -1,0 +1,172 @@
+# Review package (no-git): Task 5
+
+## Files changed
+Files .spark/sdd/task-5-before/app.js and public/assets/js/app.js differ
+Files .spark/sdd/task-5-before/views/categories/create.php and views/categories/create.php differ
+Files .spark/sdd/task-5-before/views/categories/edit.php and views/categories/edit.php differ
+Files .spark/sdd/task-5-before/views/customers/create.php and views/customers/create.php differ
+Files .spark/sdd/task-5-before/views/customers/edit.php and views/customers/edit.php differ
+Files .spark/sdd/task-5-before/views/products/create.php and views/products/create.php differ
+Files .spark/sdd/task-5-before/views/products/edit.php and views/products/edit.php differ
+Files .spark/sdd/task-5-before/views/purchase-orders/create.php and views/purchase-orders/create.php differ
+Files .spark/sdd/task-5-before/views/sales-orders/create.php and views/sales-orders/create.php differ
+Files .spark/sdd/task-5-before/views/suppliers/create.php and views/suppliers/create.php differ
+Files .spark/sdd/task-5-before/views/suppliers/edit.php and views/suppliers/edit.php differ
+Files .spark/sdd/task-5-before/views/users/create.php and views/users/create.php differ
+Files .spark/sdd/task-5-before/views/users/edit.php and views/users/edit.php differ
+Files .spark/sdd/task-5-before/views/warehouses/create.php and views/warehouses/create.php differ
+Files .spark/sdd/task-5-before/views/warehouses/edit.php and views/warehouses/edit.php differ
+
+## Diff: app.js
+--- .spark/sdd/task-5-before/app.js	2026-09-11 20:09:37
++++ public/assets/js/app.js	2026-09-11 20:10:24
+@@ -13,12 +13,13 @@
+     document.addEventListener('DOMContentLoaded', () => {
+         modal.ensureOverlays();
+         InventoryNavigation.buildShell();
+         tables.enhance();
+         InventoryCharts.render();
+         enhanceLinks();
++        enhanceCancelButtons();
+         forms.enhanceForms();
+         modal.setEnhanceForms(forms.enhanceForms);
+     });
+ 
+     function enhanceLinks() {
+         document.addEventListener('click', (event) => {
+@@ -30,7 +31,21 @@
+                 modal.openFormModal(href);
+                 return;
+             }
+             if (href.startsWith('/') && !href.endsWith('.csv')) modal.setPageLoading(true);
+         });
+     }
++
++    function enhanceCancelButtons() {
++        document.addEventListener('click', (event) => {
++            const button = event.target.closest('[data-cancel-href]');
++            if (!button) return;
++            const isInsideModal = Boolean(button.closest('.modal-panel'));
++            const target = InventoryUi.resolveCancelTarget(button.dataset.cancelHref, isInsideModal);
++            if (target.action === 'close-modal') {
++                modal.closeModal();
++                return;
++            }
++            window.location.href = target.href;
++        });
++    }
+ })();
+
+## Diff: 14 view files (one-line changes each)
+--- views/categories/create.php ---
+--- .spark/sdd/task-5-before/views/categories/create.php	2026-09-11 20:09:37
++++ views/categories/create.php	2026-09-11 20:10:25
+@@ -27,3 +27,3 @@
+             <button type="submit">Create</button>
+-            <a href="/categories">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+         </form>
+--- views/categories/edit.php ---
+--- .spark/sdd/task-5-before/views/categories/edit.php	2026-09-11 20:09:37
++++ views/categories/edit.php	2026-09-11 20:10:34
+@@ -29,3 +29,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/categories">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+             </form>
+--- views/customers/create.php ---
+--- .spark/sdd/task-5-before/views/customers/create.php	2026-09-11 20:09:37
++++ views/customers/create.php	2026-09-11 20:10:27
+@@ -29,3 +29,3 @@
+             <button type="submit">Create</button>
+-            <a href="/customers">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+         </form>
+--- views/customers/edit.php ---
+--- .spark/sdd/task-5-before/views/customers/edit.php	2026-09-11 20:09:37
++++ views/customers/edit.php	2026-09-11 20:10:35
+@@ -31,3 +31,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/customers">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+             </form>
+--- views/products/create.php ---
+--- .spark/sdd/task-5-before/views/products/create.php	2026-09-11 20:09:37
++++ views/products/create.php	2026-09-11 20:10:28
+@@ -39,3 +39,3 @@
+             <button type="submit">Create</button>
+-            <a href="/products">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/products">Cancel</button>
+         </form>
+--- views/products/edit.php ---
+--- .spark/sdd/task-5-before/views/products/edit.php	2026-09-11 20:09:37
++++ views/products/edit.php	2026-09-11 20:10:36
+@@ -43,3 +43,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/products">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/products">Cancel</button>
+             </form>
+--- views/purchase-orders/create.php ---
+--- .spark/sdd/task-5-before/views/purchase-orders/create.php	2026-09-11 20:09:37
++++ views/purchase-orders/create.php	2026-09-11 20:10:29
+@@ -56,3 +56,3 @@
+             <button type="submit">Create Draft</button>
+-            <a href="/purchase-orders">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/purchase-orders">Cancel</button>
+         </form>
+--- views/sales-orders/create.php ---
+--- .spark/sdd/task-5-before/views/sales-orders/create.php	2026-09-11 20:09:37
++++ views/sales-orders/create.php	2026-09-11 20:10:30
+@@ -56,3 +56,3 @@
+             <button type="submit">Create Draft</button>
+-            <a href="/sales-orders">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/sales-orders">Cancel</button>
+         </form>
+--- views/suppliers/create.php ---
+--- .spark/sdd/task-5-before/views/suppliers/create.php	2026-09-11 20:09:37
++++ views/suppliers/create.php	2026-09-11 20:10:31
+@@ -29,3 +29,3 @@
+             <button type="submit">Create</button>
+-            <a href="/suppliers">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/suppliers">Cancel</button>
+         </form>
+--- views/suppliers/edit.php ---
+--- .spark/sdd/task-5-before/views/suppliers/edit.php	2026-09-11 20:09:37
++++ views/suppliers/edit.php	2026-09-11 20:10:37
+@@ -31,3 +31,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/suppliers">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/suppliers">Cancel</button>
+             </form>
+--- views/users/create.php ---
+--- .spark/sdd/task-5-before/views/users/create.php	2026-09-11 20:09:37
++++ views/users/create.php	2026-09-11 20:10:32
+@@ -38,3 +38,3 @@
+             <button type="submit">Create</button>
+-            <a href="/users">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+         </form>
+--- views/users/edit.php ---
+--- .spark/sdd/task-5-before/views/users/edit.php	2026-09-11 20:09:37
++++ views/users/edit.php	2026-09-11 20:10:38
+@@ -43,3 +43,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/users">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+             </form>
+--- views/warehouses/create.php ---
+--- .spark/sdd/task-5-before/views/warehouses/create.php	2026-09-11 20:09:37
++++ views/warehouses/create.php	2026-09-11 20:10:33
+@@ -27,3 +27,3 @@
+             <button type="submit">Create</button>
+-            <a href="/warehouses">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/warehouses">Cancel</button>
+         </form>
+--- views/warehouses/edit.php ---
+--- .spark/sdd/task-5-before/views/warehouses/edit.php	2026-09-11 20:09:37
++++ views/warehouses/edit.php	2026-09-11 20:10:39
+@@ -29,3 +29,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/warehouses">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/warehouses">Cancel</button>
+             </form>

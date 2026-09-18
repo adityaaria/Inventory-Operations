@@ -1,0 +1,318 @@
+# Final whole-change review package (no-git): Design System Fase 0/1 (Tokens)
+Plan: docs/spark/plans/2026-09-11-design-system-fase-0-1-tokens.md
+
+## Full diff: app.css (task-1-before, i.e. before this whole plan, -> current)
+--- .spark/sdd/design-system/task-1-before/app.css	2026-09-11 22:02:26
++++ public/assets/css/app.css	2026-09-11 22:18:20
+@@ -7,16 +7,16 @@
+     --muted: #667085;
+     --line: #dde3ea;
+     --line-strong: #b6c2d0;
+-    --primary: #2563eb;
++    --primary: #16181D;
+     --primary-dark: #1d4ed8;
+-    --accent: #0f766e;
++    --accent: #FF5A1F;
+     --accent-soft: #ccfbf1;
+-    --success: #166534;
+-    --success-bg: #dcfce7;
+-    --warning: #92400e;
+-    --warning-bg: #fef3c7;
+-    --danger: #991b1b;
+-    --danger-bg: #fee2e2;
++    --success: #17A34A;
++    --success-bg: #E7F7ED;
++    --warning: #D69411;
++    --warning-bg: #FDF3DC;
++    --danger: #E23D3D;
++    --danger-bg: #FDECEC;
+     --info: #075985;
+     --info-bg: #e0f2fe;
+     --draft: #475569;
+@@ -137,7 +137,7 @@
+     padding: 30px;
+     background: rgba(255, 255, 255, 0.96);
+     border: 1px solid var(--line);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     box-shadow: var(--shadow);
+     overflow-x: auto;
+ }
+@@ -159,7 +159,7 @@
+     margin-bottom: 0.7rem;
+     padding: 0.25rem 0.6rem;
+     border: 1px solid rgba(15, 118, 110, 0.2);
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     background: var(--surface-tint);
+     color: var(--accent);
+     font-size: 0.76rem;
+@@ -202,7 +202,7 @@
+     min-height: 2.45rem;
+     padding: 0.55rem 0.9rem;
+     border: 1px solid var(--line);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     background: var(--surface);
+     color: var(--text);
+     font-weight: 560;
+@@ -257,7 +257,7 @@
+ button[type="submit"] {
+     border-color: var(--primary);
+     background: var(--primary);
+-    color: #ffffff;
++    color: var(--surface);
+     text-decoration: none;
+     box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+ }
+@@ -268,7 +268,7 @@
+ button[type="submit"]:focus {
+     border-color: var(--primary-dark);
+     background: var(--primary-dark);
+-    color: #ffffff;
++    color: var(--surface);
+     transform: translateY(-1px);
+ }
+ 
+@@ -319,7 +319,7 @@
+     width: 100%;
+     min-height: 2.45rem;
+     border: 1px solid var(--line-strong);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     padding: 0.58rem 0.7rem;
+     background: var(--surface);
+     color: var(--text);
+@@ -351,8 +351,8 @@
+     margin: 1rem 0 1.4rem;
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
+-    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
++    border-radius: var(--radius-md);
++    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -373,7 +373,7 @@
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+     border-radius: var(--radius-md);
+-    background: linear-gradient(180deg, #ffffff, #f8fafc);
++    background: linear-gradient(180deg, var(--surface), #f8fafc);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -450,7 +450,7 @@
+     width: 6.5rem;
+     min-height: 2.2rem;
+     border: 1px solid var(--line-strong);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     padding: 0.45rem 0.55rem;
+ }
+ 
+@@ -524,8 +524,8 @@
+ .report-panel {
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
+-    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
++    border-radius: var(--radius-md);
++    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -538,7 +538,7 @@
+     margin: 0 0 1rem;
+     padding: 0.85rem 1rem;
+     border: 1px solid #fca5a5;
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     background: var(--danger-bg);
+     color: var(--danger);
+     font-weight: 560;
+@@ -549,7 +549,7 @@
+     margin: 1rem 0;
+     padding: 1rem;
+     border: 1px dashed var(--line-strong);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     background: var(--surface-muted);
+     color: var(--muted);
+     text-align: center;
+@@ -595,8 +595,8 @@
+     margin-top: 1rem;
+     padding: 0.85rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
+-    background: #ffffff;
++    border-radius: var(--radius-md);
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -620,8 +620,8 @@
+     min-width: 2.25rem;
+     padding: 0.45rem 0.7rem;
+     border: 1px solid var(--line);
+-    border-radius: 8px;
+-    background: #ffffff;
++    border-radius: var(--radius-sm);
++    background: var(--surface);
+     color: var(--text);
+     font-weight: 560;
+     text-decoration: none;
+@@ -674,9 +674,9 @@
+     place-items: center;
+     width: 2.65rem;
+     height: 2.65rem;
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     background: var(--primary);
+-    color: #ffffff;
++    color: var(--surface);
+     font-weight: 650;
+ }
+ 
+@@ -704,7 +704,7 @@
+     align-items: center;
+     min-height: 2.55rem;
+     padding: 0.6rem 0.72rem;
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     color: #344054;
+     font-weight: 560;
+     text-decoration: none;
+@@ -734,8 +734,8 @@
+     margin: 1rem 0 -0.15rem;
+     padding: 0.8rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px 10px 0 0;
+-    background: #ffffff;
++    border-radius: var(--radius-md) var(--radius-md) 0 0;
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -751,7 +751,7 @@
+ .table-search input {
+     min-height: 2.45rem;
+     border: 1px solid var(--line-strong);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     padding: 0.56rem 0.7rem;
+ }
+ 
+@@ -802,8 +802,8 @@
+ .quick-panel {
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
+-    background: #ffffff;
++    border-radius: var(--radius-md);
++    background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+@@ -834,7 +834,7 @@
+ .chart-track {
+     height: 0.7rem;
+     overflow: hidden;
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     background: #edf2f7;
+ }
+ 
+@@ -863,7 +863,7 @@
+     gap: 0.75rem;
+     padding: 0.7rem 0.75rem;
+     border: 1px solid var(--line);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     color: var(--text);
+     font-weight: 560;
+     text-decoration: none;
+@@ -919,7 +919,7 @@
+     gap: 0.7rem;
+     padding: 0.85rem 1rem;
+     border-radius: var(--radius-pill);
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow);
+     font-weight: 560;
+ }
+@@ -931,7 +931,7 @@
+     height: 1rem;
+     border: 2px solid #bfdbfe;
+     border-top-color: var(--primary);
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     animation: spin 0.75s linear infinite;
+ }
+ 
+@@ -951,7 +951,7 @@
+     overflow: auto;
+     border: 1px solid var(--line);
+     border-radius: var(--radius-lg);
+-    background: #ffffff;
++    background: var(--surface);
+     box-shadow: var(--shadow);
+     transform: scale(0.96);
+     opacity: 0;
+@@ -973,7 +973,7 @@
+     gap: var(--space-4);
+     padding: var(--space-4);
+     border-bottom: 1px solid var(--line);
+-    background: #ffffff;
++    background: var(--surface);
+ }
+ 
+ .modal-header h2,
+@@ -1138,7 +1138,7 @@
+ 
+     .table-toolbar {
+         display: grid;
+-        border-radius: 10px;
++        border-radius: var(--radius-md);
+     }
+ 
+     .pagination {
+
+## New file: docs/quality/design-system-fase-1-known-gaps.md
+# Design System Fase 1 — Known Gaps
+
+Date: 2026-09-11
+Scope: `:root` palette swap + border-radius/#ffffff token-migration cleanup only.
+Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenced by
+`refactor-instructions-specific.md` but not present in this repository).
+
+## Visible mismatches introduced by this phase
+
+- `--primary-dark` (#1d4ed8, blue) is unchanged — hover/focus states on
+  `.button-primary` and `button[type="submit"]` transition from the new
+  near-black `--primary` to a blue that no longer matches the palette.
+- `--accent-soft` (#ccfbf1, mint) is unchanged — nothing currently consumes
+  it directly in a way that visibly clashes yet, but it no longer pairs with
+  the new orange `--accent`.
+- `.app-title`'s pill chip (`app.css:155-163`) uses a hardcoded
+  `rgba(15, 118, 110, 0.2)` border (teal-based) and `var(--surface-tint)`
+  (`#eef6f4`, mint-tinted background) — both visibly mismatched against the
+  new orange accent used elsewhere on the same page.
+
+## Deferred entirely (not started)
+
+- Font-size/font-weight token scale (`--fs-*`/`--fw-*`) — none exist yet;
+  `refactor-instructions-specific.md` gave 4 example sizes (badge 11px,
+  table 13px, page title 20px, big number 24px) without a complete scale or
+  token names.
+- Fase 2 onward (card, button variants, badge color mapping, table, sidebar,
+  modal, and the two genuinely new components — dropdown/toggle and
+  bulk-action-bar) — all blocked on the same three missing files.
+
+## What unblocks the rest
+
+The user needs to provide `design-system.md` (full token scale including
+the above), `components.css` (toggle switch spec), and `js/table-select.js`
+(bulk-action-bar event-delegation reference pattern) before Fase 2 can be
+planned with the same precision as this phase.

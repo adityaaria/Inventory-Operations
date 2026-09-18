@@ -1,0 +1,116 @@
+# Final review fix package (no-git): CSV Import Dialog
+
+## dialog.js — current full content
+'use strict';
+
+(function exposeDialog(root) {
+    root.InventoryDialog = {
+        enhance(scope = document) {
+            function open(backdrop) {
+                if (backdrop._pendingCloseCancel) {
+                    backdrop._pendingCloseCancel();
+                    delete backdrop._pendingCloseCancel;
+                }
+                wire(backdrop);
+                backdrop.hidden = false;
+                requestAnimationFrame(() => backdrop.classList.add('is-open'));
+                backdrop.querySelector('.modal-panel')?.focus();
+            }
+
+            function close(backdrop) {
+                if (!backdrop.classList.contains('is-open')) {
+                    backdrop.hidden = true;
+                    return;
+                }
+                backdrop.classList.remove('is-open');
+                const finish = () => {
+                    clearTimeout(timeoutId);
+                    backdrop.removeEventListener('transitionend', onEnd);
+                    delete backdrop._pendingCloseCancel;
+                    backdrop.hidden = true;
+                };
+                // 220ms = the 180ms CSS transition (app.css) plus a small safety
+                // margin, in case transitionend never fires.
+                const timeoutId = setTimeout(finish, 220);
+                function onEnd(event) {
+                    if (event.target !== backdrop) {
+                        return;
+                    }
+                    finish();
+                }
+                backdrop.addEventListener('transitionend', onEnd);
+                backdrop._pendingCloseCancel = () => {
+                    clearTimeout(timeoutId);
+                    backdrop.removeEventListener('transitionend', onEnd);
+                };
+            }
+
+            function wire(backdrop) {
+                if (backdrop.dataset.dialogWired === 'true') {
+                    return;
+                }
+                backdrop.dataset.dialogWired = 'true';
+                backdrop.addEventListener('click', (event) => {
+                    if (event.target === backdrop || event.target.closest('.modal-close')) {
+                        close(backdrop);
+                    }
+                });
+                document.addEventListener('keydown', (event) => {
+                    if (backdrop.hidden) {
+                        return;
+                    }
+                    if (event.key === 'Escape') {
+                        close(backdrop);
+                        return;
+                    }
+                    if (event.key === 'Tab') {
+                        trapFocus(backdrop, event);
+                    }
+                });
+            }
+
+            function trapFocus(container, event) {
+                const focusable = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+                    .filter((element) => !element.disabled && !element.hidden);
+                if (focusable.length === 0) {
+                    event.preventDefault();
+                    return;
+                }
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+
+            scope.querySelectorAll('.import-dialog:not([hidden])').forEach((backdrop) => open(backdrop));
+
+            scope.querySelectorAll('[data-dialog-open]').forEach((trigger) => {
+                if (trigger.dataset.dialogEnhanced === 'true') {
+                    return;
+                }
+                trigger.dataset.dialogEnhanced = 'true';
+                trigger.addEventListener('click', () => {
+                    const target = document.getElementById(trigger.dataset.dialogOpen);
+                    if (target) {
+                        open(target);
+                    }
+                });
+            });
+
+            return {open, close};
+        },
+    };
+})(typeof globalThis === 'object' ? globalThis : this);
+
+## Diff: ai-usage-log.md
+--- .spark/sdd/csv-import-dialog/task-5-before/ai-usage-log.md	2026-09-11 20:55:35
++++ ai-usage-log.md	2026-09-11 21:02:44
+@@ -36,2 +36,3 @@
+ | 2026-09-10 | Claude Code | Implemented four of the five gaps listed in the JavaScript insight: added `performance.mark`/`performance.measure` to `tables.js`'s `filter()`, added `tests/JavaScript/filter-baseline.bench.js` with a recorded baseline, wrote `docs/quality/js-decision-records.md` (DR-01 Node test runner vs Jest, DR-02 why TypeScript was not adopted, DR-03 a corrected `aria-describedby` audit), and updated both insight docs and the JS Decision Record Artifact to reflect the new status. | User selected "implement gaps in code" over rewriting the gap list, then selected all four implementable items (profiling, both decision records, the aria audit). | `node --check` on the changed/new JS files, `node --test tests/JavaScript/*.test.js` re-run after the `tables.js` change (still 15 pass, 0 fail), `filter-baseline.bench.js` executed for real timing numbers, and a fresh `grep -rl "<label" views/` audit (22 files, not the previously reported 16) with per-file `<form>`/`required`/`aria-*` counts before writing DR-03. |
+ | 2026-09-11 | Claude Code | Polished the UI with design tokens (CSS custom properties for spacing and border radius), animated modal fade/scale transitions respecting `prefers-reduced-motion`, and converted 14 Cancel `<a href>` elements to proper `<button>` elements that close the modal instead of navigating. | User requested and approved a brainstormed design (docs/spark/specs/2026-09-11-ui-polish-enhancement-design.md) before implementation; executed via subagent-driven-development with a task reviewer approving each of the six tasks independently. Two findings surfaced and were fixed and re-reviewed clean: an Important modal close/reopen race condition (Task 3), and a Critical factual inaccuracy in this log entry itself (Task 6). | Step 1: `node --test tests/JavaScript/*.test.js` passed 17 tests, 0 failures. Step 2: PHPUnit 10.5.64 passed 103 tests/423 assertions; PHPStan level 5 reported 0 errors. Step 3: HTTP smoke test on categories/create (200), customers/create (200), products/create (200), suppliers/create (200), users/create (200), warehouses/create (200). |
++| 2026-09-11 | Claude Code | Moved the CSV import form on six list pages (Categories, Customers, Products, Suppliers, Users, Warehouses) from an always-visible inline form to a dialog behind an 'Import CSV' toolbar button — added a new `dialog.js` module (mirroring `modal.js`'s fade/scale transition and race-condition guard without modifying `modal.js` itself), wired it onto all 29 pages, and made the dialog auto-open when the page has an import error to show. | User requested and approved a brainstormed design (docs/spark/specs/2026-09-11-csv-import-dialog-design.md) before implementation; executed via subagent-driven-development with a task reviewer approving each of the 5 tasks independently, one Critical finding surfaced at the final whole-change review — the error-path dialog rendered as an invisible, unwired, click-blocking overlay because it was never passed through `open()` — fixed and re-reviewed clean. | Step 1: `node --test tests/JavaScript/*.test.js` passed 17 tests, 0 failures. Step 2: PHPUnit 10.5.64 passed 103 tests/423 assertions; PHPStan level 5 reported 0 errors. Step 3: HTTP smoke test on categories (200), customers (200), products (200), suppliers (200), users (200), warehouses (200). |

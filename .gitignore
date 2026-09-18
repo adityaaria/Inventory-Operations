@@ -1,0 +1,15 @@
+/.env
+/vendor/
+/var/
+/coverage/
+/public/uploads/
+
+.DS_Store
+.idea/
+.vscode/
+*.log
+/.codex/skills/
+/.codex/hooks/
+/.codex-cli-plugin/
+/.codex/.spark-managed.json
+/.spark-lock.json

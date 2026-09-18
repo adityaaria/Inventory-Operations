@@ -1,0 +1,35 @@
+{
+  "name": "assessment/inventory-order-management",
+  "description": "Native PHP inventory and order management system for final assessment.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.2",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "phpstan/phpstan": "^1.11"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test:unit": "phpunit --testsuite Unit",
+    "test:integration": "phpunit --testsuite Integration",
+    "test:javascript": "node --test tests/JavaScript/*.test.js",
+    "analyse": "phpstan analyse --memory-limit=256M"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

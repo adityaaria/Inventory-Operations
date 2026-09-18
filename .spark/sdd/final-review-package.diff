@@ -1,0 +1,571 @@
+# Final whole-change review package (no-git): UI Polish Enhancement
+Plan: docs/spark/plans/2026-09-11-ui-polish-enhancement.md
+Spec: docs/spark/specs/2026-09-11-ui-polish-enhancement-design.md
+
+## Files changed (whole enhancement, earliest snapshot vs current)
+Files .spark/sdd/task-1-before/app.css and public/assets/css/app.css differ
+Files .spark/sdd/task-3-before/modal.js and public/assets/js/modal.js differ
+Files .spark/sdd/task-4-before/ui-helpers.js and public/assets/js/ui-helpers.js differ
+Files .spark/sdd/task-4-before/ui-helpers.test.js and tests/JavaScript/ui-helpers.test.js differ
+Files .spark/sdd/task-5-before/app.js and public/assets/js/app.js differ
+Files .spark/sdd/task-5-before/views/categories/create.php and views/categories/create.php differ
+Files .spark/sdd/task-5-before/views/categories/edit.php and views/categories/edit.php differ
+Files .spark/sdd/task-5-before/views/customers/create.php and views/customers/create.php differ
+Files .spark/sdd/task-5-before/views/customers/edit.php and views/customers/edit.php differ
+Files .spark/sdd/task-5-before/views/products/create.php and views/products/create.php differ
+Files .spark/sdd/task-5-before/views/products/edit.php and views/products/edit.php differ
+Files .spark/sdd/task-5-before/views/purchase-orders/create.php and views/purchase-orders/create.php differ
+Files .spark/sdd/task-5-before/views/sales-orders/create.php and views/sales-orders/create.php differ
+Files .spark/sdd/task-5-before/views/suppliers/create.php and views/suppliers/create.php differ
+Files .spark/sdd/task-5-before/views/suppliers/edit.php and views/suppliers/edit.php differ
+Files .spark/sdd/task-5-before/views/users/create.php and views/users/create.php differ
+Files .spark/sdd/task-5-before/views/users/edit.php and views/users/edit.php differ
+Files .spark/sdd/task-5-before/views/warehouses/create.php and views/warehouses/create.php differ
+Files .spark/sdd/task-5-before/views/warehouses/edit.php and views/warehouses/edit.php differ
+Files .spark/sdd/task-6-before/ai-usage-log.md and ai-usage-log.md differ
+
+## Full diff: app.css (whole enhancement)
+--- .spark/sdd/task-1-before/app.css	2026-09-11 19:48:55
++++ public/assets/css/app.css	2026-09-11 19:58:35
+@@ -21,12 +21,24 @@
+     --info-bg: #e0f2fe;
+     --draft: #475569;
+     --draft-bg: #e2e8f0;
+     --shadow: 0 22px 70px rgba(15, 23, 42, 0.10);
+     --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.06);
+     --radius: 8px;
++
++    --space-1: 0.25rem;
++    --space-2: 0.5rem;
++    --space-3: 0.75rem;
++    --space-4: 1rem;
++    --space-5: 1.5rem;
++    --space-6: 2rem;
++
++    --radius-sm: 8px;
++    --radius-md: 10px;
++    --radius-lg: 12px;
++    --radius-pill: 999px;
+ }
+ 
+ * {
+     box-sizing: border-box;
+ }
+ 
+@@ -217,13 +229,13 @@
+     align-items: center;
+     justify-content: center;
+     min-height: 2.45rem;
+     max-width: 100%;
+     padding: 0.5rem 0.85rem;
+     border: 1px solid var(--line-strong);
+-    border-radius: 8px;
++    border-radius: var(--radius-sm);
+     background: var(--surface);
+     color: var(--text);
+     cursor: pointer;
+     font-weight: 560;
+     line-height: 1.2;
+     text-align: center;
+@@ -357,13 +369,13 @@
+ }
+ 
+ .metric-card {
+     min-height: 7.25rem;
+     padding: 1.05rem;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     background: linear-gradient(180deg, #ffffff, #f8fafc);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+ .metric-card p,
+ .metric-card span {
+@@ -389,22 +401,22 @@
+     min-width: 44rem;
+     border-collapse: separate;
+     border-spacing: 0;
+     margin: 1rem 0 1.25rem;
+     overflow: hidden;
+     border: 1px solid var(--line);
+-    border-radius: 10px;
++    border-radius: var(--radius-md);
+     background: var(--surface);
+     box-shadow: var(--shadow-soft);
+ }
+ 
+ th,
+ td,
+ .data-table th,
+ .data-table td {
+-    padding: 0.75rem;
++    padding: var(--space-3);
+     border: 0;
+     border-bottom: 1px solid var(--line);
+     text-align: left;
+     vertical-align: top;
+ }
+ 
+@@ -449,13 +461,13 @@
+     align-items: center;
+     justify-content: center;
+     min-height: 1.6rem;
+     max-width: 100%;
+     padding: 0.24rem 0.62rem;
+     border: 1px solid transparent;
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     font-size: 0.82rem;
+     font-weight: 560;
+     line-height: 1.15;
+     white-space: normal;
+ }
+ 
+@@ -870,14 +882,25 @@
+     position: fixed;
+     inset: 0;
+     z-index: 40;
+     display: grid;
+     place-items: center;
+     background: rgba(15, 23, 42, 0.32);
++}
++
++.modal-backdrop,
++.confirm-backdrop {
++    opacity: 0;
++    transition: opacity 0.18s ease;
+ }
+ 
++.modal-backdrop.is-open,
++.confirm-backdrop.is-open {
++    opacity: 1;
++}
++
+ .page-loading {
+     z-index: 30;
+     pointer-events: none;
+     opacity: 0;
+     transition: opacity 0.15s ease;
+ }
+@@ -889,13 +912,13 @@
+ .page-loading > *,
+ .loading-card {
+     display: inline-flex;
+     align-items: center;
+     gap: 0.7rem;
+     padding: 0.85rem 1rem;
+-    border-radius: 999px;
++    border-radius: var(--radius-pill);
+     background: #ffffff;
+     box-shadow: var(--shadow);
+     font-weight: 560;
+ }
+ 
+ .page-loading span,
+@@ -921,36 +944,45 @@
+ .modal-panel,
+ .confirm-panel {
+     width: min(40rem, calc(100% - 2rem));
+     max-height: min(86vh, 52rem);
+     overflow: auto;
+     border: 1px solid var(--line);
+-    border-radius: 12px;
++    border-radius: var(--radius-lg);
+     background: #ffffff;
+     box-shadow: var(--shadow);
++    transform: scale(0.96);
++    opacity: 0;
++    transition: transform 0.18s ease, opacity 0.18s ease;
+ }
+ 
++.is-open .modal-panel,
++.is-open .confirm-panel {
++    transform: scale(1);
++    opacity: 1;
++}
++
+ .modal-header {
+     position: sticky;
+     top: 0;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+-    gap: 1rem;
+-    padding: 1rem;
++    gap: var(--space-4);
++    padding: var(--space-4);
+     border-bottom: 1px solid var(--line);
+     background: #ffffff;
+ }
+ 
+ .modal-header h2,
+ .confirm-panel h2 {
+     margin: 0;
+ }
+ 
+ .modal-body {
+-    padding: 1rem;
++    padding: var(--space-4);
+ }
+ 
+ .modal-backdrop[aria-busy="true"] .modal-panel {
+     cursor: progress;
+ }
+ 
+@@ -980,12 +1012,21 @@
+ .confirm-actions {
+     display: flex;
+     justify-content: flex-end;
+     gap: 0.65rem;
+ }
+ 
++@media (prefers-reduced-motion: reduce) {
++    .modal-backdrop,
++    .confirm-backdrop,
++    .modal-panel,
++    .confirm-panel {
++        transition-duration: 0.01ms;
++    }
++}
++
+ @keyframes spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }
+ 
+
+## Full diff: modal.js
+--- .spark/sdd/task-3-before/modal.js	2026-09-11 19:57:39
++++ public/assets/js/modal.js	2026-09-11 20:04:18
+@@ -29,16 +29,53 @@
+                 loader.innerHTML = '<span></span><strong>Loading</strong>';
+                 return loader;
+             }
+ 
+             function setPageLoading(active) {
+                 document.body.classList.toggle('is-page-loading', active);
+             }
+ 
++            function openWithTransition(backdrop) {
++                if (backdrop._pendingCloseCancel) {
++                    backdrop._pendingCloseCancel();
++                    delete backdrop._pendingCloseCancel;
++                }
++                backdrop.hidden = false;
++                requestAnimationFrame(() => backdrop.classList.add('is-open'));
++            }
++
++            function closeWithTransition(backdrop, cleanup) {
++                if (!backdrop.classList.contains('is-open')) {
++                    cleanup();
++                    return;
++                }
++                backdrop.classList.remove('is-open');
++                const finish = () => {
++                    clearTimeout(timeoutId);
++                    backdrop.removeEventListener('transitionend', onEnd);
++                    delete backdrop._pendingCloseCancel;
++                    cleanup();
++                };
++                // 220ms = the 180ms CSS transition above plus a small safety margin,
++                // in case transitionend never fires (e.g. the element was removed).
++                const timeoutId = setTimeout(finish, 220);
++                function onEnd(event) {
++                    if (event.target !== backdrop) {
++                        return;
++                    }
++                    finish();
++                }
++                backdrop.addEventListener('transitionend', onEnd);
++                backdrop._pendingCloseCancel = () => {
++                    clearTimeout(timeoutId);
++                    backdrop.removeEventListener('transitionend', onEnd);
++                };
++            }
++
+             function createModal() {
+                 const modal = document.createElement('div');
+                 modal.className = 'modal-backdrop';
+                 modal.hidden = true;
+                 modal.innerHTML = `
+                     <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+                         <header class="modal-header">
+                             <h2 id="modal-title">Form</h2>
+@@ -107,17 +144,17 @@
+                 const body = modal?.querySelector('.modal-body');
+                 const title = modal?.querySelector('#modal-title');
+                 if (!modal || !body || !title) {
+                     location.href = href;
+                     return;
+                 }
+ 
+                 state.modalTrigger = document.activeElement;
+-                modal.hidden = false;
++                openWithTransition(modal);
+                 document.body.classList.add('has-modal');
+                 modal.setAttribute('aria-busy', 'true');
+                 body.innerHTML = '<div class="loading-card"><span></span><strong>Loading form</strong></div>';
+                 modal.querySelector('.modal-panel')?.focus();
+                 const request = requestCoordinator.start();
+                 state.activeFormRequest = request;
+ 
+                 try {
+@@ -156,41 +193,45 @@
+ 
+             function closeModal() {
+                 requestCoordinator.cancel();
+                 state.activeFormRequest = null;
+                 const modal = document.querySelector('.modal-backdrop');
+                 if (!modal) {
+                     return;
+                 }
+-                modal.hidden = true;
+-                document.body.classList.remove('has-modal');
+-                const body = modal.querySelector('.modal-body');
+-                if (body) {
+-                    body.innerHTML = '';
+-                }
+-                if (state.modalTrigger && typeof state.modalTrigger.focus === 'function') {
+-                    state.modalTrigger.focus();
+-                }
+-                state.modalTrigger = null;
++                closeWithTransition(modal, () => {
++                    modal.hidden = true;
++                    document.body.classList.remove('has-modal');
++                    const body = modal.querySelector('.modal-body');
++                    if (body) {
++                        body.innerHTML = '';
++                    }
++                    if (state.modalTrigger && typeof state.modalTrigger.focus === 'function') {
++                        state.modalTrigger.focus();
++                    }
++                    state.modalTrigger = null;
++                });
+             }
+ 
+             function askConfirmation(message) {
+                 const dialog = document.querySelector('.confirm-backdrop');
+                 if (!dialog) {
+                     return Promise.resolve(window.confirm(message));
+                 }
+                 dialog.querySelector('.confirm-message').textContent = message;
+-                dialog.hidden = false;
++                openWithTransition(dialog);
+ 
+                 return new Promise((resolve) => {
+                     const cancel = dialog.querySelector('.confirm-cancel');
+                     const submit = dialog.querySelector('.confirm-submit');
+                     const finish = (answer) => {
+-                        dialog.hidden = true;
++                        closeWithTransition(dialog, () => {
++                            dialog.hidden = true;
++                        });
+                         cancel.removeEventListener('click', onCancel);
+                         submit.removeEventListener('click', onSubmit);
+                         resolve(answer);
+                     };
+                     const onCancel = () => finish(false);
+                     const onSubmit = () => finish(true);
+                     cancel.addEventListener('click', onCancel);
+                     submit.addEventListener('click', onSubmit);
+
+## Full diff: ui-helpers.js
+--- .spark/sdd/task-4-before/ui-helpers.js	2026-09-11 20:07:07
++++ public/assets/js/ui-helpers.js	2026-09-11 20:07:54
+@@ -58,8 +58,12 @@
+             if (timerId !== null) timerApi.clearTimeout(timerId);
+             timerId = null;
+         };
+         return debounced;
+     }
+ 
+-    return {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation};
++    function resolveCancelTarget(cancelHref, isInsideModal) {
++        return isInsideModal ? {action: 'close-modal'} : {action: 'navigate', href: cancelHref};
++    }
++
++    return {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation, resolveCancelTarget};
+ });
+
+## Full diff: ui-helpers.test.js
+--- .spark/sdd/task-4-before/ui-helpers.test.js	2026-09-11 20:07:07
++++ tests/JavaScript/ui-helpers.test.js	2026-09-11 20:07:40
+@@ -50,6 +50,14 @@
+     assert.deepEqual(calls, ['latest']);
+ 
+     debounced('cancelled');
+     debounced.cancel();
+     assert.equal(scheduled.size, 0);
+ });
++
++test('resolveCancelTarget closes the modal when the cancel button is inside one', () => {
++    assert.deepEqual(UiHelpers.resolveCancelTarget('/products', true), {action: 'close-modal'});
++});
++
++test('resolveCancelTarget navigates to the cancel href when not inside a modal', () => {
++    assert.deepEqual(UiHelpers.resolveCancelTarget('/products', false), {action: 'navigate', href: '/products'});
++});
+
+## Full diff: app.js
+--- .spark/sdd/task-5-before/app.js	2026-09-11 20:09:37
++++ public/assets/js/app.js	2026-09-11 20:10:24
+@@ -13,12 +13,13 @@
+     document.addEventListener('DOMContentLoaded', () => {
+         modal.ensureOverlays();
+         InventoryNavigation.buildShell();
+         tables.enhance();
+         InventoryCharts.render();
+         enhanceLinks();
++        enhanceCancelButtons();
+         forms.enhanceForms();
+         modal.setEnhanceForms(forms.enhanceForms);
+     });
+ 
+     function enhanceLinks() {
+         document.addEventListener('click', (event) => {
+@@ -30,7 +31,21 @@
+                 modal.openFormModal(href);
+                 return;
+             }
+             if (href.startsWith('/') && !href.endsWith('.csv')) modal.setPageLoading(true);
+         });
+     }
++
++    function enhanceCancelButtons() {
++        document.addEventListener('click', (event) => {
++            const button = event.target.closest('[data-cancel-href]');
++            if (!button) return;
++            const isInsideModal = Boolean(button.closest('.modal-panel'));
++            const target = InventoryUi.resolveCancelTarget(button.dataset.cancelHref, isInsideModal);
++            if (target.action === 'close-modal') {
++                modal.closeModal();
++                return;
++            }
++            window.location.href = target.href;
++        });
++    }
+ })();
+
+## Full diff: 14 view files
+--- views/categories/create.php ---
+--- .spark/sdd/task-5-before/views/categories/create.php	2026-09-11 20:09:37
++++ views/categories/create.php	2026-09-11 20:10:25
+@@ -27,3 +27,3 @@
+             <button type="submit">Create</button>
+-            <a href="/categories">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+         </form>
+--- views/categories/edit.php ---
+--- .spark/sdd/task-5-before/views/categories/edit.php	2026-09-11 20:09:37
++++ views/categories/edit.php	2026-09-11 20:10:34
+@@ -29,3 +29,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/categories">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+             </form>
+--- views/customers/create.php ---
+--- .spark/sdd/task-5-before/views/customers/create.php	2026-09-11 20:09:37
++++ views/customers/create.php	2026-09-11 20:10:27
+@@ -29,3 +29,3 @@
+             <button type="submit">Create</button>
+-            <a href="/customers">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+         </form>
+--- views/customers/edit.php ---
+--- .spark/sdd/task-5-before/views/customers/edit.php	2026-09-11 20:09:37
++++ views/customers/edit.php	2026-09-11 20:10:35
+@@ -31,3 +31,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/customers">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+             </form>
+--- views/products/create.php ---
+--- .spark/sdd/task-5-before/views/products/create.php	2026-09-11 20:09:37
++++ views/products/create.php	2026-09-11 20:10:28
+@@ -39,3 +39,3 @@
+             <button type="submit">Create</button>
+-            <a href="/products">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/products">Cancel</button>
+         </form>
+--- views/products/edit.php ---
+--- .spark/sdd/task-5-before/views/products/edit.php	2026-09-11 20:09:37
++++ views/products/edit.php	2026-09-11 20:10:36
+@@ -43,3 +43,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/products">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/products">Cancel</button>
+             </form>
+--- views/purchase-orders/create.php ---
+--- .spark/sdd/task-5-before/views/purchase-orders/create.php	2026-09-11 20:09:37
++++ views/purchase-orders/create.php	2026-09-11 20:10:29
+@@ -56,3 +56,3 @@
+             <button type="submit">Create Draft</button>
+-            <a href="/purchase-orders">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/purchase-orders">Cancel</button>
+         </form>
+--- views/sales-orders/create.php ---
+--- .spark/sdd/task-5-before/views/sales-orders/create.php	2026-09-11 20:09:37
++++ views/sales-orders/create.php	2026-09-11 20:10:30
+@@ -56,3 +56,3 @@
+             <button type="submit">Create Draft</button>
+-            <a href="/sales-orders">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/sales-orders">Cancel</button>
+         </form>
+--- views/suppliers/create.php ---
+--- .spark/sdd/task-5-before/views/suppliers/create.php	2026-09-11 20:09:37
++++ views/suppliers/create.php	2026-09-11 20:10:31
+@@ -29,3 +29,3 @@
+             <button type="submit">Create</button>
+-            <a href="/suppliers">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/suppliers">Cancel</button>
+         </form>
+--- views/suppliers/edit.php ---
+--- .spark/sdd/task-5-before/views/suppliers/edit.php	2026-09-11 20:09:37
++++ views/suppliers/edit.php	2026-09-11 20:10:37
+@@ -31,3 +31,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/suppliers">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/suppliers">Cancel</button>
+             </form>
+--- views/users/create.php ---
+--- .spark/sdd/task-5-before/views/users/create.php	2026-09-11 20:09:37
++++ views/users/create.php	2026-09-11 20:10:32
+@@ -38,3 +38,3 @@
+             <button type="submit">Create</button>
+-            <a href="/users">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+         </form>
+--- views/users/edit.php ---
+--- .spark/sdd/task-5-before/views/users/edit.php	2026-09-11 20:09:37
++++ views/users/edit.php	2026-09-11 20:10:38
+@@ -43,3 +43,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/users">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+             </form>
+--- views/warehouses/create.php ---
+--- .spark/sdd/task-5-before/views/warehouses/create.php	2026-09-11 20:09:37
++++ views/warehouses/create.php	2026-09-11 20:10:33
+@@ -27,3 +27,3 @@
+             <button type="submit">Create</button>
+-            <a href="/warehouses">Cancel</a>
++            <button type="button" class="button" data-cancel-href="/warehouses">Cancel</button>
+         </form>
+--- views/warehouses/edit.php ---
+--- .spark/sdd/task-5-before/views/warehouses/edit.php	2026-09-11 20:09:37
++++ views/warehouses/edit.php	2026-09-11 20:10:39
+@@ -29,3 +29,3 @@
+                 <button type="submit">Update</button>
+-                <a href="/warehouses">Cancel</a>
++                <button type="button" class="button" data-cancel-href="/warehouses">Cancel</button>
+             </form>
+
+## Full diff: ai-usage-log.md
+--- .spark/sdd/task-6-before/ai-usage-log.md	2026-09-11 20:13:50
++++ ai-usage-log.md	2026-09-11 20:17:45
+@@ -35,2 +35,3 @@
+ | 2026-09-10 | Claude Code | Read `output/pdf/Training Programmer - Javascript.pdf` (52 pages, after installing `poppler` for PDF rendering), created `docs/quality/ai-insight-javascript.md` correlating the project's Vanilla JS interaction layer to the JavaScript Intermediate curriculum, and published it as the "JavaScript Decision Record" Artifact. | User asked for an AI insight correlating the project's JavaScript with the JavaScript training material, then asked for an artifact version. | Claims were checked against `public/assets/js/*.js` and `tests/JavaScript/*.test.js`; `node --test tests/JavaScript/*.test.js` was re-run (15 pass, 0 fail) rather than trusting the prior evidence doc's numbers. |
+ | 2026-09-10 | Claude Code | Implemented four of the five gaps listed in the JavaScript insight: added `performance.mark`/`performance.measure` to `tables.js`'s `filter()`, added `tests/JavaScript/filter-baseline.bench.js` with a recorded baseline, wrote `docs/quality/js-decision-records.md` (DR-01 Node test runner vs Jest, DR-02 why TypeScript was not adopted, DR-03 a corrected `aria-describedby` audit), and updated both insight docs and the JS Decision Record Artifact to reflect the new status. | User selected "implement gaps in code" over rewriting the gap list, then selected all four implementable items (profiling, both decision records, the aria audit). | `node --check` on the changed/new JS files, `node --test tests/JavaScript/*.test.js` re-run after the `tables.js` change (still 15 pass, 0 fail), `filter-baseline.bench.js` executed for real timing numbers, and a fresh `grep -rl "<label" views/` audit (22 files, not the previously reported 16) with per-file `<form>`/`required`/`aria-*` counts before writing DR-03. |
++| 2026-09-11 | Claude Code | Polished the UI with design tokens (CSS custom properties for spacing and border radius), animated modal fade/scale transitions respecting `prefers-reduced-motion`, and converted 14 Cancel `<a href>` elements to proper `<button>` elements that close the modal instead of navigating. | User requested and approved a brainstormed design (docs/spark/specs/2026-09-11-ui-polish-enhancement-design.md) before implementation; executed via subagent-driven-development with a task reviewer approving each of the five tasks independently. One Important finding — a modal close/reopen race condition — was discovered, fixed, and re-reviewed clean. | Step 1: `node --test tests/JavaScript/*.test.js` passed 17 tests, 0 failures. Step 2: PHPUnit 10.5.64 passed 103 tests/423 assertions; PHPStan level 5 reported 0 errors. Step 3: HTTP smoke test on categories/create (200), customers/create (200), products/create (200), suppliers/create (200), users/create (200), warehouses/create (200). |
