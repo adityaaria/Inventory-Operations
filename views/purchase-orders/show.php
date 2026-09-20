@@ -19,15 +19,28 @@
 </head>
 <body>
     <main class="page">
-        <nav class="toolbar"><a href="/purchase-orders">Purchase Orders</a></nav>
-        <h1><?= htmlspecialchars($order->orderNumber(), ENT_QUOTES, 'UTF-8') ?></h1>
-        <?php if (($error ?? '') !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
-        <p>Status: <?= htmlspecialchars($order->status(), ENT_QUOTES, 'UTF-8') ?></p>
-        <p>Supplier: <?= htmlspecialchars(($suppliers[$order->supplierId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></p>
-        <p>Destination: <?= htmlspecialchars(($warehouses[$order->destinationWarehouseId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></p>
+        <?php
+        $detailStatusClass = $order->status() === 'PartiallyReceived' ? 'partial' : strtolower(str_replace([' ', '_'], '-', $order->status()));
+        $detailStatusTone = match ($order->status()) {
+            'Received' => 'status-success',
+            'PartiallyReceived', 'Ordered' => 'status-warning',
+            'Cancelled' => 'status-danger',
+            default => 'status-normal',
+        };
+        ?>
+        <header class="page-header">
+            <div><p class="app-title">Purchase Order</p><h1><?= htmlspecialchars($order->orderNumber(), ENT_QUOTES, 'UTF-8') ?></h1><p class="page-subtitle">Review order lines and available receiving actions.</p></div>
+            <nav class="toolbar"><a href="/purchase-orders">Purchase Orders</a></nav>
+        </header>
+        <?php if (($error ?? '') !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <dl class="detail-summary">
+            <div><dt>Status</dt><dd><span class="status-badge <?= $detailStatusTone ?> status-<?= htmlspecialchars($detailStatusClass, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($order->status(), ENT_QUOTES, 'UTF-8') ?></span></dd></div>
+            <div><dt>Supplier</dt><dd><?= htmlspecialchars(($suppliers[$order->supplierId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></dd></div>
+            <div><dt>Destination</dt><dd><?= htmlspecialchars(($warehouses[$order->destinationWarehouseId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></dd></div>
+        </dl>
 
-        <table>
-            <thead><tr><th>Product ID</th><th>Quantity</th><th>Received</th><th>Remaining</th><th>Purchase Price</th><th>Receive</th></tr></thead>
+        <table class="detail-table">
+            <thead><tr><th scope="col">Product ID</th><th scope="col">Quantity</th><th scope="col">Received</th><th scope="col">Remaining</th><th scope="col">Purchase Price</th><th scope="col">Receive</th></tr></thead>
             <tbody>
                 <?php foreach ($order->items() as $item): ?>
                     <tr>
@@ -52,6 +65,7 @@
             </tbody>
         </table>
 
+        <div class="form-actions">
         <?php if ($canOrderOrCancel && $order->status() === \App\Entity\PurchaseOrder::STATUS_DRAFT): ?>
             <form method="post" action="/purchase-orders/order">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -66,6 +80,7 @@
                 <button type="submit">Cancel</button>
             </form>
         <?php endif; ?>
+        </div>
     </main>
 </body>
 </html>

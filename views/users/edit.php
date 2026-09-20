@@ -19,7 +19,7 @@
 </head>
 <body>
     <main class="page">
-        <h1>Edit User</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit User</h1><p class="page-subtitle">Update internal access and role details.</p></div><nav class="toolbar"><a href="/users">Users</a></nav></header>
         <?php if ($error !== ''): ?>
             <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
@@ -29,10 +29,9 @@
             <form method="post" action="/users/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $user->id() ?>">
-                <label>Name <input name="name" required value="<?= htmlspecialchars($user->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Email <input name="email" type="email" required value="<?= htmlspecialchars($user->email(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>
-                    Role
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($user->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Email</span><input name="email" type="email" required value="<?= htmlspecialchars($user->email(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Role</span>
                     <select name="role" required>
                         <?php foreach ($roles as $role): ?>
                             <option value="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>" <?= $role === $user->role() ? 'selected' : '' ?>>
@@ -41,8 +40,7 @@
                         <?php endforeach; ?>
                     </select>
                 </label>
-                <button type="submit">Update</button>
-                <button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button>
+                <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button></div>
             </form>
         <?php endif; ?>
     </main>

@@ -19,18 +19,17 @@
 </head>
 <body>
     <main class="page">
-        <h1>Edit Customer</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit Customer</h1><p class="page-subtitle">Update the customer details.</p></div><nav class="toolbar"><a href="/customers">Customers</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($customer !== null): ?>
             <form method="post" action="/customers/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $customer->id() ?>">
-                <label>Name <input name="name" required value="<?= htmlspecialchars($customer->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Email <input name="email" type="email" value="<?= htmlspecialchars($customer->email(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Phone <input name="phone" value="<?= htmlspecialchars($customer->phone(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Address <textarea name="address" rows="3"><?= htmlspecialchars($customer->address(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
-                <button type="submit">Update</button>
-                <button type="button" class="button button-quiet" data-cancel-href="/customers">Cancel</button>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($customer->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Email</span><input name="email" type="email" value="<?= htmlspecialchars($customer->email(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Phone</span><input name="phone" value="<?= htmlspecialchars($customer->phone(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Address</span><textarea name="address" rows="3"><?= htmlspecialchars($customer->address(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
+                <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/customers">Cancel</button></div>
             </form>
         <?php endif; ?>
     </main>

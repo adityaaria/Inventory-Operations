@@ -19,16 +19,15 @@
 </head>
 <body>
     <main class="page">
-        <h1>Edit Warehouse</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit Warehouse</h1><p class="page-subtitle">Update the warehouse details.</p></div><nav class="toolbar"><a href="/warehouses">Warehouses</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($warehouse !== null): ?>
             <form method="post" action="/warehouses/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $warehouse->id() ?>">
-                <label>Name <input name="name" required value="<?= htmlspecialchars($warehouse->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Location <input name="location" value="<?= htmlspecialchars($warehouse->location(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <button type="submit">Update</button>
-                <button type="button" class="button button-quiet" data-cancel-href="/warehouses">Cancel</button>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($warehouse->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Location</span><input name="location" value="<?= htmlspecialchars($warehouse->location(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/warehouses">Cancel</button></div>
             </form>
         <?php endif; ?>
     </main>

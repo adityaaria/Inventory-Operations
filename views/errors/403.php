@@ -19,8 +19,15 @@
 </head>
 <body>
     <main class="page">
-        <h1>Forbidden</h1>
-        <p>You are not allowed to access this page.</p>
+        <header class="page-header">
+            <div>
+                <p class="app-title">Inventory Operations</p>
+                <h1>Forbidden</h1>
+                <p class="page-subtitle">This account is not allowed to access the requested page.</p>
+            </div>
+            <nav class="toolbar"><a class="button-primary" href="/">Back to dashboard</a></nav>
+        </header>
+        <p class="alert alert-danger" role="alert">You are not allowed to access this page.</p>
     </main>
 </body>
 </html>

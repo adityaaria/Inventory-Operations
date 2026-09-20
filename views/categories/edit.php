@@ -19,16 +19,18 @@
 </head>
 <body>
     <main class="page">
-        <h1>Edit Category</h1>
+        <header class="page-header">
+            <div><p class="app-title">Inventory Operations</p><h1>Edit Category</h1><p class="page-subtitle">Update the category details.</p></div>
+            <nav class="toolbar"><a href="/categories">Categories</a></nav>
+        </header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($category !== null): ?>
             <form method="post" action="/categories/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $category->id() ?>">
-                <label>Name <input name="name" required value="<?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label>Description <textarea name="description" rows="3"><?= htmlspecialchars($category->description(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
-                <button type="submit">Update</button>
-                <button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Description</span><textarea name="description" rows="3"><?= htmlspecialchars($category->description(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
+                <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button></div>
             </form>
         <?php endif; ?>
     </main>

@@ -337,6 +337,43 @@ button[disabled],
     margin-bottom: 1.25rem;
 }
 
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.25rem;
+}
+
+.detail-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.75rem 1rem;
+    margin: 1rem 0 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface-muted);
+}
+
+.detail-summary div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.detail-summary dt {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+}
+
+.detail-summary dd {
+    margin: 0;
+    color: var(--text);
+    font-weight: var(--fw-medium);
+}
+
 .form label {
     display: grid;
     gap: 0.4rem;
@@ -531,7 +568,8 @@ input[type="hidden"] {
 }
 
 table,
-.data-table {
+.data-table,
+.detail-table {
     width: 100%;
     min-width: 44rem;
     border-collapse: separate;
@@ -547,7 +585,9 @@ table,
 th,
 td,
 .data-table th,
-.data-table td {
+.data-table td,
+.detail-table th,
+.detail-table td {
     padding: var(--space-3);
     border: 0;
     border-bottom: 1px solid var(--line);
@@ -556,7 +596,8 @@ td,
 }
 
 th,
-.data-table th {
+.data-table th,
+.detail-table th {
     background: var(--table-header);
     color: #344054;
     font-size: var(--fs-xs);
@@ -1345,8 +1386,14 @@ button.is-loading::before {
     .toolbar form button,
     .action-link,
     .filters button,
-    .form button {
+    .form button,
+    .form-actions button {
         width: 100%;
+    }
+
+    .form-actions {
+        align-items: stretch;
+        flex-direction: column;
     }
 
     h1 {

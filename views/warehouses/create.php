@@ -19,14 +19,13 @@
 </head>
 <body>
     <main class="page">
-        <h1>Create Warehouse</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Warehouse</h1><p class="page-subtitle">Add a warehouse for stock operations.</p></div><nav class="toolbar"><a href="/warehouses">Warehouses</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/warehouses" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>Name <input name="name" required></label>
-            <label>Location <input name="location"></label>
-            <button type="submit">Create</button>
-            <button type="button" class="button button-quiet" data-cancel-href="/warehouses">Cancel</button>
+            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
+            <label class="field"><span class="field-label">Location</span><input name="location"></label>
+            <div class="form-actions"><button type="submit">Create</button><button type="button" class="button button-quiet" data-cancel-href="/warehouses">Cancel</button></div>
         </form>
     </main>
 </body>

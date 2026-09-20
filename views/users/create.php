@@ -19,25 +19,23 @@
 </head>
 <body>
     <main class="page">
-        <h1>Create User</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create User</h1><p class="page-subtitle">Add an internal user and assign an operational role.</p></div><nav class="toolbar"><a href="/users">Users</a></nav></header>
         <?php if ($error !== ''): ?>
             <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
         <form method="post" action="/users" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>Name <input name="name" required></label>
-            <label>Email <input name="email" type="email" required></label>
-            <label>Password <input name="password" type="password" required minlength="8"></label>
-            <label>
-                Role
+            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
+            <label class="field"><span class="field-label">Email</span><input name="email" type="email" required></label>
+            <label class="field"><span class="field-label">Password</span><input name="password" type="password" required minlength="8"></label>
+            <label class="field"><span class="field-label">Role</span>
                 <select name="role" required>
                     <?php foreach ($roles as $role): ?>
                         <option value="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
-            <button type="submit">Create</button>
-            <button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button>
+            <div class="form-actions"><button type="submit">Create</button><button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button></div>
         </form>
     </main>
 </body>

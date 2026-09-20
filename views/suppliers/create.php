@@ -19,16 +19,15 @@
 </head>
 <body>
     <main class="page">
-        <h1>Create Supplier</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Supplier</h1><p class="page-subtitle">Add a supplier for purchase orders.</p></div><nav class="toolbar"><a href="/suppliers">Suppliers</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/suppliers" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>Name <input name="name" required></label>
-            <label>Email <input name="email" type="email"></label>
-            <label>Phone <input name="phone"></label>
-            <label>Address <textarea name="address" rows="3"></textarea></label>
-            <button type="submit">Create</button>
-            <button type="button" class="button button-quiet" data-cancel-href="/suppliers">Cancel</button>
+            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
+            <label class="field"><span class="field-label">Email</span><input name="email" type="email"></label>
+            <label class="field"><span class="field-label">Phone</span><input name="phone"></label>
+            <label class="field"><span class="field-label">Address</span><textarea name="address" rows="3"></textarea></label>
+            <div class="form-actions"><button type="submit">Create</button><button type="button" class="button button-quiet" data-cancel-href="/suppliers">Cancel</button></div>
         </form>
     </main>
 </body>

@@ -19,13 +19,12 @@
 </head>
 <body>
     <main class="page">
-        <h1>Create Purchase Order</h1>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Purchase Order</h1><p class="page-subtitle">Create a draft purchase order for replenishment.</p></div><nav class="toolbar"><a href="/purchase-orders">Purchase Orders</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/purchase-orders" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>Order Number <input name="order_number" required value="PO-<?= date('YmdHis') ?>"></label>
-            <label>
-                Supplier
+            <label class="field"><span class="field-label">Order Number</span><input name="order_number" required value="PO-<?= date('YmdHis') ?>"></label>
+            <label class="field"><span class="field-label">Supplier</span>
                 <select name="supplier_id" required>
                     <?php foreach ($suppliers as $supplier): ?>
                         <?php if ($supplier->isActive()): ?>
@@ -34,8 +33,7 @@
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>
-                Destination Warehouse
+            <label class="field"><span class="field-label">Destination Warehouse</span>
                 <select name="warehouse_id" required>
                     <?php foreach ($warehouses as $warehouse): ?>
                         <?php if ($warehouse->isActive()): ?>
@@ -44,18 +42,16 @@
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>
-                Product
+            <label class="field"><span class="field-label">Product</span>
                 <select name="product_id" required>
                     <?php foreach ($products as $product): ?>
                         <option value="<?= $product->id() ?>"><?= htmlspecialchars($product->sku() . ' - ' . $product->name(), ENT_QUOTES, 'UTF-8') ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>Quantity <input name="quantity" type="number" min="1" required></label>
-            <label>Purchase Price <input name="purchase_price" type="number" min="0" step="0.01" required></label>
-            <button type="submit">Create Draft</button>
-            <button type="button" class="button button-quiet" data-cancel-href="/purchase-orders">Cancel</button>
+            <label class="field"><span class="field-label">Quantity</span><input name="quantity" type="number" min="1" required></label>
+            <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required></label>
+            <div class="form-actions"><button type="submit">Create Draft</button><button type="button" class="button button-quiet" data-cancel-href="/purchase-orders">Cancel</button></div>
         </form>
     </main>
 </body>
