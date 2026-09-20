@@ -115,3 +115,9 @@ test('defines selection control and bulk action hooks', () => {
         assert.ok(css.includes(selector), `missing ${selector}`);
     }
 });
+
+test('defines cross-page form and detail component hooks', () => {
+    for (const selector of ['.form-actions', '.detail-summary', '.detail-table']) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+});
