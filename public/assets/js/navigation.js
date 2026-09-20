@@ -26,6 +26,7 @@
 
             const sidebar = document.createElement('aside');
             sidebar.className = 'sidebar';
+            sidebar.id = 'primary-navigation';
             sidebar.innerHTML = `
                 <a class="brand" href="/">
                     <span class="brand-mark">IO</span>
@@ -34,15 +35,65 @@
                 <nav class="side-nav" aria-label="Main navigation">
                     ${navItems.map(([label, href]) => {
                         const active = location.pathname === href || (href !== '/' && location.pathname.startsWith(href));
-                        return `<a class="${active ? 'is-active' : ''}" href="${href}">${label}</a>`;
+                        return `<a class="${active ? 'is-active' : ''}" href="${href}"${active ? ' aria-current="page"' : ''}>${label}</a>`;
                     }).join('')}
                 </nav>
             `;
 
             const content = document.createElement('div');
             content.className = 'main-content';
+            main.id = main.id || 'main-content';
+
+            const skipLink = document.createElement('a');
+            skipLink.className = 'skip-link';
+            skipLink.href = '#main-content';
+            skipLink.textContent = 'Skip to main content';
+
+            const menuButton = document.createElement('button');
+            menuButton.className = 'sidebar-toggle';
+            menuButton.type = 'button';
+            menuButton.setAttribute('aria-controls', sidebar.id);
+            menuButton.setAttribute('aria-expanded', 'false');
+            menuButton.textContent = 'Menu';
+
+            const backdrop = document.createElement('button');
+            backdrop.className = 'sidebar-backdrop';
+            backdrop.type = 'button';
+            backdrop.setAttribute('aria-label', 'Close navigation menu');
+            backdrop.tabIndex = -1;
+
+            const closeDrawer = () => {
+                sidebar.classList.remove('is-open');
+                backdrop.classList.remove('is-open');
+                document.body.classList.remove('has-sidebar-drawer');
+                menuButton.setAttribute('aria-expanded', 'false');
+                menuButton.focus();
+            };
+
+            const openDrawer = () => {
+                sidebar.classList.add('is-open');
+                backdrop.classList.add('is-open');
+                document.body.classList.add('has-sidebar-drawer');
+                menuButton.setAttribute('aria-expanded', 'true');
+            };
+
+            menuButton.addEventListener('click', () => {
+                if (sidebar.classList.contains('is-open')) {
+                    closeDrawer();
+                    return;
+                }
+                openDrawer();
+            });
+            backdrop.addEventListener('click', closeDrawer);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                    closeDrawer();
+                }
+            });
+
             main.parentNode?.insertBefore(shell, main);
-            shell.append(sidebar, content);
+            shell.append(sidebar, backdrop, content);
+            content.append(skipLink, menuButton);
             content.append(main);
         },
     };

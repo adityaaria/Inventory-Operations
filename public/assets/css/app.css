@@ -765,6 +765,32 @@ td.empty {
     min-height: 100vh;
 }
 
+.skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 60;
+    transform: translateY(-180%);
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--surface);
+    font-weight: 650;
+    text-decoration: none;
+    transition: transform var(--motion-fast) ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    transform: translateY(0);
+    color: var(--surface);
+}
+
+.sidebar-toggle,
+.sidebar-backdrop {
+    display: none;
+}
+
 .sidebar {
     position: sticky;
     top: 0;
@@ -833,9 +859,17 @@ td.empty {
     color: var(--primary-dark);
 }
 
+.side-nav a[aria-current="page"] {
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
 .main-content {
     min-width: 0;
     padding: 0.1px 0;
+}
+
+.main-content > .sidebar-toggle {
+    margin: 1rem 1.125rem 0;
 }
 
 .app-shell .page {
@@ -1312,5 +1346,85 @@ button.is-loading::before {
 
     .chart-row strong {
         text-align: left;
+    }
+}
+
+@media (max-width: 760px) {
+    body.has-sidebar-drawer {
+        overflow: hidden;
+    }
+
+    .app-shell {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 55;
+        width: min(18rem, calc(100vw - 3rem));
+        min-height: 100vh;
+        overflow-y: auto;
+        border-right: 1px solid var(--line);
+        border-bottom: 0;
+        transform: translateX(-105%);
+        transition: transform var(--motion-normal) ease;
+    }
+
+    .sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.45rem;
+        padding: 0.55rem 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--text);
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        border: 0;
+        background: rgba(15, 23, 42, 0.42);
+        opacity: 0;
+        pointer-events: none;
+        cursor: pointer;
+        transition: opacity var(--motion-normal) ease;
+    }
+
+    .sidebar-backdrop.is-open {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .main-content {
+        width: 100%;
+    }
+
+    .page-header {
+        flex-wrap: wrap;
+    }
+
+    .page-header .toolbar {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+    }
+
+    .app-shell .page {
+        width: min(100%, calc(100% - 2rem));
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
     }
 }
