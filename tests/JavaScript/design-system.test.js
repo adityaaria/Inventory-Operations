@@ -81,3 +81,28 @@ test('defines layout and navigation component hooks', () => {
         assert.ok(css.includes(selector), `missing ${selector}`);
     }
 });
+
+test('defines typography scale and weight tokens', () => {
+    for (const token of [
+        '--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl',
+        '--fw-regular', '--fw-medium', '--fw-semibold', '--fw-bold',
+    ]) {
+        assert.match(css, new RegExp(`${token}\\s*:`), `missing ${token}`);
+    }
+});
+
+test('uses typography tokens in primary content selectors', () => {
+    for (const selector of ['body', 'h1', '.page-subtitle', '.app-title', '.side-nav a', '.data-table', '.metric-card']) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+    assert.match(css, /\.page-subtitle[\s\S]*var\(--fs-/);
+    assert.match(css, /\.metric-card[\s\S]*var\(--fs-/);
+});
+
+test('defines active palette aliases for migrated surfaces', () => {
+    for (const token of ['--page-tint', '--surface-active', '--accent-soft', '--shadow', '--shadow-soft']) {
+        assert.match(css, new RegExp(`${token}\\s*:`), `missing ${token}`);
+    }
+    assert.match(css, /\.app-title[\s\S]*var\(--accent/);
+    assert.match(css, /radial-gradient[\s\S]*var\(--page-tint/);
+});
