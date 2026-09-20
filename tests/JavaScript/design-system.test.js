@@ -106,3 +106,12 @@ test('defines active palette aliases for migrated surfaces', () => {
     assert.match(css, /\.app-title[\s\S]*var\(--accent/);
     assert.match(css, /radial-gradient[\s\S]*var\(--page-tint/);
 });
+
+test('defines selection control and bulk action hooks', () => {
+    for (const selector of [
+        '.field select', '.filters select', '.form select', '.table-row-select',
+        '.table-select-all', '.bulk-action-bar', '.bulk-action-bar.is-visible',
+    ]) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+});
