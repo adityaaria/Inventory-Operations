@@ -31,17 +31,17 @@
             </nav>
         </header>
         <form method="get" action="/purchase-orders" class="filters">
-            <input name="q" placeholder="Search order or supplier" value="<?= htmlspecialchars($criteria->term(), ENT_QUOTES, 'UTF-8') ?>">
-            <select name="status">
+            <label class="field"><span class="field-label">Search</span><input name="q" placeholder="Search order or supplier" value="<?= htmlspecialchars($criteria->term(), ENT_QUOTES, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Status</span><select name="status">
                 <option value="">All statuses</option>
                 <?php foreach (['Draft', 'Ordered', 'PartiallyReceived', 'Received', 'Cancelled'] as $status): ?>
                     <option value="<?= $status ?>" <?= $criteria->status() === $status ? 'selected' : '' ?>><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></option>
                 <?php endforeach; ?>
-            </select>
-            <select name="direction">
+            </select></label>
+            <label class="field"><span class="field-label">Order</span><select name="direction">
                 <option value="desc" <?= $criteria->direction() === 'desc' ? 'selected' : '' ?>>Newest</option>
                 <option value="asc" <?= $criteria->direction() === 'asc' ? 'selected' : '' ?>>Oldest</option>
-            </select>
+            </select></label>
             <button type="submit">Filter</button>
         </form>
         <table class="data-table">
@@ -98,7 +98,7 @@
             <span class="pagination-summary">Total <?= $result->total() ?> purchase orders</span>
             <div class="pagination-actions">
                 <?php if ($result->page() > 1): ?><a href="<?= htmlspecialchars($previousPageUrl, ENT_QUOTES, 'UTF-8') ?>">Previous</a><?php else: ?><span aria-disabled="true">Previous</span><?php endif; ?>
-                <strong class="pagination-current">Page <?= $result->page() ?> of <?= $result->pages() ?></strong>
+                <strong class="pagination-current" aria-current="page">Page <?= $result->page() ?> of <?= $result->pages() ?></strong>
                 <?php if ($result->page() < $result->pages()): ?><a href="<?= htmlspecialchars($nextPageUrl, ENT_QUOTES, 'UTF-8') ?>">Next</a><?php else: ?><span aria-disabled="true">Next</span><?php endif; ?>
             </div>
         </nav>

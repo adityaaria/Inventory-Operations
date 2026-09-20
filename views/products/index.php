@@ -31,22 +31,22 @@
                 <?php if ($canWrite): ?><button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button><?php endif; ?>
             </nav>
         </header>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="get" action="/products" class="filters">
-            <input name="q" placeholder="Search name or SKU" value="<?= htmlspecialchars($criteria->term(), ENT_QUOTES, 'UTF-8') ?>">
-            <select name="category_id">
+            <label class="field"><span class="field-label">Search</span><input name="q" placeholder="Search name or SKU" value="<?= htmlspecialchars($criteria->term(), ENT_QUOTES, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Category</span><select name="category_id">
                 <option value="">All categories</option>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?= $category->id() ?>" <?= $criteria->categoryId() === $category->id() ? 'selected' : '' ?>>
                         <?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>
                     </option>
                 <?php endforeach; ?>
-            </select>
-            <select name="stock_status">
+            </select></label>
+            <label class="field"><span class="field-label">Stock status</span><select name="stock_status">
                 <option value="">All stock</option>
                 <option value="low" <?= $criteria->stockStatus() === 'low' ? 'selected' : '' ?>>Low stock</option>
                 <option value="normal" <?= $criteria->stockStatus() === 'normal' ? 'selected' : '' ?>>Normal stock</option>
-            </select>
+            </select></label>
             <button type="submit">Filter</button>
         </form>
         <?php if ($canWrite): ?>
@@ -129,7 +129,7 @@
             <span class="pagination-summary">Total <?= $result->total() ?> products</span>
             <div class="pagination-actions">
                 <?php if ($result->page() > 1): ?><a href="<?= htmlspecialchars($previousPageUrl, ENT_QUOTES, 'UTF-8') ?>">Previous</a><?php else: ?><span aria-disabled="true">Previous</span><?php endif; ?>
-                <strong class="pagination-current">Page <?= $result->page() ?> of <?= $result->pages() ?></strong>
+                <strong class="pagination-current" aria-current="page">Page <?= $result->page() ?> of <?= $result->pages() ?></strong>
                 <?php if ($result->page() < $result->pages()): ?><a href="<?= htmlspecialchars($nextPageUrl, ENT_QUOTES, 'UTF-8') ?>">Next</a><?php else: ?><span aria-disabled="true">Next</span><?php endif; ?>
             </div>
         </nav>

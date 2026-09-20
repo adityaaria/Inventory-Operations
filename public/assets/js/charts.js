@@ -12,9 +12,14 @@
                 }
                 const entries = Object.entries(data);
                 if (entries.length === 0) {
+                    chart.setAttribute('role', 'status');
                     chart.innerHTML = '<div class="empty-state"><strong>No chart data</strong><span>There are no records for this widget yet.</span></div>';
                     return;
                 }
+                const labelledBy = chart.getAttribute('aria-labelledby');
+                const label = labelledBy ? document.getElementById(labelledBy)?.textContent?.trim() : '';
+                chart.setAttribute('role', 'img');
+                if (label) chart.setAttribute('aria-label', `${label} chart`);
                 const max = Math.max(...entries.map(([, value]) => Number(value) || 0), 1);
                 chart.innerHTML = entries.map(([label, value]) => {
                     const numeric = Number(value) || 0;

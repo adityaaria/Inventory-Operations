@@ -30,15 +30,15 @@
         <section class="report-grid">
             <article class="report-panel">
                 <form class="form" method="get" action="/reports/orders.csv">
-                    <label>From <input name="from" type="date"></label>
-                    <label>To <input name="to" type="date"></label>
+                    <label class="field"><span class="field-label">From</span><input name="from" type="date"></label>
+                    <label class="field"><span class="field-label">To</span><input name="to" type="date"></label>
                     <button type="submit">Download Orders CSV</button>
                 </form>
             </article>
             <article class="report-panel">
                 <form class="form" method="get" action="/reports/stock-ledger.csv">
-                    <label>From <input name="from" type="date"></label>
-                    <label>To <input name="to" type="date"></label>
+                    <label class="field"><span class="field-label">From</span><input name="from" type="date"></label>
+                    <label class="field"><span class="field-label">To</span><input name="to" type="date"></label>
                     <button type="submit">Download Stock Ledger CSV</button>
                 </form>
             </article>

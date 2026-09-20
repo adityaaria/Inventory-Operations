@@ -65,12 +65,12 @@
         </section>
         <section class="dashboard-grid">
             <article class="dashboard-panel">
-                <h2>Purchase Order Status</h2>
-                <div class="chart" data-chart="<?= $purchaseChart ?>"></div>
+                <h2 id="purchase-order-status-heading">Purchase Order Status</h2>
+                <div class="chart" data-chart="<?= $purchaseChart ?>" aria-labelledby="purchase-order-status-heading"></div>
             </article>
             <article class="dashboard-panel">
-                <h2>Sales Order Status</h2>
-                <div class="chart" data-chart="<?= $salesChart ?>"></div>
+                <h2 id="sales-order-status-heading">Sales Order Status</h2>
+                <div class="chart" data-chart="<?= $salesChart ?>" aria-labelledby="sales-order-status-heading"></div>
             </article>
             <article class="dashboard-panel">
                 <h2>Purchase Status Data</h2>

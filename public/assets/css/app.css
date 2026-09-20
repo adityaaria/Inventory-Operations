@@ -27,6 +27,10 @@
     --focus-ring: rgba(255, 90, 31, 0.28);
     --motion-fast: 150ms;
     --motion-normal: 220ms;
+    --table-header: #f1f5f9;
+    --table-row-hover: #fff7ed;
+    --state-muted: #98a2b3;
+    --state-error: var(--danger);
     --radius: 8px;
 
     --space-1: 0.25rem;
@@ -472,7 +476,7 @@ td,
 
 th,
 .data-table th {
-    background: #f1f5f9;
+    background: var(--table-header);
     color: #344054;
     font-size: 0.78rem;
     font-weight: 560;
@@ -485,7 +489,7 @@ tbody tr:nth-child(even) td {
 }
 
 tbody tr:hover td {
-    background: #f3f7ff;
+    background: var(--table-row-hover);
 }
 
 tbody tr:last-child td {
@@ -638,6 +642,33 @@ td input[type="number"] {
     background: var(--surface-muted);
     color: var(--muted);
     text-align: center;
+}
+
+.table-loading,
+.filtered-empty,
+.data-error {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface-muted);
+    color: var(--muted);
+}
+
+.table-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 4rem;
+    padding: var(--space-4);
+}
+
+.filtered-empty {
+    background: var(--surface-muted);
+}
+
+.data-error {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+    color: var(--state-error);
 }
 
 tr.empty td,
@@ -890,6 +921,12 @@ td.empty {
     border-radius: var(--radius-md);
     background: var(--surface);
     box-shadow: var(--shadow-soft);
+}
+
+.dashboard-panel,
+.metric-card,
+.quick-panel {
+    min-width: 0;
 }
 
 .dashboard-panel h2,

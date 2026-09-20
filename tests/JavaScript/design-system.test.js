@@ -57,3 +57,18 @@ test('defines modal footer and accessible dialog states', () => {
     assert.match(css, /\.modal-close:focus-visible/);
     assert.match(css, /transition:[^;]*var\(--motion-normal\)/);
 });
+
+test('defines data-heavy component states', () => {
+    for (const selector of [
+        '.table-toolbar', '.table-search', '.table-loading', '.filtered-empty',
+        '.data-error', '.metric-card', '.dashboard-panel', '.chart', '.quick-panel',
+    ]) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+});
+
+test('defines dashboard chart state styling', () => {
+    for (const selector of ['.chart-row', '.chart-track', '.quick-list']) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+});

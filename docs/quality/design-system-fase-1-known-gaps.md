@@ -1,8 +1,9 @@
 # Design System Fase 1 — Known Gaps
 
 Date: 2026-09-20
-Scope: Core interaction enhancement: semantic tokens, buttons, forms, alerts,
-status badges, and modal/dialog states.
+Scope: Core interaction plus data-heavy enhancement: semantic tokens, buttons,
+forms, alerts, status badges, modal/dialog, tables, filters, pagination, and
+dashboard data states.
 Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenced by
 `refactor-instructions-specific.md` but not present in this repository).
 
@@ -30,7 +31,9 @@ Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenc
 - Added `.button-danger`, `.button-quiet`, `.field`, `.field-label`, `.field-hint`, and semantic alert variants.
 - Added canonical status modifiers while preserving legacy order/stock aliases.
 - Added `.modal-footer` and modal close-button focus treatment without changing dialog lifecycle behavior.
-- Added `tests/JavaScript/design-system.test.js`; full JavaScript suite passed with 23 tests.
+- Added data-heavy tokens/states for tables, filtered-empty, data error, metrics, panels, and dashboard charts.
+- Added accessible `aria-sort`, table search labeling, filtered-empty rows, pagination `aria-current`, and chart roles.
+- Added `tests/JavaScript/design-system.test.js`, `tests/JavaScript/tables.test.js`, and `tests/JavaScript/charts.test.js`; the current JavaScript suite contains 28 passing tests.
 
 ## Deferred entirely (not started)
 
@@ -38,13 +41,11 @@ Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenc
   `refactor-instructions-specific.md` gave 4 example sizes (badge 11px,
   table 13px, page title 20px, big number 24px) without a complete scale or
   token names.
-- Fase 2 onward (card, button variants, badge color mapping, table, sidebar,
-  modal, and the two genuinely new components — dropdown/toggle and
-  bulk-action-bar) — all blocked on the same three missing files.
+- Future work remains for a complete font-size/font-weight scale, sidebar/app-shell polish, palette cleanup, and genuinely new components such as dropdown/toggle and bulk-action-bar.
 
-## What unblocks the rest
+## Remaining external references
 
-The user needs to provide `design-system.md` (full token scale including
-the above), `components.css` (toggle switch spec), and `js/table-select.js`
-(bulk-action-bar event-delegation reference pattern) before Fase 2 can be
-planned with the same precision as this phase.
+`design-system.md`, `components.css`, and `js/table-select.js` are not present
+in this repository. They are not required for the completed table/dashboard
+slice, but would be useful references before adding new toggle or bulk-action
+components.
