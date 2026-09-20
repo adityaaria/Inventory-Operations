@@ -72,3 +72,12 @@ test('defines dashboard chart state styling', () => {
         assert.ok(css.includes(selector), `missing ${selector}`);
     }
 });
+
+test('defines layout and navigation component hooks', () => {
+    for (const selector of [
+        '.app-shell', '.sidebar', '.main-content', '.page-header', '.toolbar',
+        '.skip-link', '.sidebar-toggle', '.sidebar-backdrop',
+    ]) {
+        assert.ok(css.includes(selector), `missing ${selector}`);
+    }
+});
