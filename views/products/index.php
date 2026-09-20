@@ -61,7 +61,9 @@
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                             <label>Import CSV <textarea name="csv_data" rows="3" placeholder="sku,name,unit,purchase_price,selling_price,reorder_point,category_id"></textarea></label>
                             <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
-                            <button type="submit">Import CSV</button>
+                            <div class="modal-footer">
+                                <button type="submit">Import CSV</button>
+                            </div>
                         </form>
                     </div>
                 </section>

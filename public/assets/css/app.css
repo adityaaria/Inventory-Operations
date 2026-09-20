@@ -8,6 +8,7 @@
     --line: #dde3ea;
     --line-strong: #b6c2d0;
     --primary: #16181D;
+    --primary-hover: #2f3238;
     --primary-dark: #1d4ed8;
     --accent: #FF5A1F;
     --accent-soft: #ccfbf1;
@@ -23,6 +24,9 @@
     --draft-bg: #e2e8f0;
     --shadow: 0 22px 70px rgba(15, 23, 42, 0.10);
     --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.06);
+    --focus-ring: rgba(255, 90, 31, 0.28);
+    --motion-fast: 150ms;
+    --motion-normal: 220ms;
     --radius: 8px;
 
     --space-1: 0.25rem;
@@ -127,7 +131,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-    outline: 3px solid rgba(29, 78, 216, 0.28);
+    outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
 }
 
@@ -209,7 +213,7 @@ td form {
     line-height: 1.2;
     text-decoration: none;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+    transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, color var(--motion-fast) ease;
 }
 
 .toolbar a:hover,
@@ -240,7 +244,7 @@ button,
     line-height: 1.2;
     text-align: center;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 button:hover,
@@ -266,10 +270,38 @@ button[type="submit"] {
 .button-primary:focus,
 button[type="submit"]:hover,
 button[type="submit"]:focus {
-    border-color: var(--primary-dark);
-    background: var(--primary-dark);
+    border-color: var(--primary-hover);
+    background: var(--primary-hover);
     color: var(--surface);
     transform: translateY(-1px);
+}
+
+.button-danger {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: var(--surface);
+}
+
+.button-danger:hover,
+.button-danger:focus {
+    border-color: #b83232;
+    background: #b83232;
+    color: var(--surface);
+}
+
+.button-quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+    box-shadow: none;
+}
+
+.button-quiet:hover,
+.button-quiet:focus {
+    border-color: var(--line);
+    background: var(--surface-muted);
+    color: var(--text);
+    box-shadow: none;
 }
 
 button[disabled],
@@ -290,6 +322,24 @@ button[disabled],
     gap: 0.4rem;
     color: var(--text);
     font-weight: 560;
+}
+
+.field {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--text);
+    font-weight: 560;
+}
+
+.field-label {
+    color: inherit;
+    font-weight: inherit;
+}
+
+.field-hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 400;
 }
 
 .field-error {
@@ -336,7 +386,7 @@ button[disabled],
 .filters input:focus,
 .filters select:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+    box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 input[type="hidden"] {
@@ -480,6 +530,8 @@ td input[type="number"] {
 
 .status-ordered,
 .status-pending,
+.status-low,
+.status-warning,
 .status-pendingapproval,
 .status-pending-approval,
 .status-partial,
@@ -492,6 +544,7 @@ td input[type="number"] {
 }
 
 .status-approved,
+.status-success,
 .status-received,
 .status-fulfilled {
     border-color: #bbf7d0;
@@ -501,6 +554,7 @@ td input[type="number"] {
 
 .status-cancelled,
 .status-canceled,
+.status-danger,
 .status-inactive {
     border-color: #fecaca;
     background: var(--danger-bg);
@@ -543,6 +597,37 @@ td input[type="number"] {
     color: var(--danger);
     font-weight: 560;
     overflow-wrap: anywhere;
+}
+
+.alert-info,
+.alert-success,
+.alert-warning,
+.alert-danger {
+    border-color: var(--line);
+}
+
+.alert-info {
+    border-color: #bae6fd;
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.alert-success {
+    border-color: #bbf7d0;
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.alert-warning {
+    border-color: #fde68a;
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.alert-danger {
+    border-color: #fecaca;
+    background: var(--danger-bg);
+    color: var(--danger);
 }
 
 .empty {
@@ -892,7 +977,7 @@ td.empty {
 .confirm-backdrop,
 .import-dialog {
     opacity: 0;
-    transition: opacity 0.18s ease;
+    transition: opacity var(--motion-normal) ease;
 }
 
 .modal-backdrop.is-open,
@@ -905,7 +990,7 @@ td.empty {
     z-index: 30;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--motion-fast) ease;
 }
 
 .is-page-loading .page-loading {
@@ -955,7 +1040,7 @@ button.is-loading::before {
     box-shadow: var(--shadow);
     transform: scale(0.96);
     opacity: 0;
-    transition: transform 0.18s ease, opacity 0.18s ease;
+    transition: transform var(--motion-normal) ease, opacity var(--motion-normal) ease;
 }
 
 .is-open .modal-panel,
@@ -981,8 +1066,38 @@ button.is-loading::before {
     margin: 0;
 }
 
+.modal-close {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.6rem;
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+    box-shadow: none;
+}
+
+.modal-close:hover,
+.modal-close:focus,
+.modal-close:focus-visible {
+    border-color: var(--line);
+    background: var(--surface-muted);
+    color: var(--text);
+    box-shadow: none;
+}
+
 .modal-body {
     padding: var(--space-4);
+}
+
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-top: 1px solid var(--line);
+    background: var(--surface-muted);
 }
 
 .modal-backdrop[aria-busy="true"] .modal-panel {
@@ -1019,6 +1134,15 @@ button.is-loading::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
     .modal-backdrop,
     .confirm-backdrop,
     .import-dialog,

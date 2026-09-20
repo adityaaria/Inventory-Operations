@@ -59,7 +59,7 @@
                         <td><?= htmlspecialchars($customer->email(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($customer->phone(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($customer->address(), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><span class="status-badge <?= $customer->isActive() ? 'status-active' : 'status-cancelled' ?>"><?= $customer->isActive() ? 'Active' : 'Inactive' ?></span></td>
+                        <td><span class="status-badge <?= $customer->isActive() ? 'status-active status-success' : 'status-cancelled status-danger' ?>"><?= $customer->isActive() ? 'Active' : 'Inactive' ?></span></td>
                         <?php if ($canWrite): ?>
                             <td>
                                 <a class="action-link" href="/customers/edit?id=<?= $customer->id() ?>">Edit</a>

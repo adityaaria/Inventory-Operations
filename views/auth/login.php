@@ -27,16 +27,16 @@
             </div>
         </header>
         <?php if ($error !== ''): ?>
-            <p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
         <form method="post" action="/login" class="form">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>
-                Email
+            <label class="field">
+                <span class="field-label">Email</span>
                 <input name="email" type="email" required value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>">
             </label>
-            <label>
-                Password
+            <label class="field">
+                <span class="field-label">Password</span>
                 <input name="password" type="password" required>
             </label>
             <button class="button-primary" type="submit">Login</button>

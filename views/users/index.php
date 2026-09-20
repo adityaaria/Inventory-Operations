@@ -47,7 +47,9 @@
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         <label>Import CSV <textarea name="csv_data" rows="3" placeholder="name,email,password,role"></textarea></label>
                         <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
-                        <button type="submit">Import CSV</button>
+                        <div class="modal-footer">
+                            <button type="submit">Import CSV</button>
+                        </div>
                     </form>
                 </div>
             </section>
@@ -68,7 +70,7 @@
                         <td><?= htmlspecialchars($user->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($user->email(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($user->role(), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><span class="status-badge <?= $user->isActive() ? 'status-active' : 'status-cancelled' ?>"><?= $user->isActive() ? 'Active' : 'Inactive' ?></span></td>
+                        <td><span class="status-badge <?= $user->isActive() ? 'status-active status-success' : 'status-cancelled status-danger' ?>"><?= $user->isActive() ? 'Active' : 'Inactive' ?></span></td>
                         <td>
                             <a class="action-link" href="/users/edit?id=<?= $user->id() ?>">Edit</a>
                             <form method="post" action="<?= $user->isActive() ? '/users/deactivate' : '/users/activate' ?>">

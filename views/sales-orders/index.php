@@ -59,6 +59,12 @@
                     $statusClass = $order->status() === 'PendingApproval'
                         ? 'pending'
                         : strtolower(str_replace([' ', '_'], '-', $order->status()));
+                    $statusTone = match ($order->status()) {
+                        'Approved', 'Fulfilled' => 'status-success',
+                        'PendingApproval' => 'status-warning',
+                        'Cancelled' => 'status-danger',
+                        default => 'status-normal',
+                    };
                     $customer = $customers[$order->customerId()] ?? null;
                     $warehouse = $warehouses[$order->sourceWarehouseId()] ?? null;
                     ?>
@@ -67,7 +73,7 @@
                         <td><?= htmlspecialchars($customer === null ? 'Unknown' : $customer->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($warehouse === null ? 'Unknown' : $warehouse->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td>
-                            <span class="status-badge status-<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>">
+                            <span class="status-badge <?= $statusTone ?> status-<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>">
                                 <?= htmlspecialchars($order->status(), ENT_QUOTES, 'UTF-8') ?>
                             </span>
                         </td>

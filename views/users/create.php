@@ -21,7 +21,7 @@
     <main class="page">
         <h1>Create User</h1>
         <?php if ($error !== ''): ?>
-            <p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
         <form method="post" action="/users" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -37,7 +37,7 @@
                 </select>
             </label>
             <button type="submit">Create</button>
-            <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+            <button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button>
         </form>
     </main>
 </body>

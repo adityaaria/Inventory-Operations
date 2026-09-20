@@ -20,7 +20,7 @@
 <body>
     <main class="page">
         <h1>Edit Category</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($category !== null): ?>
             <form method="post" action="/categories/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -28,7 +28,7 @@
                 <label>Name <input name="name" required value="<?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
                 <label>Description <textarea name="description" rows="3"><?= htmlspecialchars($category->description(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
                 <button type="submit">Update</button>
-                <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+                <button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button>
             </form>
         <?php endif; ?>
     </main>

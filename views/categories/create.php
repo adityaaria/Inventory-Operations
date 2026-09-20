@@ -20,13 +20,13 @@
 <body>
     <main class="page">
         <h1>Create Category</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/categories" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
             <label>Name <input name="name" required></label>
             <label>Description <textarea name="description" rows="3"></textarea></label>
             <button type="submit">Create</button>
-            <button type="button" class="button" data-cancel-href="/categories">Cancel</button>
+            <button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button>
         </form>
     </main>
 </body>

@@ -1,7 +1,8 @@
 # Design System Fase 1 — Known Gaps
 
-Date: 2026-09-11
-Scope: `:root` palette swap + border-radius/#ffffff token-migration cleanup only.
+Date: 2026-09-20
+Scope: Core interaction enhancement: semantic tokens, buttons, forms, alerts,
+status badges, and modal/dialog states.
 Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenced by
 `refactor-instructions-specific.md` but not present in this repository).
 
@@ -17,10 +18,19 @@ Blocked on: `design-system.md`, `components.css`, `js/table-select.js` (referenc
   `rgba(15, 118, 110, 0.2)` border (teal-based) and `var(--surface-tint)`
   (`#eef6f4`, mint-tinted background) — both visibly mismatched against the
   new orange accent used elsewhere on the same page.
-- Global focus ring (`app.css:130`) — hardcoded blue `outline: 3px solid rgba(29, 78, 216, 0.28)` is not derived from any token; every focused control still rings blue against the new near-black `--primary` palette.
-- Button hover/focus drop shadows (`app.css:222`, `:253`, `:262`) — hardcoded blue-tinted `box-shadow` values (`rgba(37, 99, 235, ...)`) now sit under buttons whose background is near-black `#16181D`, creating stark contrast mismatches.
-- Loading spinner track border (`app.css:932`) — hardcoded pale blue `border: 2px solid #bfdbfe` clashes with the new palette.
+- Global focus ring is now derived from `--focus-ring`; browser-level contrast and keyboard smoke verification remain manual.
+- Some legacy blue-tinted shadows and background gradients remain outside the core interaction slice and should be reviewed in a later visual polish pass.
+- Loading spinner track border (`app.css:932`) still uses a legacy pale-blue literal and remains outside this slice.
 - Page background radial gradients (`app.css:62-63`, `:574-575`) — hardcoded old blue (`rgba(37, 99, 235, ...)`) and old teal (`rgba(15, 118, 110, ...)`) tints remain in the background gradients on every page, still presenting old-palette interference.
+
+## Implemented in this slice
+
+- Added `--primary-hover`, `--focus-ring`, `--motion-fast`, and `--motion-normal`.
+- Added reduced-motion behavior for all transitions/animations.
+- Added `.button-danger`, `.button-quiet`, `.field`, `.field-label`, `.field-hint`, and semantic alert variants.
+- Added canonical status modifiers while preserving legacy order/stock aliases.
+- Added `.modal-footer` and modal close-button focus treatment without changing dialog lifecycle behavior.
+- Added `tests/JavaScript/design-system.test.js`; full JavaScript suite passed with 23 tests.
 
 ## Deferred entirely (not started)
 

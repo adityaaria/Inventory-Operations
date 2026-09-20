@@ -59,7 +59,7 @@
                         <td><?= htmlspecialchars($supplier->email(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($supplier->phone(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($supplier->address(), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><span class="status-badge <?= $supplier->isActive() ? 'status-active' : 'status-cancelled' ?>"><?= $supplier->isActive() ? 'Active' : 'Inactive' ?></span></td>
+                        <td><span class="status-badge <?= $supplier->isActive() ? 'status-active status-success' : 'status-cancelled status-danger' ?>"><?= $supplier->isActive() ? 'Active' : 'Inactive' ?></span></td>
                         <?php if ($canWrite): ?>
                             <td>
                                 <a class="action-link" href="/suppliers/edit?id=<?= $supplier->id() ?>">Edit</a>

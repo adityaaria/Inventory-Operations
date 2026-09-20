@@ -20,17 +20,17 @@
 <body>
     <main class="page">
         <h1>Create Product</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/products" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label>SKU <input name="sku" required></label>
-            <label>Name <input name="name" required></label>
-            <label>Unit <input name="unit" required></label>
-            <label>Purchase Price <input name="purchase_price" type="number" min="0" step="0.01" required></label>
-            <label>Selling Price <input name="selling_price" type="number" min="0" step="0.01" required></label>
-            <label>Reorder Point <input name="reorder_point" type="number" min="0" required></label>
-            <label>
-                Category
+            <label class="field"><span class="field-label">SKU</span><input name="sku" required></label>
+            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
+            <label class="field"><span class="field-label">Unit</span><input name="unit" required></label>
+            <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required></label>
+            <label class="field"><span class="field-label">Selling Price</span><input name="selling_price" type="number" min="0" step="0.01" required></label>
+            <label class="field"><span class="field-label">Reorder Point</span><input name="reorder_point" type="number" min="0" required></label>
+            <label class="field">
+                <span class="field-label">Category</span>
                 <select name="category_id" required>
                     <?php foreach ($categories as $category): ?>
                         <option value="<?= $category->id() ?>"><?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?></option>
@@ -38,7 +38,7 @@
                 </select>
             </label>
             <button type="submit">Create</button>
-            <button type="button" class="button" data-cancel-href="/products">Cancel</button>
+            <button type="button" class="button button-quiet" data-cancel-href="/products">Cancel</button>
         </form>
     </main>
 </body>

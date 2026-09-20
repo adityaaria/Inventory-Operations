@@ -20,7 +20,7 @@
 <body>
     <main class="page">
         <h1>Create Customer</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/customers" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
             <label>Name <input name="name" required></label>
@@ -28,7 +28,7 @@
             <label>Phone <input name="phone"></label>
             <label>Address <textarea name="address" rows="3"></textarea></label>
             <button type="submit">Create</button>
-            <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+            <button type="button" class="button button-quiet" data-cancel-href="/customers">Cancel</button>
         </form>
     </main>
 </body>

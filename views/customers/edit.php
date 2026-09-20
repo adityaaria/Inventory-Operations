@@ -20,7 +20,7 @@
 <body>
     <main class="page">
         <h1>Edit Customer</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($customer !== null): ?>
             <form method="post" action="/customers/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -30,7 +30,7 @@
                 <label>Phone <input name="phone" value="<?= htmlspecialchars($customer->phone(), ENT_QUOTES, 'UTF-8') ?>"></label>
                 <label>Address <textarea name="address" rows="3"><?= htmlspecialchars($customer->address(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
                 <button type="submit">Update</button>
-                <button type="button" class="button" data-cancel-href="/customers">Cancel</button>
+                <button type="button" class="button button-quiet" data-cancel-href="/customers">Cancel</button>
             </form>
         <?php endif; ?>
     </main>

@@ -20,7 +20,7 @@
 <body>
     <main class="page">
         <h1>Create Sales Order</h1>
-        <?php if ($error !== ''): ?><p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/sales-orders" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
             <label>Order Number <input name="order_number" required value="SO-<?= date('YmdHis') ?>"></label>
@@ -55,7 +55,7 @@
             <label>Quantity <input name="quantity" type="number" min="1" required></label>
             <label>Selling Price <input name="selling_price" type="number" min="0" step="0.01" required></label>
             <button type="submit">Create Draft</button>
-            <button type="button" class="button" data-cancel-href="/sales-orders">Cancel</button>
+            <button type="button" class="button button-quiet" data-cancel-href="/sales-orders">Cancel</button>
         </form>
     </main>
 </body>

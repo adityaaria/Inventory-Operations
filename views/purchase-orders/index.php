@@ -59,6 +59,12 @@
                     $statusClass = $order->status() === 'PartiallyReceived'
                         ? 'partial'
                         : strtolower(str_replace([' ', '_'], '-', $order->status()));
+                    $statusTone = match ($order->status()) {
+                        'Received' => 'status-success',
+                        'PartiallyReceived', 'Ordered' => 'status-warning',
+                        'Cancelled' => 'status-danger',
+                        default => 'status-normal',
+                    };
                     $supplier = $suppliers[$order->supplierId()] ?? null;
                     $warehouse = $warehouses[$order->destinationWarehouseId()] ?? null;
                     ?>
@@ -67,7 +73,7 @@
                         <td><?= htmlspecialchars($supplier === null ? 'Unknown' : $supplier->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($warehouse === null ? 'Unknown' : $warehouse->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td>
-                            <span class="status-badge status-<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>">
+                            <span class="status-badge <?= $statusTone ?> status-<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>">
                                 <?= htmlspecialchars($order->status(), ENT_QUOTES, 'UTF-8') ?>
                             </span>
                         </td>

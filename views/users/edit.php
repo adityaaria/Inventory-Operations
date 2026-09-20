@@ -21,7 +21,7 @@
     <main class="page">
         <h1>Edit User</h1>
         <?php if ($error !== ''): ?>
-            <p class="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
         <?php if ($user === null): ?>
             <p>User not found.</p>
@@ -42,7 +42,7 @@
                     </select>
                 </label>
                 <button type="submit">Update</button>
-                <button type="button" class="button" data-cancel-href="/users">Cancel</button>
+                <button type="button" class="button button-quiet" data-cancel-href="/users">Cancel</button>
             </form>
         <?php endif; ?>
     </main>
