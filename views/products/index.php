@@ -69,9 +69,10 @@
                 </section>
             </div>
         <?php endif; ?>
-        <table class="data-table">
+        <table class="data-table" data-selectable="products">
             <thead>
                 <tr>
+                    <th class="selection-column" scope="col"><input class="table-select-all" type="checkbox" aria-label="Select all products on this page"></th>
                     <th>SKU</th>
                     <th>Name</th>
                     <th>Unit</th>
@@ -85,11 +86,12 @@
             <tbody>
                 <?php if ($result->items() === []): ?>
                     <tr class="empty">
-                        <td colspan="<?= $canWrite ? 8 : 7 ?>">No products found.</td>
+                        <td colspan="<?= $canWrite ? 9 : 8 ?>">No products found.</td>
                     </tr>
                 <?php endif; ?>
                 <?php foreach ($result->items() as $product): ?>
                     <tr>
+                        <td class="selection-cell"><input class="table-row-select" type="checkbox" aria-label="Select product <?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?>"></td>
                         <td><?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= htmlspecialchars($product->unit(), ENT_QUOTES, 'UTF-8') ?></td>

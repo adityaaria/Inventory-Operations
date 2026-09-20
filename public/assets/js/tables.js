@@ -24,6 +24,7 @@
                         if (search.value !== '') filter(table, search.value);
                     }
                     toolbar.querySelector('[data-export-table]')?.addEventListener('click', () => exportTable(table));
+                    enhanceSelection(table);
                     addSorting(table);
                     upgradeEmptyRows(table);
                 });
@@ -43,6 +44,7 @@
                     if (match) visible += 1;
                 });
                 setGeneratedEmpty(table, visible === 0);
+                syncSelection(table);
 
                 if (canMeasure) {
                     performance.mark(markEnd);
@@ -52,6 +54,7 @@
 
             function addSorting(table) {
                 table.querySelectorAll('thead th').forEach((th, index) => {
+                    if (th.classList.contains('selection-column')) return;
                     th.tabIndex = 0;
                     th.classList.add('sortable');
                     th.setAttribute('aria-sort', th.getAttribute('aria-sort') || 'none');
@@ -63,6 +66,49 @@
                         }
                     });
                 });
+            }
+
+            function enhanceSelection(table) {
+                if (!table.dataset.selectable) return;
+
+                const selectAll = table.querySelector('.table-select-all');
+                const rowCheckboxes = () => [...table.querySelectorAll('.table-row-select')];
+                if (!selectAll) return;
+
+                const bulkBar = document.createElement('div');
+                bulkBar.className = 'bulk-action-bar';
+                bulkBar.setAttribute('role', 'region');
+                bulkBar.setAttribute('aria-label', 'Bulk selection status');
+                bulkBar.innerHTML = '<strong class="bulk-action-count" aria-live="polite" aria-label="Selected count">0 selected</strong><span>Bulk actions are not available.</span>';
+                table.parentNode?.insertBefore(bulkBar, table);
+
+                selectAll.addEventListener('change', () => {
+                    rowCheckboxes().forEach((checkbox) => {
+                        const row = checkbox.closest('tr');
+                        if (!row?.hidden) checkbox.checked = selectAll.checked;
+                    });
+                    syncSelection(table);
+                });
+                rowCheckboxes().forEach((checkbox) => checkbox.addEventListener('change', () => syncSelection(table)));
+                table._selectionBar = bulkBar;
+                syncSelection(table);
+            }
+
+            function syncSelection(table) {
+                const selectAll = table.querySelector('.table-select-all');
+                const checkboxes = [...table.querySelectorAll('.table-row-select')];
+                if (!selectAll || checkboxes.length === 0) return;
+
+                const visible = checkboxes.filter((checkbox) => !checkbox.closest('tr')?.hidden);
+                checkboxes.filter((checkbox) => checkbox.closest('tr')?.hidden).forEach((checkbox) => {
+                    checkbox.checked = false;
+                });
+                const selected = visible.filter((checkbox) => checkbox.checked).length;
+                selectAll.checked = visible.length > 0 && selected === visible.length;
+                selectAll.indeterminate = selected > 0 && selected < visible.length;
+                const count = table._selectionBar?.querySelector('.bulk-action-count');
+                if (count) count.textContent = `${selected} selected`;
+                table._selectionBar?.classList.toggle('is-visible', selected > 0);
             }
 
             function sort(table, index, th) {
@@ -118,7 +164,9 @@
             function exportTable(table) {
                 const rows = [...table.querySelectorAll('tr')]
                     .filter((row) => !row.hidden && !row.classList.contains('empty'))
-                    .map((row) => [...row.children].map((cell) => InventoryUi.escapeCsvCell(cell.textContent)).join(','));
+                    .map((row) => [...row.children]
+                        .filter((cell) => !cell.classList.contains('selection-column') && !cell.classList.contains('selection-cell'))
+                        .map((cell) => InventoryUi.escapeCsvCell(cell.textContent)).join(','));
                 const blob = new Blob([rows.join('\n')], {type: 'text/csv'});
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
