@@ -29,4 +29,38 @@ final class RequestAuditRecorderTest extends TestCase
         self::assertSame(12, $repository->entries()[0]['entity_id']);
         self::assertSame(5, $repository->entries()[0]['actor_id']);
     }
+
+    public function testSkipsNonPostRequests(): void
+    {
+        $repository = new InMemoryAuditLogRepository();
+        $recorder = new RequestAuditRecorder(new AuditLogger($repository));
+
+        $recorder->record(new Request('GET', '/products', [], [], []), new Response('', 200), null);
+
+        self::assertCount(0, $repository->entries());
+    }
+
+    public function testSkipsRequestsWithoutPathSegments(): void
+    {
+        $repository = new InMemoryAuditLogRepository();
+        $recorder = new RequestAuditRecorder(new AuditLogger($repository));
+
+        $recorder->record(new Request('POST', '/', [], [], []), new Response('', 200), null);
+
+        self::assertCount(0, $repository->entries());
+    }
+
+    public function testRecordsFailureStatusAndDefaultsOperationAndActorWhenMissing(): void
+    {
+        $repository = new InMemoryAuditLogRepository();
+        $recorder = new RequestAuditRecorder(new AuditLogger($repository));
+
+        $recorder->record(new Request('POST', '/products', [], [], []), new Response('', 422), null);
+
+        self::assertCount(1, $repository->entries());
+        self::assertSame('products.create', $repository->entries()[0]['action']);
+        self::assertSame('failure', $repository->entries()[0]['status']);
+        self::assertNull($repository->entries()[0]['entity_id']);
+        self::assertNull($repository->entries()[0]['actor_id']);
+    }
 }

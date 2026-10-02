@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use App\Repository\Contract\AuditLogRepositoryInterface;
 use App\Repository\InMemory\InMemoryAuditLogRepository;
 use App\Service\AuditLogger;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class AuditLoggerTest extends TestCase
 {
@@ -21,5 +23,20 @@ final class AuditLoggerTest extends TestCase
         self::assertSame('user.updated', $repository->entries()[0]['action']);
         self::assertSame(7, $repository->entries()[0]['actor_id']);
         self::assertSame(['field' => 'role'], $repository->entries()[0]['metadata']);
+    }
+
+    public function testSwallowsRepositoryFailureWithoutPropagating(): void
+    {
+        $repository = new class implements AuditLogRepositoryInterface {
+            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void
+            {
+                throw new RuntimeException('Audit storage unavailable.');
+            }
+        };
+        $logger = new AuditLogger($repository);
+
+        $logger->record(1, 'user.updated', 'users', 1, 'success', '127.0.0.1', 'Unit Test');
+
+        self::assertTrue(true);
     }
 }

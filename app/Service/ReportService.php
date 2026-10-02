@@ -35,6 +35,8 @@ final class ReportService
         }
 
         $handle = fopen('php://temp', 'r+');
+        // Unreachable in practice: opening an in-memory php://temp stream does not fail under
+        // normal PHP operation. Kept as a defensive guard against a hypothetical stream failure.
         if ($handle === false) {
             throw new \RuntimeException('Unable to create CSV buffer.');
         }

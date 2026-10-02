@@ -37,6 +37,9 @@ final class UserService
         }
 
         $hash = password_hash($password, PASSWORD_BCRYPT);
+        // Unreachable in practice: password_hash() with PASSWORD_BCRYPT on a non-empty string
+        // input does not return a non-string value on supported PHP versions. Kept as a
+        // defensive guard against a hypothetical hashing failure.
         if (!is_string($hash)) {
             throw new InvalidArgumentException('Unable to hash password.');
         }

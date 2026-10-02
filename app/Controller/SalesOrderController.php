@@ -47,6 +47,7 @@ final class SalesOrderController
             'criteria' => $criteria,
             'customers' => $this->customers,
             'warehouses' => $this->warehouses,
+            'canCreate' => in_array($actor->role(), [User::ROLE_ADMIN, User::ROLE_SALES], true),
         ]);
     }
 

@@ -39,4 +39,64 @@ final class StockServiceIssueTest extends TestCase
 
         $service->issue(1, [new StockMovement(10, 3)], 1, 'SO', 99);
     }
+
+    public function testIssueRejectsMissingWarehouse(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Warehouse is required.');
+
+        $service->issue(0, [new StockMovement(10, 1)], 1, 'SO', 99);
+    }
+
+    public function testIssueRejectsMissingPerformer(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Performer is required.');
+
+        $service->issue(1, [new StockMovement(10, 1)], 0, 'SO', 99);
+    }
+
+    public function testIssueRejectsMissingReference(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Reference is required.');
+
+        $service->issue(1, [new StockMovement(10, 1)], 1, 'SO', 0);
+    }
+
+    public function testIssueRejectsEmptyMovementList(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('At least one stock movement is required.');
+
+        $service->issue(1, [], 1, 'SO', 99);
+    }
+
+    public function testIssueRejectsMissingProduct(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Product is required.');
+
+        $service->issue(1, [new StockMovement(0, 1)], 1, 'SO', 99);
+    }
+
+    public function testIssueRejectsNonPositiveQuantity(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Issue quantity must be positive.');
+
+        $service->issue(1, [new StockMovement(10, 0)], 1, 'SO', 99);
+    }
 }

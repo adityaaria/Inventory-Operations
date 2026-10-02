@@ -8,6 +8,7 @@ use App\Entity\Product;
 use App\Entity\ProductStock;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Support\PaginatedResult;
+use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
 use RuntimeException;
@@ -54,20 +55,20 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
         return $this->products[$id] ?? null;
     }
 
-    public function create(string $sku, string $name, string $unit, float $purchasePrice, float $sellingPrice, int $reorderPoint, int $categoryId, bool $isActive): Product
+    public function create(ProductInput $input, bool $isActive): Product
     {
-        $this->assertSkuAvailable($sku, null);
-        $product = new Product($this->nextId++, $sku, $name, $unit, $purchasePrice, $sellingPrice, $reorderPoint, $categoryId, $isActive);
+        $this->assertSkuAvailable($input->sku, null);
+        $product = new Product($this->nextId++, $input->sku, $input->name, $input->unit, $input->purchasePrice, $input->sellingPrice, $input->reorderPoint, $input->categoryId, $isActive);
         $this->products[$product->id()] = $product;
 
         return $product;
     }
 
-    public function update(int $id, string $sku, string $name, string $unit, float $purchasePrice, float $sellingPrice, int $reorderPoint, int $categoryId): Product
+    public function update(int $id, ProductInput $input): Product
     {
         $existing = $this->findRequired($id);
-        $this->assertSkuAvailable($sku, $id);
-        $updated = new Product($id, $sku, $name, $unit, $purchasePrice, $sellingPrice, $reorderPoint, $categoryId, $existing->isActive());
+        $this->assertSkuAvailable($input->sku, $id);
+        $updated = new Product($id, $input->sku, $input->name, $input->unit, $input->purchasePrice, $input->sellingPrice, $input->reorderPoint, $input->categoryId, $existing->isActive());
         $this->products[$id] = $updated;
 
         return $updated;

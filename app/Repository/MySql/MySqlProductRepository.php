@@ -8,6 +8,7 @@ use App\Entity\Product;
 use App\Entity\ProductStock;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Support\PaginatedResult;
+use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use PDO;
 use RuntimeException;
@@ -66,28 +67,28 @@ final class MySqlProductRepository implements ProductRepositoryInterface
         return is_array($row) ? $this->hydrate($row) : null;
     }
 
-    public function create(string $sku, string $name, string $unit, float $purchasePrice, float $sellingPrice, int $reorderPoint, int $categoryId, bool $isActive): Product
+    public function create(ProductInput $input, bool $isActive): Product
     {
         $statement = $this->pdo->prepare(
             'INSERT INTO products (sku, name, unit, purchase_price, selling_price, price, reorder_point, category_id, is_active)
              VALUES (:sku, :name, :unit, :purchase_price, :selling_price, :price, :reorder_point, :category_id, :is_active)'
         );
         $statement->execute([
-            'sku' => $sku,
-            'name' => $name,
-            'unit' => $unit,
-            'purchase_price' => $purchasePrice,
-            'selling_price' => $sellingPrice,
-            'price' => $sellingPrice,
-            'reorder_point' => $reorderPoint,
-            'category_id' => $categoryId,
+            'sku' => $input->sku,
+            'name' => $input->name,
+            'unit' => $input->unit,
+            'purchase_price' => $input->purchasePrice,
+            'selling_price' => $input->sellingPrice,
+            'price' => $input->sellingPrice,
+            'reorder_point' => $input->reorderPoint,
+            'category_id' => $input->categoryId,
             'is_active' => $isActive ? 1 : 0,
         ]);
 
         return $this->findRequired((int) $this->pdo->lastInsertId());
     }
 
-    public function update(int $id, string $sku, string $name, string $unit, float $purchasePrice, float $sellingPrice, int $reorderPoint, int $categoryId): Product
+    public function update(int $id, ProductInput $input): Product
     {
         $statement = $this->pdo->prepare(
             'UPDATE products
@@ -96,14 +97,14 @@ final class MySqlProductRepository implements ProductRepositoryInterface
         );
         $statement->execute([
             'id' => $id,
-            'sku' => $sku,
-            'name' => $name,
-            'unit' => $unit,
-            'purchase_price' => $purchasePrice,
-            'selling_price' => $sellingPrice,
-            'price' => $sellingPrice,
-            'reorder_point' => $reorderPoint,
-            'category_id' => $categoryId,
+            'sku' => $input->sku,
+            'name' => $input->name,
+            'unit' => $input->unit,
+            'purchase_price' => $input->purchasePrice,
+            'selling_price' => $input->sellingPrice,
+            'price' => $input->sellingPrice,
+            'reorder_point' => $input->reorderPoint,
+            'category_id' => $input->categoryId,
         ]);
 
         return $this->findRequired($id);

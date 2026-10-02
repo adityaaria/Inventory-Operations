@@ -22,4 +22,16 @@ final class SessionManagerTest extends TestCase
         $session->logout();
         self::assertNull($session->auth());
     }
+
+    public function testCsrfTokenIsStableAndValidatable(): void
+    {
+        $session = new SessionManager();
+
+        $token = $session->csrfToken();
+
+        self::assertNotSame('', $token);
+        self::assertSame($token, $session->csrfToken());
+        self::assertTrue($session->isValidCsrfToken($token));
+        self::assertFalse($session->isValidCsrfToken('wrong-token'));
+    }
 }

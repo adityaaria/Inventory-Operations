@@ -41,6 +41,56 @@ final class StockServiceReceiptTest extends TestCase
         $service->receive(1, [new StockMovement(10, 0)], 1, 'PO', 99);
     }
 
+    public function testReceiptRejectsMissingWarehouse(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Warehouse is required.');
+
+        $service->receive(0, [new StockMovement(10, 1)], 1, 'PO', 99);
+    }
+
+    public function testReceiptRejectsMissingPerformer(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Performer is required.');
+
+        $service->receive(1, [new StockMovement(10, 1)], 0, 'PO', 99);
+    }
+
+    public function testReceiptRejectsMissingReference(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Reference is required.');
+
+        $service->receive(1, [new StockMovement(10, 1)], 1, '', 99);
+    }
+
+    public function testReceiptRejectsEmptyMovementList(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('At least one stock movement is required.');
+
+        $service->receive(1, [], 1, 'PO', 99);
+    }
+
+    public function testReceiptRejectsMissingProduct(): void
+    {
+        $service = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Product is required.');
+
+        $service->receive(1, [new StockMovement(0, 1)], 1, 'PO', 99);
+    }
+
     public function testReceiptRollsBackWhenLedgerFails(): void
     {
         $stock = new InMemoryStockRepository();

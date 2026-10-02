@@ -51,12 +51,29 @@ final class NativeSessionManager extends SessionManager
             'email' => $authContext->email(),
             'role' => $authContext->role(),
         ];
+        // Non-HttpOnly companion cookie so client-side navigation can hide role-restricted
+        // menu items (e.g. Users). This is a UI convenience only: every route still enforces
+        // its own authorization server-side regardless of what this cookie says.
+        $this->setRoleCookie($authContext->role());
     }
 
     public function logout(): void
     {
         unset($_SESSION[self::AUTH_KEY]);
         session_regenerate_id(true);
+        $this->setRoleCookie(null);
+    }
+
+    private function setRoleCookie(?string $role): void
+    {
+        $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        setcookie('user_role', $role ?? '', [
+            'expires' => $role === null ? time() - 3600 : 0,
+            'path' => '/',
+            'httponly' => false,
+            'samesite' => 'Lax',
+            'secure' => $secure,
+        ]);
     }
 
     public function csrfToken(): string

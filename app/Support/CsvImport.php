@@ -56,6 +56,8 @@ final class CsvImport
     private static function parse(string $csv): array
     {
         $handle = fopen('php://temp', 'r+');
+        // Unreachable in practice: opening an in-memory php://temp stream does not fail under
+        // normal PHP operation. Kept as a defensive guard against a hypothetical stream failure.
         if ($handle === false) {
             throw new InvalidArgumentException('CSV content could not be parsed.');
         }
@@ -64,6 +66,9 @@ final class CsvImport
         rewind($handle);
 
         $header = fgetcsv($handle, 0, ',', '"', '\\');
+        // Unreachable in practice: rowsFromRequest() only reaches parse() with a $csv that is
+        // already guaranteed non-empty after trim(), so fgetcsv() always returns at least one
+        // field for the header line. Kept as a defensive guard against a malformed stream.
         if (!is_array($header) || $header === []) {
             throw new InvalidArgumentException('CSV header is required.');
         }

@@ -34,6 +34,15 @@ final class DashboardServiceTest extends TestCase
         self::assertArrayNotHasKey('inventory_value', $dashboard);
     }
 
+    public function testWarehouseStaffGetsWarehouseDashboard(): void
+    {
+        $dashboard = (new DashboardService(new InMemoryOperationalQueryRepository()))->forActor(new AuthContext(9, 'warehouse@example.test', User::ROLE_WAREHOUSE_STAFF));
+
+        self::assertSame(User::ROLE_WAREHOUSE_STAFF, $dashboard['role']);
+        self::assertArrayNotHasKey('inventory_value', $dashboard);
+        self::assertArrayNotHasKey('sales_user_id', $dashboard);
+    }
+
     public function testDashboardControllerRequiresLogin(): void
     {
         $controller = new DashboardController(

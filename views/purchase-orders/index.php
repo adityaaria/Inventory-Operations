@@ -27,7 +27,7 @@
             </div>
             <nav class="toolbar">
                 <a href="/">Home</a>
-                <a href="/purchase-orders/create">Create Purchase Order</a>
+                <?php if ($canCreate): ?><a href="/purchase-orders/create">Create Purchase Order</a><?php endif; ?>
             </nav>
         </header>
         <form method="get" action="/purchase-orders" class="filters">

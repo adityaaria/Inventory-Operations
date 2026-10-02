@@ -19,6 +19,25 @@ final class SearchCriteriaTest extends TestCase
         self::assertSame('name', $criteria->sortBy());
         self::assertSame('desc', $criteria->direction());
         self::assertSame('SKU', $criteria->term());
+        self::assertNull($criteria->categoryId());
+        self::assertNull($criteria->stockStatus());
+        self::assertSame(0, $criteria->offset());
+    }
+
+    public function testProductCriteriaAppliesCategoryStockStatusAndOffset(): void
+    {
+        $criteria = ProductSearchCriteria::fromArray(['category_id' => '3', 'stock_status' => 'low', 'page' => '2', 'per_page' => '5']);
+
+        self::assertSame(3, $criteria->categoryId());
+        self::assertSame('low', $criteria->stockStatus());
+        self::assertSame(5, $criteria->offset());
+    }
+
+    public function testProductCriteriaAcceptsAllowedSortColumn(): void
+    {
+        $criteria = ProductSearchCriteria::fromArray(['sort' => 'price']);
+
+        self::assertSame('price', $criteria->sortBy());
     }
 
     public function testOrderCriteriaKeepsAllowedStatusAndSort(): void

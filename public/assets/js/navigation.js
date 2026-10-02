@@ -1,18 +1,27 @@
 'use strict';
 
 (function exposeNavigation(root) {
+    // Third element = roles allowed to see the item; omitted/undefined means every
+    // authenticated role can see it. Kept in sync with each section's actual write
+    // capability (see PurchaseOrderService/SalesOrderService/UserController guards) so the
+    // menu only surfaces sections that are actually part of that role's daily workflow.
     const navItems = [
         ['Dashboard', '/dashboard'],
         ['Products', '/products'],
-        ['Purchase Orders', '/purchase-orders'],
+        ['Purchase Orders', '/purchase-orders', ['Admin', 'WarehouseStaff']],
         ['Sales Orders', '/sales-orders'],
         ['Reports', '/reports'],
-        ['Users', '/users'],
+        ['Users', '/users', ['Admin']],
         ['Categories', '/categories'],
         ['Warehouses', '/warehouses'],
-        ['Suppliers', '/suppliers'],
-        ['Customers', '/customers'],
+        ['Suppliers', '/suppliers', ['Admin', 'WarehouseStaff']],
+        ['Customers', '/customers', ['Admin', 'Sales']],
     ];
+
+    function currentRole() {
+        const match = document.cookie.match(/(?:^|; )user_role=([^;]*)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
 
     root.InventoryNavigation = {
         buildShell() {
@@ -20,6 +29,9 @@
             if (!main || document.querySelector('.app-shell') || document.body.classList.contains('auth-body')) {
                 return;
             }
+
+            const role = currentRole();
+            const visibleNavItems = navItems.filter(([, , allowedRoles]) => !allowedRoles || allowedRoles.includes(role));
 
             const shell = document.createElement('div');
             shell.className = 'app-shell';
@@ -33,7 +45,7 @@
                     <span><strong>Inventory Ops</strong><small>Order Management</small></span>
                 </a>
                 <nav class="side-nav" aria-label="Main navigation">
-                    ${navItems.map(([label, href]) => {
+                    ${visibleNavItems.map(([label, href]) => {
                         const active = location.pathname === href || (href !== '/' && location.pathname.startsWith(href));
                         return `<a class="${active ? 'is-active' : ''}" href="${href}"${active ? ' aria-current="page"' : ''}>${label}</a>`;
                     }).join('')}

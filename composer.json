@@ -27,6 +27,7 @@
     "test:unit": "phpunit --testsuite Unit",
     "test:integration": "phpunit --testsuite Integration",
     "test:javascript": "node --test tests/JavaScript/*.test.js",
+    "test:coverage": "phpunit --coverage-html coverage --coverage-text",
     "analyse": "phpstan analyse --memory-limit=256M"
   },
   "config": {

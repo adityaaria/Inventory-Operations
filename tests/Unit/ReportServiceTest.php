@@ -30,4 +30,31 @@ final class ReportServiceTest extends TestCase
 
         $service->ordersCsv('not-date', null, null);
     }
+
+    public function testRejectsFromDateAfterToDate(): void
+    {
+        $service = new ReportService(new InMemoryOperationalQueryRepository());
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $service->ordersCsv('2026-09-01', '2026-08-01', null);
+    }
+
+    public function testOrdersCsvReturnsRowsForSalesUser(): void
+    {
+        $service = new ReportService(new InMemoryOperationalQueryRepository([
+            ['Order' => 'SO-001', 'Status' => 'Approved'],
+        ]));
+
+        $csv = $service->ordersCsv(null, null, 7);
+
+        self::assertStringContainsString('SO-001', $csv);
+    }
+
+    public function testCsvReturnsNoDataMessageWhenRowsAreEmpty(): void
+    {
+        $service = new ReportService(new InMemoryOperationalQueryRepository());
+
+        self::assertSame("No data\n", $service->stockLedgerCsv(null, null));
+    }
 }

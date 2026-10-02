@@ -28,7 +28,7 @@ final class AuthController
             return $this->renderLogin('Invalid email, password, or inactive account.', $email);
         }
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => '/']);
     }
 
     public function logout(Request $request): Response

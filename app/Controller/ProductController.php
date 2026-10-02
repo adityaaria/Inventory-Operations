@@ -13,6 +13,7 @@ use App\Repository\Contract\ProductRepositoryInterface;
 use App\Security\AuthGuard;
 use App\Service\ProductService;
 use App\Support\CsvImport;
+use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
 
@@ -59,8 +60,7 @@ final class ProductController
         $post = $request->post();
 
         try {
-            $this->products->create(
-                $actor,
+            $this->products->create($actor, new ProductInput(
                 (string) ($post['sku'] ?? ''),
                 (string) ($post['name'] ?? ''),
                 (string) ($post['unit'] ?? ''),
@@ -68,7 +68,7 @@ final class ProductController
                 (float) ($post['selling_price'] ?? 0),
                 (int) ($post['reorder_point'] ?? 0),
                 (int) ($post['category_id'] ?? 0),
-            );
+            ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/create.php', [
                 'categories' => $this->categories->active(),
@@ -85,8 +85,7 @@ final class ProductController
 
         try {
             foreach (CsvImport::rowsFromRequest($request) as $row) {
-                $this->products->create(
-                    $actor,
+                $this->products->create($actor, new ProductInput(
                     $row['sku'] ?? '',
                     $row['name'] ?? '',
                     $row['unit'] ?? '',
@@ -94,7 +93,7 @@ final class ProductController
                     (float) ($row['selling_price'] ?? 0),
                     (int) ($row['reorder_point'] ?? 0),
                     (int) ($row['category_id'] ?? 0),
-                );
+                ));
             }
         } catch (\Throwable $exception) {
             $criteria = ProductSearchCriteria::fromArray([]);
@@ -135,9 +134,7 @@ final class ProductController
         $id = (int) ($post['id'] ?? 0);
 
         try {
-            $this->products->update(
-                $actor,
-                $id,
+            $this->products->update($actor, $id, new ProductInput(
                 (string) ($post['sku'] ?? ''),
                 (string) ($post['name'] ?? ''),
                 (string) ($post['unit'] ?? ''),
@@ -145,7 +142,7 @@ final class ProductController
                 (float) ($post['selling_price'] ?? 0),
                 (int) ($post['reorder_point'] ?? 0),
                 (int) ($post['category_id'] ?? 0),
-            );
+            ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/edit.php', [
                 'product' => $this->repository->findById($id),

@@ -38,7 +38,7 @@ final class PurchaseOrderController
 
     public function index(Request $request): Response
     {
-        $this->guard->requireAuth();
+        $actor = $this->guard->requireAuth();
         $criteria = OrderSearchCriteria::fromArray($request->query());
 
         return $this->render('purchase-orders/index.php', [
@@ -46,6 +46,7 @@ final class PurchaseOrderController
             'criteria' => $criteria,
             'suppliers' => $this->suppliers,
             'warehouses' => $this->warehouses,
+            'canCreate' => in_array($actor->role(), [User::ROLE_ADMIN, User::ROLE_WAREHOUSE_STAFF], true),
         ]);
     }
 

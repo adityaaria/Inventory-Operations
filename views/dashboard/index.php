@@ -28,6 +28,9 @@
             : [];
         $purchaseChart = htmlspecialchars((string) json_encode($purchaseStatus), ENT_QUOTES, 'UTF-8');
         $salesChart = htmlspecialchars((string) json_encode($salesStatus), ENT_QUOTES, 'UTF-8');
+        $dashboardRole = (string) $dashboard['role'];
+        $canCreatePurchaseOrder = in_array($dashboardRole, [\App\Entity\User::ROLE_ADMIN, \App\Entity\User::ROLE_WAREHOUSE_STAFF], true);
+        $canCreateSalesOrder = in_array($dashboardRole, [\App\Entity\User::ROLE_ADMIN, \App\Entity\User::ROLE_SALES], true);
         ?>
         <header class="page-header">
             <div>
@@ -90,8 +93,8 @@
                 <h2>Quick Actions</h2>
                 <ul class="quick-list">
                     <li><a href="/products"><span>Review stock</span><strong>Products</strong></a></li>
-                    <li><a href="/purchase-orders/create"><span>Create replenishment</span><strong>PO</strong></a></li>
-                    <li><a href="/sales-orders/create"><span>Create fulfillment</span><strong>SO</strong></a></li>
+                    <?php if ($canCreatePurchaseOrder): ?><li><a href="/purchase-orders/create"><span>Create replenishment</span><strong>PO</strong></a></li><?php endif; ?>
+                    <?php if ($canCreateSalesOrder): ?><li><a href="/sales-orders/create"><span>Create fulfillment</span><strong>SO</strong></a></li><?php endif; ?>
                     <li><a href="/reports"><span>Download reports</span><strong>CSV</strong></a></li>
                 </ul>
             </aside>

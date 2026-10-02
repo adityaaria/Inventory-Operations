@@ -9,6 +9,7 @@ use App\Exception\HttpException;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Security\AuthContext;
 use App\Support\PaginatedResult;
+use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
 
@@ -28,37 +29,20 @@ final class ProductService
         return $this->products->search($criteria);
     }
 
-    public function create(
-        AuthContext $actor,
-        string $sku,
-        string $name,
-        string $unit,
-        float $purchasePrice,
-        float $sellingPrice,
-        int $reorderPoint,
-        int $categoryId,
-    ): Product {
+    public function create(AuthContext $actor, ProductInput $input): Product
+    {
         $this->assertCanWrite($actor);
-        $this->assertValid($sku, $name, $unit, $purchasePrice, $sellingPrice, $reorderPoint, $categoryId);
+        $this->assertValid($input);
 
-        return $this->products->create(trim($sku), trim($name), trim($unit), $purchasePrice, $sellingPrice, $reorderPoint, $categoryId, true);
+        return $this->products->create($input->trimmed(), true);
     }
 
-    public function update(
-        AuthContext $actor,
-        int $id,
-        string $sku,
-        string $name,
-        string $unit,
-        float $purchasePrice,
-        float $sellingPrice,
-        int $reorderPoint,
-        int $categoryId,
-    ): Product {
+    public function update(AuthContext $actor, int $id, ProductInput $input): Product
+    {
         $this->assertCanWrite($actor);
-        $this->assertValid($sku, $name, $unit, $purchasePrice, $sellingPrice, $reorderPoint, $categoryId);
+        $this->assertValid($input);
 
-        return $this->products->update($id, trim($sku), trim($name), trim($unit), $purchasePrice, $sellingPrice, $reorderPoint, $categoryId);
+        return $this->products->update($id, $input->trimmed());
     }
 
     public function setActive(AuthContext $actor, int $id, bool $isActive): void
@@ -69,6 +53,9 @@ final class ProductService
 
     private function assertCanRead(AuthContext $actor): void
     {
+        // Unreachable via the public API: AuthContext's constructor already rejects any role
+        // outside User::ROLES, so canRead() (in_array($role, User::ROLES)) can never be false here.
+        // Kept as a defensive guard in case that invariant ever changes.
         if (!$this->authorization->canRead($actor)) {
             throw new HttpException(403, 'Forbidden');
         }
@@ -81,27 +68,27 @@ final class ProductService
         }
     }
 
-    private function assertValid(string $sku, string $name, string $unit, float $purchasePrice, float $sellingPrice, int $reorderPoint, int $categoryId): void
+    private function assertValid(ProductInput $input): void
     {
-        if (trim($sku) === '') {
+        if (trim($input->sku) === '') {
             throw new InvalidArgumentException('SKU is required.');
         }
-        if (trim($name) === '') {
+        if (trim($input->name) === '') {
             throw new InvalidArgumentException('Name is required.');
         }
-        if (trim($unit) === '') {
+        if (trim($input->unit) === '') {
             throw new InvalidArgumentException('Unit is required.');
         }
-        if ($purchasePrice < 0) {
+        if ($input->purchasePrice < 0) {
             throw new InvalidArgumentException('Purchase price cannot be negative.');
         }
-        if ($sellingPrice < 0) {
+        if ($input->sellingPrice < 0) {
             throw new InvalidArgumentException('Selling price cannot be negative.');
         }
-        if ($reorderPoint < 0) {
+        if ($input->reorderPoint < 0) {
             throw new InvalidArgumentException('Reorder point cannot be negative.');
         }
-        if ($categoryId <= 0) {
+        if ($input->categoryId <= 0) {
             throw new InvalidArgumentException('Category is required.');
         }
     }

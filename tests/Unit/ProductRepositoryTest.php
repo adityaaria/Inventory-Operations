@@ -8,6 +8,7 @@ use App\Entity\Category;
 use App\Entity\Product;
 use App\Repository\InMemory\InMemoryCategoryRepository;
 use App\Repository\InMemory\InMemoryProductRepository;
+use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +23,7 @@ final class ProductRepositoryTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $repository->create('SKU-001', 'Widget B', 'pcs', 2000.0, 2500.0, 5, 1, true);
+        $repository->create(new ProductInput('SKU-001', 'Widget B', 'pcs', 2000.0, 2500.0, 5, 1), true);
     }
 
     public function testSearchPaginatesProducts(): void
