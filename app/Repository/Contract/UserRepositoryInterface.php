@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Repository\Contract;
 
 use App\Entity\User;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 
 interface UserRepositoryInterface
 {
@@ -16,6 +18,9 @@ interface UserRepositoryInterface
      * @return list<User>
      */
     public function all(): array;
+
+    /** @return PaginatedResult<User> */
+    public function paginate(Pagination $pagination): PaginatedResult;
 
     public function create(string $name, string $email, string $passwordHash, string $role, bool $isActive): User;
 

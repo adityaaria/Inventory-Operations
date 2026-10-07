@@ -13,7 +13,7 @@ use App\Exception\HttpException;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Repository\Contract\PurchaseOrderRepositoryInterface;
 use App\Security\AuthContext;
-use InvalidArgumentException;
+use App\Exception\ValidationException;
 
 final class PurchaseOrderService
 {
@@ -44,13 +44,16 @@ final class PurchaseOrderService
 
     public function markOrdered(AuthContext $actor, int $id): void
     {
-        $this->assertAdmin($actor);
-        $order = $this->findOrder($id);
-        if ($order->status() !== PurchaseOrder::STATUS_DRAFT) {
-            throw new InvalidArgumentException('Only Draft purchase orders can be ordered.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $this->assertAdmin($actor);
+            $order = $this->findOrder($id);
+            if ($order->status() !== PurchaseOrder::STATUS_DRAFT) {
+                throw new ValidationException('Only Draft purchase orders can be ordered.');
+            }
 
-        $this->orders->markOrdered($id);
+            $this->orders->markOrdered($id);
+
+        });
     }
 
     /**
@@ -58,53 +61,59 @@ final class PurchaseOrderService
      */
     public function receive(AuthContext $actor, int $id, array $receivedQuantitiesByItemId): void
     {
-        $this->assertCanReceive($actor);
-        $order = $this->findOrder($id);
-        if (!in_array($order->status(), PurchaseOrder::RECEIVABLE_STATUSES, true)) {
-            throw new InvalidArgumentException('Purchase order is not receivable.');
-        }
-
-        $acceptedReceipts = [];
-        $movements = [];
-        foreach ($order->items() as $item) {
-            $quantity = $receivedQuantitiesByItemId[$item->id()] ?? 0;
-            if ($quantity === 0) {
-                continue;
+        $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId): void {
+            $this->assertCanReceive($actor);
+            $order = $this->findOrder($id);
+            if (!in_array($order->status(), PurchaseOrder::RECEIVABLE_STATUSES, true)) {
+                throw new ValidationException('Purchase order is not receivable.');
             }
-            if ($quantity < 0) {
-                throw new InvalidArgumentException('Receipt quantity must be positive.');
-            }
-            if ($quantity > $item->remainingQuantity()) {
-                throw new InvalidArgumentException('Receipt quantity cannot exceed remaining quantity.');
-            }
-            $acceptedReceipts[$item->id()] = $quantity;
-            $movements[] = new StockMovement($item->productId(), $quantity);
-        }
 
-        if ($acceptedReceipts === []) {
-            throw new InvalidArgumentException('At least one receipt quantity is required.');
-        }
+            $acceptedReceipts = [];
+            $movements = [];
+            foreach ($order->items() as $item) {
+                $quantity = $receivedQuantitiesByItemId[$item->id()] ?? 0;
+                if ($quantity === 0) {
+                    continue;
+                }
+                if ($quantity < 0) {
+                    throw new ValidationException('Receipt quantity must be positive.');
+                }
+                if ($quantity > $item->remainingQuantity()) {
+                    throw new ValidationException('Receipt quantity cannot exceed remaining quantity.');
+                }
+                $acceptedReceipts[$item->id()] = $quantity;
+                $movements[] = new StockMovement($item->productId(), $quantity);
+            }
 
-        $status = $this->statusAfterReceipt($order, $acceptedReceipts);
-        $this->stockService->receive(
-            $order->destinationWarehouseId(),
-            $movements,
-            $actor->userId(),
-            'PO',
-            $order->id(),
-            fn (): null => $this->recordReceipt($order->id(), $acceptedReceipts, $status),
-        );
+            if ($acceptedReceipts === []) {
+                throw new ValidationException('At least one receipt quantity is required.');
+            }
+
+            $status = $this->statusAfterReceipt($order, $acceptedReceipts);
+            $this->stockService->receive(
+                $order->destinationWarehouseId(),
+                $movements,
+                $actor->userId(),
+                'PO',
+                $order->id(),
+                fn (): null => $this->recordReceipt($order->id(), $acceptedReceipts, $status),
+            );
+
+        });
     }
 
     public function cancel(AuthContext $actor, int $id): void
     {
-        $this->assertAdmin($actor);
-        $order = $this->findOrder($id);
-        if ($order->status() !== PurchaseOrder::STATUS_DRAFT && $order->status() !== PurchaseOrder::STATUS_ORDERED) {
-            throw new InvalidArgumentException('Only Draft or Ordered purchase orders can be cancelled.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $this->assertAdmin($actor);
+            $order = $this->findOrder($id);
+            if ($order->status() !== PurchaseOrder::STATUS_DRAFT && $order->status() !== PurchaseOrder::STATUS_ORDERED) {
+                throw new ValidationException('Only Draft or Ordered purchase orders can be cancelled.');
+            }
 
-        $this->orders->cancel($id);
+            $this->orders->cancel($id);
+
+        });
     }
 
     private function assertCanCreate(AuthContext $actor): void
@@ -130,16 +139,17 @@ final class PurchaseOrderService
 
     private function assertHeader(string $orderNumber, int $supplierId, int $warehouseId): void
     {
+        \App\Validation\InputValidator::requiredString('order_number', $orderNumber, 50);
         if (trim($orderNumber) === '') {
-            throw new InvalidArgumentException('Order number is required.');
+            throw new ValidationException('Order number is required.');
         }
         $supplier = $this->suppliers[$supplierId] ?? null;
         if (!$supplier instanceof Supplier || !$supplier->isActive()) {
-            throw new InvalidArgumentException('Active supplier is required.');
+            throw new ValidationException('Active supplier is required.');
         }
         $warehouse = $this->warehouses[$warehouseId] ?? null;
         if (!$warehouse instanceof Warehouse || !$warehouse->isActive()) {
-            throw new InvalidArgumentException('Active warehouse is required.');
+            throw new ValidationException('Active warehouse is required.');
         }
     }
 
@@ -149,23 +159,24 @@ final class PurchaseOrderService
     private function assertItems(array $items): void
     {
         if ($items === []) {
-            throw new InvalidArgumentException('At least one item is required.');
+            throw new ValidationException('At least one item is required.');
         }
 
         $seenProducts = [];
         foreach ($items as $item) {
             $product = $this->products->findById($item['product_id']);
             if (!$product instanceof Product || !$product->isActive()) {
-                throw new InvalidArgumentException('Active product is required.');
+                throw new ValidationException('Active product is required.');
             }
             if (isset($seenProducts[$item['product_id']])) {
-                throw new InvalidArgumentException('Duplicate product lines are not allowed.');
+                throw new ValidationException('Duplicate product lines are not allowed.');
             }
             if ($item['quantity'] <= 0) {
-                throw new InvalidArgumentException('Quantity must be positive.');
+                throw new ValidationException('Quantity must be positive.');
             }
+            \App\Validation\InputValidator::nonNegativeMoney('purchase_price', $item['purchase_price']);
             if ($item['purchase_price'] < 0) {
-                throw new InvalidArgumentException('Purchase price cannot be negative.');
+                throw new ValidationException('Purchase price cannot be negative.');
             }
             $seenProducts[$item['product_id']] = true;
         }
@@ -173,7 +184,7 @@ final class PurchaseOrderService
 
     private function findOrder(int $id): PurchaseOrder
     {
-        return $this->orders->findById($id) ?? throw new InvalidArgumentException('Purchase order not found.');
+        return $this->orders->lockById($id) ?? throw new ValidationException('Purchase order not found.');
     }
 
     /**

@@ -4,6 +4,9 @@
     root.InventoryModal = {
         create({state}) {
             let enhanceForms = () => {};
+            let pageLoadingTimer = null;
+            let pageLoadingActive = false;
+            root.addEventListener('pageshow', () => setPageLoading(false));
             const requestCoordinator = InventoryHttp.createRequestCoordinator();
 
             function setEnhanceForms(handler) {
@@ -25,13 +28,30 @@
             function createPageLoader() {
                 const loader = document.createElement('div');
                 loader.className = 'page-loading';
+                loader.setAttribute('role', 'status');
+                loader.setAttribute('aria-live', 'polite');
                 loader.setAttribute('aria-hidden', 'true');
-                loader.innerHTML = '<span></span><strong>Loading</strong>';
+                loader.innerHTML = '<span aria-hidden="true"></span><strong class="page-loading-label">Loading page…</strong>';
                 return loader;
             }
 
             function setPageLoading(active) {
-                document.body.classList.toggle('is-page-loading', active);
+                if (active && pageLoadingActive) return;
+                pageLoadingActive = active;
+                clearTimeout(pageLoadingTimer);
+                pageLoadingTimer = null;
+                const loader = document.querySelector('.page-loading');
+                if (!active) {
+                    document.body.classList.remove('is-page-loading');
+                    loader?.setAttribute('aria-hidden', 'true');
+                    return;
+                }
+                // Fast navigation completes without flashing an indicator.
+                pageLoadingTimer = setTimeout(() => {
+                    document.body.classList.add('is-page-loading');
+                    loader?.setAttribute('aria-hidden', 'false');
+                    pageLoadingTimer = null;
+                }, 180);
             }
 
             function openWithTransition(backdrop) {
@@ -128,9 +148,9 @@
                 dialog.hidden = true;
                 dialog.innerHTML = `
                     <section class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-                        <h2 id="confirm-title">Confirm action</h2>
-                        <p class="confirm-message">Continue this action?</p>
-                        <div class="confirm-actions">
+                        <header class="modal-header"><h2 id="confirm-title">Confirm action</h2></header>
+                        <div class="modal-body"><p class="confirm-message">Continue this action?</p></div>
+                        <div class="confirm-actions modal-footer">
                             <button type="button" class="button confirm-cancel">Cancel</button>
                             <button type="button" class="button-primary confirm-submit">Continue</button>
                         </div>
@@ -162,21 +182,17 @@
                     if (!request.isCurrent()) {
                         return;
                     }
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    const remoteMain = doc.querySelector('main.page');
-                    const remoteTitle = remoteMain?.querySelector('h1')?.textContent?.trim() || 'Form';
-                    title.textContent = remoteTitle;
-                    body.innerHTML = remoteMain ? remoteMain.innerHTML : html;
-                    enhanceForms(body);
+                    renderForm(html);
                 } catch (error) {
                     if (request.signal.aborted || error.name === 'AbortError') {
                         return;
                     }
+                    const sessionMessage = InventoryHttp.sessionFailureMessage(error);
                     body.innerHTML = `
                         <div class="alert" role="alert">
-                            <strong>Unable to load this form.</strong>
-                            <span>Please try again or close this dialog.</span>
-                            <button type="button" class="button" data-modal-retry>Try again</button>
+                            <strong>${sessionMessage || 'Unable to load this form.'}</strong>
+                            ${sessionMessage ? '<a class="button" href="/login">Sign in</a>' :
+                                '<span>Please try again or close this dialog.</span><button type="button" class="button" data-modal-retry>Try again</button>'}
                         </div>
                     `;
                     body.querySelector('[data-modal-retry]')?.addEventListener('click', () => openFormModal(href));
@@ -189,6 +205,31 @@
                         }
                     }
                 }
+            }
+
+            function renderForm(html) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const remoteMain = doc.querySelector('main.page');
+                const body = document.querySelector('.modal-backdrop .modal-body');
+                const title = document.querySelector('#modal-title');
+                if (!body || !title) return;
+                const header = remoteMain?.querySelector('.page-header');
+                title.textContent = header?.querySelector('h1')?.textContent?.trim() || 'Form';
+                const subtitle = header?.querySelector('.page-subtitle');
+                // The page heading/navigation belongs to the page, not the dialog body.
+                if (subtitle) {
+                    subtitle.classList.add('modal-description');
+                    header.replaceWith(subtitle);
+                } else {
+                    header?.remove();
+                }
+                body.innerHTML = remoteMain ? remoteMain.innerHTML : html;
+                body.querySelectorAll('.form-actions').forEach(actions => {
+                    actions.classList.add('modal-footer');
+                    const cancel = actions.querySelector('[data-cancel-href]');
+                    if (cancel) actions.prepend(cancel);
+                });
+                enhanceForms(body);
             }
 
             function closeModal() {
@@ -239,7 +280,7 @@
                 });
             }
 
-            return {askConfirmation, closeModal, ensureOverlays, openFormModal, setEnhanceForms, setPageLoading};
+            return {askConfirmation, closeModal, ensureOverlays, openFormModal, renderForm, setEnhanceForms, setPageLoading};
         },
     };
 })(typeof globalThis === 'object' ? globalThis : this);

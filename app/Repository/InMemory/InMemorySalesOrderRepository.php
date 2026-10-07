@@ -50,6 +50,11 @@ final class InMemorySalesOrderRepository implements SalesOrderRepositoryInterfac
         return $this->orders[$id] ?? null;
     }
 
+    public function lockById(int $id): ?SalesOrder
+    {
+        return $this->findById($id);
+    }
+
     public function createDraft(string $orderNumber, int $customerId, int $warehouseId, int $createdBy, array $items): SalesOrder
     {
         $this->assertUniqueProducts($items);

@@ -18,6 +18,9 @@ interface PurchaseOrderRepositoryInterface
 
     public function findById(int $id): ?PurchaseOrder;
 
+    /** Lock the source order inside the caller transaction. */
+    public function lockById(int $id): ?PurchaseOrder;
+
     /**
      * @param list<array{product_id: int, quantity: int, purchase_price: float}> $items
      */

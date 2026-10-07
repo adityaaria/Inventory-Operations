@@ -1,0 +1,9 @@
+FROM inventory-operations-test:latest
+COPY --chown=www-data:www-data app ./app
+COPY --chown=www-data:www-data config ./config
+COPY --chown=www-data:www-data public ./public
+COPY --chown=www-data:www-data scripts ./scripts
+COPY --chown=www-data:www-data views ./views
+COPY --chown=www-data:www-data tests ./tests
+COPY --chown=www-data:www-data database ./database
+COPY --chown=www-data:www-data composer.json composer.lock phpunit.xml phpstan.neon ./

@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const source = fs.readFileSync(path.join(__dirname, '../../public/assets/js/navigation.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../../public/assets/js/navigation.js'), 'utf8')
+    + fs.readFileSync(path.join(__dirname, '../../views/partials/workspace-start.php'), 'utf8');
 
 test('navigation exposes accessible active route and drawer contracts', () => {
     assert.match(source, /aria-current/);

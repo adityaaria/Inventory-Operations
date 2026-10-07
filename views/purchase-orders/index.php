@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Purchase Orders'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div>
                 <p class="app-title">Inventory Operations</p>
@@ -26,7 +27,7 @@
                 <p class="page-subtitle">Search, filter, and review supplier replenishment orders.</p>
             </div>
             <nav class="toolbar">
-                <a href="/">Home</a>
+
                 <?php if ($canCreate): ?><a href="/purchase-orders/create">Create Purchase Order</a><?php endif; ?>
             </nav>
         </header>
@@ -44,9 +45,10 @@
             </select></label>
             <button type="submit">Filter</button>
         </form>
-        <table class="data-table">
+        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="data-table">
             <thead>
-                <tr><th>Order Number</th><th>Supplier</th><th>Warehouse</th><th>Status</th><th>Date</th><th>Action</th></tr>
+                <tr><?php $sortPath = '/purchase-orders'; $sortKey = 'order_number'; $sortLabel = 'Order Number'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Supplier</th><th>Warehouse</th><?php $sortPath = '/purchase-orders'; $sortKey = 'status'; $sortLabel = 'Status'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/purchase-orders'; $sortKey = 'order_date'; $sortLabel = 'Date'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Action</th></tr>
             </thead>
             <tbody>
                 <?php if ($result->items() === []): ?>
@@ -83,6 +85,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+</div>
         <?php
         $baseQuery = [
             'q' => $criteria->term(),
@@ -103,5 +106,6 @@
             </div>
         </nav>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

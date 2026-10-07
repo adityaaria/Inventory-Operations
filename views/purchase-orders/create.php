@@ -18,17 +18,19 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Create Purchase Order'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Purchase Order</h1><p class="page-subtitle">Create a draft purchase order for replenishment.</p></div><nav class="toolbar"><a href="/purchase-orders">Purchase Orders</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/purchase-orders" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label class="field"><span class="field-label">Order Number</span><input name="order_number" required value="PO-<?= date('YmdHis') ?>"></label>
+            <label class="field"><span class="field-label">Order Number</span><input name="order_number" required value="<?= htmlspecialchars($formState->value('order_number', 'PO-' . date('YmdHis')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <label class="field"><span class="field-label">Supplier</span>
                 <select name="supplier_id" required>
                     <?php foreach ($suppliers as $supplier): ?>
                         <?php if ($supplier->isActive()): ?>
-                            <option value="<?= $supplier->id() ?>"><?= htmlspecialchars($supplier->name(), ENT_QUOTES, 'UTF-8') ?></option>
+                            <option value="<?= $supplier->id() ?>" <?= $formState->selected('supplier_id', $supplier->id(), false) ?>><?= htmlspecialchars($supplier->name(), ENT_QUOTES, 'UTF-8') ?></option>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
@@ -37,7 +39,7 @@
                 <select name="warehouse_id" required>
                     <?php foreach ($warehouses as $warehouse): ?>
                         <?php if ($warehouse->isActive()): ?>
-                            <option value="<?= $warehouse->id() ?>"><?= htmlspecialchars($warehouse->name(), ENT_QUOTES, 'UTF-8') ?></option>
+                            <option value="<?= $warehouse->id() ?>" <?= $formState->selected('warehouse_id', $warehouse->id(), false) ?>><?= htmlspecialchars($warehouse->name(), ENT_QUOTES, 'UTF-8') ?></option>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
@@ -45,14 +47,15 @@
             <label class="field"><span class="field-label">Product</span>
                 <select name="product_id" required>
                     <?php foreach ($products as $product): ?>
-                        <option value="<?= $product->id() ?>"><?= htmlspecialchars($product->sku() . ' - ' . $product->name(), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="<?= $product->id() ?>" <?= $formState->selected('product_id', $product->id(), false) ?>><?= htmlspecialchars($product->sku() . ' - ' . $product->name(), ENT_QUOTES, 'UTF-8') ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label class="field"><span class="field-label">Quantity</span><input name="quantity" type="number" min="1" required></label>
-            <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required></label>
+            <label class="field"><span class="field-label">Quantity</span><input name="quantity" type="number" min="1" required value="<?= htmlspecialchars($formState->value('quantity', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('purchase_price', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <div class="form-actions"><button type="submit">Create Draft</button><button type="button" class="button button-quiet" data-cancel-href="/purchase-orders">Cancel</button></div>
         </form>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

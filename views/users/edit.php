@@ -18,7 +18,9 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Edit User'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit User</h1><p class="page-subtitle">Update internal access and role details.</p></div><nav class="toolbar"><a href="/users">Users</a></nav></header>
         <?php if ($error !== ''): ?>
             <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
@@ -29,12 +31,12 @@
             <form method="post" action="/users/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $user->id() ?>">
-                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($user->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label class="field"><span class="field-label">Email</span><input name="email" type="email" required value="<?= htmlspecialchars($user->email(), ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', $user->name()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Email</span><input name="email" type="email" required value="<?= htmlspecialchars($formState->value('email', $user->email()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
                 <label class="field"><span class="field-label">Role</span>
                     <select name="role" required>
                         <?php foreach ($roles as $role): ?>
-                            <option value="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>" <?= $role === $user->role() ? 'selected' : '' ?>>
+                            <option value="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>" <?= $formState->selected('role', $role, $role === $user->role()) ?>>
                                 <?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>
                             </option>
                         <?php endforeach; ?>
@@ -44,5 +46,6 @@
             </form>
         <?php endif; ?>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

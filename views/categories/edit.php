@@ -18,7 +18,9 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Edit Category'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div><p class="app-title">Inventory Operations</p><h1>Edit Category</h1><p class="page-subtitle">Update the category details.</p></div>
             <nav class="toolbar"><a href="/categories">Categories</a></nav>
@@ -28,11 +30,12 @@
             <form method="post" action="/categories/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $category->id() ?>">
-                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label class="field"><span class="field-label">Description</span><textarea name="description" rows="3"><?= htmlspecialchars($category->description(), ENT_QUOTES, 'UTF-8') ?></textarea></label>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', $category->name()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Description</span><textarea name="description" rows="3"><?= htmlspecialchars($formState->value('description', $category->description()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea></label>
                 <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button></div>
             </form>
         <?php endif; ?>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

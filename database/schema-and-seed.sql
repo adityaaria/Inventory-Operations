@@ -409,3 +409,12 @@ FROM sales_orders so
 INNER JOIN products p ON p.sku = CONCAT('SKU-SEED-', RIGHT(so.order_number, 3))
 WHERE so.order_number LIKE 'SO-SEED-%'
 ON DUPLICATE KEY UPDATE quantity = VALUES(quantity), selling_price = VALUES(selling_price);
+
+-- Opening zero balances complete the product/warehouse matrix without inventing stock movements.
+-- Preserve all populated seed balances. Runtime initialization is owned by StockService.
+INSERT INTO product_stocks (product_id, warehouse_id, quantity)
+SELECT p.id, w.id, 0
+FROM products p
+CROSS JOIN warehouses w
+LEFT JOIN product_stocks ps ON ps.product_id = p.id AND ps.warehouse_id = w.id
+WHERE ps.product_id IS NULL;

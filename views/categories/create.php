@@ -18,7 +18,9 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Create Category'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div><p class="app-title">Inventory Operations</p><h1>Create Category</h1><p class="page-subtitle">Add a category for organizing products.</p></div>
             <nav class="toolbar"><a href="/categories">Categories</a></nav>
@@ -26,10 +28,11 @@
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/categories" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
-            <label class="field"><span class="field-label">Description</span><textarea name="description" rows="3"></textarea></label>
+            <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Description</span><textarea name="description" rows="3"><?= htmlspecialchars($formState->value('description', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea></label>
             <div class="form-actions"><button type="submit">Create</button><button type="button" class="button button-quiet" data-cancel-href="/categories">Cancel</button></div>
         </form>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

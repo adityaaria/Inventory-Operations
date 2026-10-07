@@ -43,6 +43,33 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
         return $this->reportRows;
     }
 
+    public function reportSummary(string $type, ?string $from, ?string $to, ?int $salesUserId): array
+    {
+        $counts = $distribution = [];
+        $received = $issued = 0;
+        foreach ($this->reportRows as $row) {
+            $group = (string) ($row[$type === 'orders' ? 'Status' : 'Movement'] ?? 'Unknown');
+            $bucket = (string) ($row[$type === 'orders' ? 'Type' : 'Warehouse'] ?? 'Unknown');
+            $counts[$group] = ($counts[$group] ?? 0) + 1;
+            $distribution[$bucket] = ($distribution[$bucket] ?? 0) + 1;
+            $received += $group === 'Receipt' ? (int) ($row['Quantity'] ?? 0) : 0;
+            $issued += $group === 'Issue' ? (int) ($row['Quantity'] ?? 0) : 0;
+        }
+        ksort($counts);
+        ksort($distribution);
+        return ['total' => count($this->reportRows), 'counts' => $counts, 'distribution' => $distribution, 'received' => $received, 'issued' => $issued];
+    }
+
+    public function reportPage(string $type, ?string $from, ?string $to, ?int $salesUserId, int $limit, int $offset): array
+    {
+        return array_slice($this->reportRows, $offset, $limit);
+    }
+
+    public function iterateReportRows(string $type, ?string $from, ?string $to, ?int $salesUserId): iterable
+    {
+        yield from $this->reportRows;
+    }
+
     public function productAvailability(string $sku): ?array
     {
         if ($sku !== 'SKU-001') {

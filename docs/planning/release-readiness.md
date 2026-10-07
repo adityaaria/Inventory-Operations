@@ -1,7 +1,11 @@
 # Release Readiness
 
 Date: 2026-08-31  
-Status: Ready for assessment review with explicit Git limitation
+Status: Historical assessment verification; superseded by the current status below
+
+## Current status — 6 October 2026
+
+Git history is available; the previous no-Git limitation is historical. Docker runtime/test targets and an isolated disposable `test-db` now provide a repeatable quality gate. Current source-order locking, authorization revocation, strict input/import/CSV handling, product detail and reporting evidence is in `../testing/audit-remediation-2026-10-06.md`. Preserve the dated counts below as historical results rather than current claims. Physical-device checks and trainer ambiguities still need external validation.
 
 ## Clean Docker and Empty DB Verification
 
@@ -148,3 +152,7 @@ Passed:
 Blocked:
 
 - Git status, `refactor:` commit evidence, and final tag are unavailable because this workspace is not a Git repository.
+
+## Current verification — 7 October 2026
+
+The workspace is a Git repository; the older statement above about unavailable Git status is historical and no longer applies. Release commit/tag and human review are not claimed. Functional verification passes: 329 PHP tests, 50 JS tests, 199 HTTP checks, 303 browser page checks and 110 dialog checks. A fresh dependency build failed on DNS; matching-lock offline verification passed. Production operations/trainer decisions remain separate gates. See [current evidence](../testing/end-to-end-verification-2026-10-07.md).

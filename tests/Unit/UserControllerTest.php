@@ -21,7 +21,7 @@ final class UserControllerTest extends TestCase
         $session = new SessionManager();
         $session->login(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN));
         $repository = new InMemoryUserRepository();
-        $controller = new UserController(new UserService($repository), $repository, new AuthGuard($session));
+        $controller = new UserController(new UserService($repository), $repository, new AuthGuard($session), new \App\Service\CsvImportService(new \Tests\Support\ImmediateTransactions()));
 
         $response = $controller->import(new Request('POST', '/users/import', [], [
             'csv_data' => "name,email,password,role\nImported User,imported@example.test,password123,Sales\n",

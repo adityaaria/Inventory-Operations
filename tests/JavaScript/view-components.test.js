@@ -59,7 +59,9 @@ test('list, dashboard, reports, and auth contracts remain identifiable', () => {
         assert.match(read(file), /class="data-table"/, `${file} missing data-table`);
     }
     assert.match(read('dashboard/index.php'), /dashboard-grid/);
-    assert.match(read('reports/index.php'), /report-grid/);
+    assert.match(read('reports/index.php'), /metric-grid/);
+    assert.match(read('reports/index.php'), /report-charts/);
+    assert.match(read('reports/index.php'), /data-export="server"/);
     const login = read('auth/login.php');
     assert.match(login, /auth-body/);
     assert.doesNotMatch(login, /side-nav/);

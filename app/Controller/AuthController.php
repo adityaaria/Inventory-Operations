@@ -21,8 +21,10 @@ final class AuthController
 
     public function login(Request $request): Response
     {
-        $email = (string) ($request->post()['email'] ?? '');
-        $password = (string) ($request->post()['password'] ?? '');
+        $emailInput = $request->post()['email'] ?? '';
+        $passwordInput = $request->post()['password'] ?? '';
+        $email = is_string($emailInput) ? substr($emailInput, 0, 190) : '';
+        $password = is_string($passwordInput) ? $passwordInput : '';
 
         if (!$this->auth->login($email, $password, $this->ipAddress($request), $this->userAgent($request))) {
             return $this->renderLogin('Invalid email, password, or inactive account.', $email);

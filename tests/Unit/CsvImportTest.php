@@ -35,6 +35,20 @@ final class CsvImportTest extends TestCase
         ], $rows);
     }
 
+    public function testRejectsArrayContentBeforeStringCoercion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('CSV content must be text.');
+        CsvImport::rowsFromRequest(new Request('POST', '/products/import', [], ['csv_data' => ['bad']], []));
+    }
+
+    public function testRejectsNestedMultipleUploadMetadata(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Upload one CSV file at a time.');
+        CsvImport::rowsFromRequest(new Request('POST', '/products/import', [], [], [], ['csv_file' => ['error' => [UPLOAD_ERR_OK], 'size' => [10], 'tmp_name' => ['/tmp/file']]]));
+    }
+
     public function testRejectsEmptyImportPayload(): void
     {
         $this->expectException(InvalidArgumentException::class);

@@ -306,6 +306,19 @@ final class PurchaseOrderServiceTest extends TestCase
     /**
      * @return array{0: PurchaseOrderService, 1: InMemoryPurchaseOrderRepository}
      */
+    public function testRepeatedOrderTransitionIsAnHttp422ValidationFailure(): void
+    {
+        [$service] = $this->service();
+        $actor = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
+        $order = $service->createDraft($actor, 'PO-STATE', 1, 1, [['product_id'=>10,'quantity'=>1,'purchase_price'=>10.0]]);
+        $service->markOrdered($actor, $order->id());
+        try { $service->markOrdered($actor, $order->id()); self::fail('Transition must fail.'); }
+        catch (\App\Exception\ValidationException $exception) {
+            self::assertSame(422, $exception->statusCode());
+            self::assertSame(422, \App\Http\ErrorResponder::browser($exception, false)->statusCode());
+        }
+    }
+
     private function service(): array
     {
         $orders = new InMemoryPurchaseOrderRepository();

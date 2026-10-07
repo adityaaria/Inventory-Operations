@@ -1,0 +1,17 @@
+{
+  "before": {
+    "positive_balances_sha256": "b426a70fdcb43b98771ec33d0e07079c585c0c1aef4f8a072ae77010ff156cf2",
+    "quantity_total": 1857,
+    "ledger_rows": 18,
+    "stock_rows": 60,
+    "expected_rows": 60
+  },
+  "after": {
+    "positive_balances_sha256": "b426a70fdcb43b98771ec33d0e07079c585c0c1aef4f8a072ae77010ff156cf2",
+    "quantity_total": 1857,
+    "ledger_rows": 18,
+    "stock_rows": 60,
+    "expected_rows": 60
+  },
+  "invariants": "PASS"
+}

@@ -1,0 +1,1 @@
+Missing product/warehouse pairs initialized at zero; existing quantities and ledger unchanged.

@@ -81,14 +81,8 @@
                         return;
                     }
                     if (response.status === 422) {
-                        const doc = new DOMParser().parseFromString(html, 'text/html');
-                        const remoteMain = doc.querySelector('main.page');
-                        const body = document.querySelector('.modal-backdrop .modal-body');
-                        if (body) {
-                            body.innerHTML = remoteMain ? remoteMain.innerHTML : html;
-                            enhanceForms(body);
-                            return;
-                        }
+                        modal.renderForm(html);
+                        return;
                     }
                     location.reload();
                 } catch (error) {
@@ -101,13 +95,16 @@
                 const container = form.closest('.modal-body') || form.parentElement;
                 if (!container) return;
                 container.querySelector('.form-request-error')?.remove();
-                const message = error instanceof InventoryHttp.HttpResponseError
+                const sessionMessage = InventoryHttp.sessionFailureMessage(error);
+                const message = sessionMessage || (error instanceof InventoryHttp.HttpResponseError
                     ? 'The server could not process this request. Please try again.'
-                    : 'The request could not be completed. Check your connection and try again.';
+                    : 'The request could not be completed. Check your connection and try again.');
                 const alert = document.createElement('div');
                 alert.className = 'alert form-request-error';
                 alert.setAttribute('role', 'alert');
-                alert.innerHTML = `<strong>${message}</strong> <button type="button" class="button" data-retry-submit>Try again</button>`;
+                alert.innerHTML = `<strong>${message}</strong> ${sessionMessage
+                    ? '<a class="button" href="/login">Sign in</a>'
+                    : '<button type="button" class="button" data-retry-submit>Try again</button>'}`;
                 container.insertBefore(alert, form);
                 alert.querySelector('[data-retry-submit]')?.addEventListener('click', () => {
                     alert.remove();

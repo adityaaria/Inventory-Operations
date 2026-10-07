@@ -30,7 +30,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
             throw new RuntimeException('Unable to query purchase orders.');
         }
 
-        return array_map(fn (array $row): PurchaseOrder => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
+        return $this->hydrateRows($statement->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function search(OrderSearchCriteria $criteria): PaginatedResult
@@ -53,7 +53,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
         $statement->execute();
         $count = $this->countSearch($where, $params);
 
-        return new PaginatedResult(array_map(fn (array $row): PurchaseOrder => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC)), $count, $criteria->page(), $criteria->perPage());
+        return new PaginatedResult($this->hydrateRows($statement->fetchAll(PDO::FETCH_ASSOC)), $count, $criteria->page(), $criteria->perPage());
     }
 
     public function findById(int $id): ?PurchaseOrder
@@ -68,49 +68,67 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
         return is_array($row) ? $this->hydrate($row) : null;
     }
 
+    public function lockById(int $id): ?PurchaseOrder
+    {
+        if (!$this->pdo->inTransaction()) {
+            throw new RuntimeException('Source order locks require a transaction.');
+        }
+        $statement = $this->pdo->prepare(
+            'SELECT id, order_number, supplier_id, destination_warehouse_id, status, order_date, created_by
+             FROM purchase_orders WHERE id = :id FOR UPDATE'
+        );
+        $statement->execute(['id' => $id]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->hydrate($row) : null;
+    }
+
     public function createDraft(string $orderNumber, int $supplierId, int $warehouseId, int $createdBy, array $items): PurchaseOrder
     {
-        $this->pdo->beginTransaction();
-        try {
-            $statement = $this->pdo->prepare(
-                'INSERT INTO purchase_orders (order_number, supplier_id, destination_warehouse_id, status, order_date, created_by)
-                 VALUES (:order_number, :supplier_id, :warehouse_id, :status, CURRENT_DATE, :created_by)'
-            );
-            $statement->execute([
-                'order_number' => $orderNumber,
-                'supplier_id' => $supplierId,
-                'warehouse_id' => $warehouseId,
-                'status' => PurchaseOrder::STATUS_DRAFT,
-                'created_by' => $createdBy,
-            ]);
-            $orderId = (int) $this->pdo->lastInsertId();
-
-            $itemStatement = $this->pdo->prepare(
-                'INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, received_quantity, purchase_price)
-                 VALUES (:purchase_order_id, :product_id, :quantity, 0, :purchase_price)'
-            );
-            foreach ($items as $item) {
-                $itemStatement->execute([
-                    'purchase_order_id' => $orderId,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'purchase_price' => $item['purchase_price'],
+        return PersistenceErrors::write(function () use ($orderNumber, $supplierId, $warehouseId, $createdBy, $items): PurchaseOrder {
+            $this->pdo->beginTransaction();
+            try {
+                $statement = $this->pdo->prepare(
+                    'INSERT INTO purchase_orders (order_number, supplier_id, destination_warehouse_id, status, order_date, created_by)
+                     VALUES (:order_number, :supplier_id, :warehouse_id, :status, CURRENT_DATE, :created_by)'
+                );
+                $statement->execute([
+                    'order_number' => $orderNumber,
+                    'supplier_id' => $supplierId,
+                    'warehouse_id' => $warehouseId,
+                    'status' => PurchaseOrder::STATUS_DRAFT,
+                    'created_by' => $createdBy,
                 ]);
+                $orderId = (int) $this->pdo->lastInsertId();
+
+                $itemStatement = $this->pdo->prepare(
+                    'INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, received_quantity, purchase_price)
+                     VALUES (:purchase_order_id, :product_id, :quantity, 0, :purchase_price)'
+                );
+                foreach ($items as $item) {
+                    $itemStatement->execute([
+                        'purchase_order_id' => $orderId,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'purchase_price' => $item['purchase_price'],
+                    ]);
+                }
+
+                $this->pdo->commit();
+                return $this->findRequired($orderId);
+            } catch (\Throwable $exception) {
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+                throw $exception;
             }
 
-            $this->pdo->commit();
-            return $this->findRequired($orderId);
-        } catch (\Throwable $exception) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            throw $exception;
-        }
+        });
     }
 
     public function markOrdered(int $id): void
     {
-        $statement = $this->pdo->prepare('UPDATE purchase_orders SET status = :status WHERE id = :id');
+        $statement = $this->pdo->prepare("UPDATE purchase_orders SET status = :status WHERE id = :id AND status = 'Draft'");
         $statement->execute(['id' => $id, 'status' => PurchaseOrder::STATUS_ORDERED]);
     }
 
@@ -125,18 +143,18 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
             $itemStatement->execute(['id' => $itemId, 'purchase_order_id' => $id, 'quantity' => $quantity]);
         }
 
-        $orderStatement = $this->pdo->prepare('UPDATE purchase_orders SET status = :status WHERE id = :id');
+        $orderStatement = $this->pdo->prepare("UPDATE purchase_orders SET status = :status WHERE id = :id AND status IN ('Ordered','PartiallyReceived')");
         $orderStatement->execute(['id' => $id, 'status' => $status]);
     }
 
     public function cancel(int $id): void
     {
-        $statement = $this->pdo->prepare('UPDATE purchase_orders SET status = :status WHERE id = :id');
+        $statement = $this->pdo->prepare("UPDATE purchase_orders SET status = :status WHERE id = :id AND status IN ('Draft','Ordered')");
         $statement->execute(['id' => $id, 'status' => PurchaseOrder::STATUS_CANCELLED]);
     }
 
-    /** @param array<string, mixed> $row */
-    private function hydrate(array $row): PurchaseOrder
+    /** @param array<string, mixed> $row @param list<PurchaseOrderItem>|null $items */
+    private function hydrate(array $row, ?array $items = null): PurchaseOrder
     {
         $orderId = (int) $row['id'];
 
@@ -148,8 +166,23 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
             (string) $row['status'],
             (string) $row['order_date'],
             (int) $row['created_by'],
-            $this->itemsForOrder($orderId),
+            $items ?? $this->itemsForOrder($orderId),
         );
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<PurchaseOrder> */
+    private function hydrateRows(array $rows): array
+    {
+        if ($rows === []) return [];
+        $ids = array_map(static fn (array $row): int => (int) $row['id'], $rows);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $statement = $this->pdo->prepare("SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price FROM purchase_order_items WHERE purchase_order_id IN ({$placeholders}) ORDER BY id ASC");
+        $statement->execute($ids);
+        $items = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $items[(int) $row['purchase_order_id']][] = new PurchaseOrderItem((int) $row['id'], (int) $row['purchase_order_id'], (int) $row['product_id'], (int) $row['quantity'], (int) $row['received_quantity'], (float) $row['purchase_price']);
+        }
+        return array_map(fn (array $row): PurchaseOrder => $this->hydrate($row, $items[(int) $row['id']] ?? []), $rows);
     }
 
     /** @return list<PurchaseOrderItem> */
@@ -182,8 +215,9 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
         $parts = [];
         $params = [];
         if ($criteria->term() !== '') {
-            $parts[] = '(po.order_number LIKE :term OR s.name LIKE :term)';
+            $parts[] = '(po.order_number LIKE :term OR s.name LIKE :party_term)';
             $params['term'] = '%' . $criteria->term() . '%';
+            $params['party_term'] = $params['term'];
         }
         if ($criteria->status() !== null) {
             $parts[] = 'po.status = :status';

@@ -49,10 +49,7 @@ final class MySqlStockRepository implements StockRepositoryInterface
         );
         $insert->execute(['product_id' => $productId, 'warehouse_id' => $warehouseId]);
 
-        $statement->execute(['product_id' => $productId, 'warehouse_id' => $warehouseId]);
-        if ($statement->fetch(PDO::FETCH_ASSOC) === false) {
-            throw new RuntimeException('Unable to lock product stock row.');
-        }
+        // INSERT already holds the new row's exclusive lock until this transaction ends.
     }
 
     public function increment(int $productId, int $warehouseId, int $quantity): void
@@ -78,7 +75,7 @@ final class MySqlStockRepository implements StockRepositoryInterface
     public function quantity(int $productId, int $warehouseId): int
     {
         $statement = $this->pdo->prepare(
-            'SELECT quantity FROM product_stocks WHERE product_id = :product_id AND warehouse_id = :warehouse_id'
+            'SELECT quantity FROM product_stocks WHERE product_id = :product_id AND warehouse_id = :warehouse_id' . ($this->pdo->inTransaction() ? ' FOR UPDATE' : '')
         );
         $statement->execute(['product_id' => $productId, 'warehouse_id' => $warehouseId]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);

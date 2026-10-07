@@ -17,8 +17,8 @@ use App\Repository\Contract\SalesOrderRepositoryInterface;
 use App\Security\AuthGuard;
 use App\Service\SalesOrderService;
 use App\Support\OrderSearchCriteria;
-use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
+use App\Validation\InputValidator;
 
 final class SalesOrderController
 {
@@ -85,17 +85,18 @@ final class SalesOrderController
         try {
             $this->salesOrders->createDraft(
                 $actor,
-                (string) ($post['order_number'] ?? ''),
-                (int) ($post['customer_id'] ?? 0),
-                (int) ($post['warehouse_id'] ?? 0),
+                InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
+                InputValidator::positiveInt('customer_id', $post['customer_id'] ?? ''),
+                InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
                 [[
-                    'product_id' => (int) ($post['product_id'] ?? 0),
-                    'quantity' => (int) ($post['quantity'] ?? 0),
-                    'selling_price' => (float) ($post['selling_price'] ?? 0),
+                    'product_id' => InputValidator::positiveInt('product_id', $post['product_id'] ?? ''),
+                    'quantity' => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
+                    'selling_price' => InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
                 ]],
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('sales-orders/create.php', [
+                'old' => $post,
                 'customers' => $this->customers,
                 'warehouses' => $this->warehouses,
                 'products' => $this->activeProducts(),
@@ -108,21 +109,21 @@ final class SalesOrderController
 
     public function submit(Request $request): Response
     {
-        $this->salesOrders->submit($this->guard->requireAuth(), (int) ($request->post()['id'] ?? 0));
+        $this->salesOrders->submit($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
         return new Response('', 302, ['Location' => '/sales-orders']);
     }
 
     public function approve(Request $request): Response
     {
-        $this->salesOrders->approve($this->guard->requireAuth(), (int) ($request->post()['id'] ?? 0));
+        $this->salesOrders->approve($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
         return new Response('', 302, ['Location' => '/sales-orders']);
     }
 
     public function cancel(Request $request): Response
     {
-        $this->salesOrders->rejectOrCancel($this->guard->requireAuth(), (int) ($request->post()['id'] ?? 0));
+        $this->salesOrders->rejectOrCancel($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
         return new Response('', 302, ['Location' => '/sales-orders']);
     }
@@ -130,7 +131,7 @@ final class SalesOrderController
     public function issue(Request $request): Response
     {
         $actor = $this->guard->requireAuth();
-        $id = (int) ($request->post()['id'] ?? 0);
+        $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
         $order = $this->findOrder($id);
         try {
             $this->salesOrders->issue($actor, $id);
@@ -163,7 +164,7 @@ final class SalesOrderController
     /** @return list<Product> */
     private function activeProducts(): array
     {
-        return $this->products->search(ProductSearchCriteria::fromArray(['per_page' => '100']))->items();
+        return $this->products->active();
     }
 
     /** @param array<string, mixed> $data */

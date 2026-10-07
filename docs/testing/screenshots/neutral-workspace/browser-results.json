@@ -1,0 +1,1198 @@
+[
+  {
+    "route": "/dashboard",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": false,
+    "rows": 4,
+    "gaps": []
+  },
+  {
+    "route": "/products",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/products/create",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/purchase-orders",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/sales-orders",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/reports",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/users",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 5,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/categories",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/warehouses",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/suppliers",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/customers",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/purchase-orders/show?id=1",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/sales-orders/show?id=1",
+    "width": 1440,
+    "documentWidth": 1440,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1440,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/dashboard",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": false,
+    "rows": 4,
+    "gaps": []
+  },
+  {
+    "route": "/products",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/products/create",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/purchase-orders",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/sales-orders",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/reports",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/users",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 5,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/categories",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/warehouses",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/suppliers",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/customers",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/purchase-orders/show?id=1",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/sales-orders/show?id=1",
+    "width": 360,
+    "documentWidth": 360,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 360,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/dashboard",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": false,
+    "rows": 4,
+    "gaps": []
+  },
+  {
+    "route": "/products",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/products/create",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/purchase-orders",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/sales-orders",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/reports",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/users",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 5,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/categories",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/warehouses",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/suppliers",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/customers",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/purchase-orders/show?id=1",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/sales-orders/show?id=1",
+    "width": 1024,
+    "documentWidth": 1024,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1024,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/dashboard",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": false,
+    "rows": 4,
+    "gaps": []
+  },
+  {
+    "route": "/products",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/products/create",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/purchase-orders",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/sales-orders",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 10,
+    "gaps": [
+      {
+        "pair": "filter/table",
+        "gap": 0
+      },
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/reports",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/users",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 5,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/categories",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/warehouses",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/suppliers",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/customers",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 1,
+    "tables": 1,
+    "pagination": true,
+    "rows": 2,
+    "gaps": [
+      {
+        "pair": "table/pagination",
+        "gap": 0
+      }
+    ]
+  },
+  {
+    "route": "/purchase-orders/show?id=1",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  },
+  {
+    "route": "/sales-orders/show?id=1",
+    "width": 1920,
+    "documentWidth": 1920,
+    "shell": true,
+    "shellLeft": 0,
+    "shellTop": 0,
+    "shellWidth": 1920,
+    "searchTable": false,
+    "sidebarBackground": "rgb(245, 244, 242)",
+    "home": false,
+    "misplacedExport": false,
+    "filterExports": 0,
+    "exports": 0,
+    "tables": 0,
+    "pagination": false,
+    "rows": 0,
+    "gaps": []
+  }
+]

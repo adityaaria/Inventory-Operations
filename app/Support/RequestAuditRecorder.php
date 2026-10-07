@@ -21,6 +21,9 @@ final class RequestAuditRecorder
             return;
         }
 
+        if ($response->statusCode() < 400 && in_array($request->path(), ['/purchase-orders/receive', '/sales-orders/issue'], true)) {
+            return; // Success is recorded atomically with the stock movement.
+        }
         $parts = array_values(array_filter(explode('/', trim($request->path(), '/'))));
         if ($parts === []) {
             return;
@@ -29,7 +32,10 @@ final class RequestAuditRecorder
         $entityType = $parts[0];
         $operation = $parts[1] ?? 'create';
         $status = $response->statusCode() >= 200 && $response->statusCode() < 400 ? 'success' : 'failure';
-        $entityId = isset($request->post()['id']) && (int) $request->post()['id'] > 0 ? (int) $request->post()['id'] : null;
+        $rawId = $request->post()['id'] ?? null;
+        $validatedId = is_int($rawId) || is_string($rawId)
+            ? filter_var($rawId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
+        $entityId = is_int($validatedId) ? $validatedId : null;
 
         $this->audit->record(
             $actor?->userId(),

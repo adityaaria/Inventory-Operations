@@ -1,0 +1,204 @@
+{
+  "results": [
+    {
+      "name": "products server sort preserves filters",
+      "passed": true,
+      "detail": {
+        "href": "/products?q=Demo&sort=sku&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "products export scope explicit",
+      "passed": true,
+      "detail": {
+        "href": "/products?q=Demo&sort=sku&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "products server sort updates aria",
+      "passed": true
+    },
+    {
+      "name": "purchase-orders server sort preserves filters",
+      "passed": true,
+      "detail": {
+        "href": "/purchase-orders?q=Demo&sort=order_number&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "purchase-orders export scope explicit",
+      "passed": true,
+      "detail": {
+        "href": "/purchase-orders?q=Demo&sort=order_number&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "purchase-orders server sort updates aria",
+      "passed": true
+    },
+    {
+      "name": "sales-orders server sort preserves filters",
+      "passed": true,
+      "detail": {
+        "href": "/sales-orders?q=Demo&sort=order_number&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "sales-orders export scope explicit",
+      "passed": true,
+      "detail": {
+        "href": "/sales-orders?q=Demo&sort=order_number&direction=asc&page=1",
+        "localHandler": null,
+        "exportLabel": "Export Current Page"
+      }
+    },
+    {
+      "name": "sales-orders server sort updates aria",
+      "passed": true
+    },
+    {
+      "name": "report aggregate total on clean seed",
+      "passed": true
+    },
+    {
+      "name": "full streamed report CSV",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "lines": 26
+      }
+    },
+    {
+      "name": "empty streamed CSV keeps schema",
+      "passed": true,
+      "detail": "Type,OrderNumber,Party,Status,Date\n"
+    },
+    {
+      "name": "array date rejects safely",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "admin@example.test product detail 320",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": true,
+        "overflow": false
+      }
+    },
+    {
+      "name": "admin@example.test product detail 390",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": true,
+        "overflow": false
+      }
+    },
+    {
+      "name": "admin@example.test product detail 1440",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": true,
+        "overflow": false
+      }
+    },
+    {
+      "name": "sales1@example.test product detail 320",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "sales1@example.test product detail 390",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "sales1@example.test product detail 1440",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "Sales stock report remains forbidden",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Sales export remains SO scoped",
+      "passed": true,
+      "detail": {
+        "lines": 7
+      }
+    },
+    {
+      "name": "warehouse1@example.test product detail 320",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "warehouse1@example.test product detail 390",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "warehouse1@example.test product detail 1440",
+      "passed": true,
+      "detail": {
+        "title": "Demo Finished Product",
+        "total": true,
+        "edit": false,
+        "overflow": false
+      }
+    },
+    {
+      "name": "Unauthenticated API stays JSON 401",
+      "passed": true,
+      "detail": {
+        "status": 401,
+        "type": "application/json; charset=UTF-8",
+        "text": "{\"error\":\"Authentication required\"}"
+      }
+    }
+  ],
+  "errors": []
+}

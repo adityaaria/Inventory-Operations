@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Customers'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div>
                 <p class="app-title">Inventory Operations</p>
@@ -26,7 +27,7 @@
                 <p class="page-subtitle">Maintain sales account records.</p>
             </div>
             <nav class="toolbar">
-                <a href="/">Home</a>
+
                 <?php if ($canWrite): ?><a class="button-primary" href="/customers/create">Create Customer</a><?php endif; ?>
                 <?php if ($canWrite): ?><button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button><?php endif; ?>
             </nav>
@@ -44,13 +45,14 @@
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                             <label>Import CSV <textarea name="csv_data" rows="3" placeholder="name,email,phone,address"></textarea></label>
                             <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
-                            <button type="submit">Import CSV</button>
+                            <div class="modal-footer"><button type="button" class="button button-quiet" data-dialog-close>Cancel</button><button type="submit">Import CSV</button></div>
                         </form>
                     </div>
                 </section>
             </div>
         <?php endif; ?>
-        <table class="data-table">
+        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="data-table">
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Status</th><?php if ($canWrite): ?><th>Action</th><?php endif; ?></tr></thead>
             <tbody>
                 <?php foreach ($customers as $customer): ?>
@@ -74,6 +76,9 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+</div>
+        <?php require dirname(__DIR__) . "/partials/pagination.php"; ?>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

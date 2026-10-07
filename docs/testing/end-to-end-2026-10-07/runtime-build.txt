@@ -1,0 +1,46 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.offline-runtime
+#1 transferring dockerfile: 545B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/inventory-operations-app:latest
+#2 DONE 0.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 128B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 10.80kB 0.0s done
+#4 DONE 0.0s
+
+#5 [1/6] FROM docker.io/library/inventory-operations-app:latest@sha256:27a608e68b78dac9287c3b8500bca85048e6b22008e79ea33fdee6c3520567f6
+#5 resolve docker.io/library/inventory-operations-app:latest@sha256:27a608e68b78dac9287c3b8500bca85048e6b22008e79ea33fdee6c3520567f6 0.0s done
+#5 DONE 0.1s
+
+#6 [2/6] COPY --chown=www-data:www-data app ./app
+#6 DONE 0.1s
+
+#7 [3/6] COPY --chown=www-data:www-data config ./config
+#7 DONE 0.0s
+
+#8 [4/6] COPY --chown=www-data:www-data public ./public
+#8 DONE 0.0s
+
+#9 [5/6] COPY --chown=www-data:www-data scripts ./scripts
+#9 DONE 0.0s
+
+#10 [6/6] COPY --chown=www-data:www-data views ./views
+#10 DONE 0.0s
+
+#11 exporting to image
+#11 exporting layers 0.1s done
+#11 exporting manifest sha256:865dee3d31df3783c9592b316bd771ed7d5c231824b3fd402e4c8d902079765f done
+#11 exporting config sha256:7cf0ef68bd309ae1cee0016c1fd69c2275eef7854b67ebce2b226bb296e5ba6a done
+#11 exporting attestation manifest sha256:1c493c82b438b96fa58aa18ba4e5aafe2bab133186ecda0e363b6faeb5f9ec9c 0.0s done
+#11 exporting manifest list sha256:71e199e0da7be8cb93c99ee7b4591ad8c85d47cb974c84f65812f69c7130fc11 0.0s done
+#11 naming to docker.io/library/inventory-operations-app:latest done
+#11 unpacking to docker.io/library/inventory-operations-app:latest
+#11 unpacking to docker.io/library/inventory-operations-app:latest 0.2s done
+#11 DONE 0.4s

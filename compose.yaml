@@ -2,6 +2,7 @@ services:
   app:
     build:
       context: .
+      target: runtime
     ports:
       - "${APP_PORT:-8080}:8080"
     environment:
@@ -9,11 +10,18 @@ services:
       APP_ENV: "${APP_ENV:-local}"
       APP_DEBUG: "${APP_DEBUG:-true}"
       APP_PORT: "${APP_PORT:-8080}"
+      SESSION_IDLE_SECONDS: "${SESSION_IDLE_SECONDS:-1800}"
+      SESSION_ABSOLUTE_SECONDS: "${SESSION_ABSOLUTE_SECONDS:-28800}"
+      SESSION_ROTATION_SECONDS: "${SESSION_ROTATION_SECONDS:-900}"
+      SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-auto}"
+      SESSION_SAVE_PATH: /var/www/html/var/sessions
       DB_HOST: db
       DB_PORT: 3306
       DB_DATABASE: "${DB_DATABASE:-inventory_order_management}"
       DB_USERNAME: "${DB_USERNAME:-inventory_app}"
       DB_PASSWORD: "${DB_PASSWORD:-change_me_for_local_only}"
+    volumes:
+      - session-data:/var/www/html/var/sessions
     depends_on:
       db:
         condition: service_healthy
@@ -35,5 +43,40 @@ services:
       - mysql-data:/var/lib/mysql
       - ./database/schema-and-seed.sql:/docker-entrypoint-initdb.d/001-schema-and-seed.sql:ro
 
+  test:
+    profiles: [quality]
+    build:
+      context: .
+      target: test
+    environment:
+      APP_ENV: test
+      APP_DEBUG: false
+      DB_HOST: test-db
+      DB_PORT: 3306
+      DB_DATABASE: inventory_order_management_test
+      DB_USERNAME: inventory_test
+      DB_PASSWORD: local_disposable_test_only
+    depends_on:
+      test-db:
+        condition: service_healthy
+  test-db:
+    profiles: [quality]
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: inventory_order_management_test
+      MYSQL_USER: inventory_test
+      MYSQL_PASSWORD: local_disposable_test_only
+      MYSQL_ROOT_PASSWORD: local_disposable_root_only
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, localhost]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+    volumes:
+      - ./database/schema-and-seed.sql:/docker-entrypoint-initdb.d/001-schema-and-seed.sql:ro
+
 volumes:
+  session-data:
   mysql-data:

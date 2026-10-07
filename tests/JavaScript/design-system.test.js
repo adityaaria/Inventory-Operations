@@ -60,7 +60,7 @@ test('defines modal footer and accessible dialog states', () => {
 
 test('defines data-heavy component states', () => {
     for (const selector of [
-        '.table-toolbar', '.table-search', '.table-loading', '.filtered-empty',
+        '.filters', '.table-loading', '.filtered-empty',
         '.data-error', '.metric-card', '.dashboard-panel', '.chart', '.quick-panel',
     ]) {
         assert.ok(css.includes(selector), `missing ${selector}`);
@@ -104,7 +104,7 @@ test('defines active palette aliases for migrated surfaces', () => {
         assert.match(css, new RegExp(`${token}\\s*:`), `missing ${token}`);
     }
     assert.match(css, /\.app-title[\s\S]*var\(--accent/);
-    assert.match(css, /radial-gradient[\s\S]*var\(--page-tint/);
+    assert.match(css, /body\s*\{[^}]*background:\s*var\(--bg\)/);
 });
 
 test('defines selection control and bulk action hooks', () => {

@@ -10,6 +10,8 @@ final class IntegrationBootstrapTest extends TestCase
 {
     public function testIntegrationSuiteIsConfigured(): void
     {
-        self::assertTrue(true);
+        $pdo = \Tests\Support\TestDatabase::connect();
+        self::assertStringEndsWith('_test', (string) $pdo->query('SELECT DATABASE()')->fetchColumn());
+        self::assertSame(0, (int) $pdo->getAttribute(\PDO::ATTR_EMULATE_PREPARES));
     }
 }

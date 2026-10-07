@@ -6,6 +6,8 @@ namespace App\Repository\InMemory;
 
 use App\Entity\Category;
 use App\Repository\Contract\CategoryRepositoryInterface;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 use RuntimeException;
 
 final class InMemoryCategoryRepository implements CategoryRepositoryInterface
@@ -21,6 +23,20 @@ final class InMemoryCategoryRepository implements CategoryRepositoryInterface
             $this->categories[$category->id()] = $category;
             $this->nextId = max($this->nextId, $category->id() + 1);
         }
+    }
+
+    public function paginate(Pagination $pagination): PaginatedResult
+    {
+        $items = $this->all();
+        usort($items, static fn (Category $a, Category $b): int => strcasecmp($a->name(), $b->name()) ?: $a->id() <=> $b->id());
+        $total = count($items);
+
+        return new PaginatedResult(
+            array_slice($items, $pagination->offsetForTotal($total), Pagination::PER_PAGE),
+            $total,
+            $pagination->pageForTotal($total),
+            Pagination::PER_PAGE,
+        );
     }
 
     public function all(): array

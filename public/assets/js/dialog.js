@@ -48,7 +48,7 @@
                 }
                 backdrop.dataset.dialogWired = 'true';
                 backdrop.addEventListener('click', (event) => {
-                    if (event.target === backdrop || event.target.closest('.modal-close')) {
+                    if (event.target === backdrop || event.target.closest('.modal-close, [data-dialog-close]')) {
                         close(backdrop);
                     }
                 });

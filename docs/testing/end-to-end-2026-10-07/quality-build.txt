@@ -1,0 +1,54 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.offline-verification
+#1 transferring dockerfile: 510B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/inventory-operations-test:latest
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 128B done
+#3 DONE 0.0s
+
+#4 [1/9] FROM docker.io/library/inventory-operations-test:latest@sha256:446c9b7635fdec8ce6dfa4975209c80bfb1631c0c2c88c3d72a854abe9e13e71
+#4 resolve docker.io/library/inventory-operations-test:latest@sha256:446c9b7635fdec8ce6dfa4975209c80bfb1631c0c2c88c3d72a854abe9e13e71 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 39.94kB 0.0s done
+#5 DONE 0.0s
+
+#6 [3/9] COPY --chown=www-data:www-data config ./config
+#6 CACHED
+
+#7 [4/9] COPY --chown=www-data:www-data public ./public
+#7 CACHED
+
+#8 [2/9] COPY --chown=www-data:www-data app ./app
+#8 CACHED
+
+#9 [5/9] COPY --chown=www-data:www-data scripts ./scripts
+#9 CACHED
+
+#10 [6/9] COPY --chown=www-data:www-data views ./views
+#10 CACHED
+
+#11 [7/9] COPY --chown=www-data:www-data tests ./tests
+#11 DONE 0.1s
+
+#12 [8/9] COPY --chown=www-data:www-data database ./database
+#12 DONE 0.0s
+
+#13 [9/9] COPY --chown=www-data:www-data composer.json composer.lock phpunit.xml phpstan.neon ./
+#13 DONE 0.0s
+
+#14 exporting to image
+#14 exporting layers 0.0s done
+#14 exporting manifest sha256:292ed4f7884e1db86f5c2d2652569af39552198000e1e60555df36c94c874c6c done
+#14 exporting config sha256:7b17691029b13457c2e7ffaf43fa0556a207f1edc118b035820c31dd56a70576 done
+#14 exporting attestation manifest sha256:5ce2c7b512747bc5aed6c4d1278322ec08041ee6a90299b23a0d7818eded0932 done
+#14 exporting manifest list sha256:9fa376f174aba69e58a38c913eedbcf4387a756613bf86ff5a7463124cae8080 done
+#14 naming to docker.io/library/inventory-e2e-quality:local done
+#14 unpacking to docker.io/library/inventory-e2e-quality:local 0.0s done
+#14 DONE 0.1s

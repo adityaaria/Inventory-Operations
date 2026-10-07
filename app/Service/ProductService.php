@@ -18,6 +18,7 @@ final class ProductService
     public function __construct(
         private readonly ProductRepositoryInterface $products,
         private readonly MasterDataAuthorizationService $authorization,
+        private readonly ?StockService $stock = null,
     ) {
     }
 
@@ -34,7 +35,12 @@ final class ProductService
         $this->assertCanWrite($actor);
         $this->assertValid($input);
 
-        return $this->products->create($input->trimmed(), true);
+        if ($this->stock === null) return $this->products->create($input->trimmed(), true);
+        return $this->stock->catalogTransaction(function () use ($input): Product {
+            $product = $this->products->create($input->trimmed(), true);
+            $this->stock->initializeProduct($product->id());
+            return $product;
+        });
     }
 
     public function update(AuthContext $actor, int $id, ProductInput $input): Product
@@ -49,6 +55,12 @@ final class ProductService
     {
         $this->assertCanWrite($actor);
         $this->products->setActive($id, $isActive);
+    }
+
+    public function detail(AuthContext $actor, int $id): Product
+    {
+        $this->assertCanRead($actor);
+        return $this->products->findById($id) ?? throw new HttpException(404, 'Product not found.');
     }
 
     private function assertCanRead(AuthContext $actor): void
@@ -70,6 +82,11 @@ final class ProductService
 
     private function assertValid(ProductInput $input): void
     {
+        \App\Validation\InputValidator::requiredString('sku', $input->sku, 80);
+        \App\Validation\InputValidator::requiredString('name', $input->name, 160);
+        \App\Validation\InputValidator::requiredString('unit', $input->unit, 30);
+        \App\Validation\InputValidator::nonNegativeMoney('purchase_price', $input->purchasePrice);
+        \App\Validation\InputValidator::nonNegativeMoney('selling_price', $input->sellingPrice);
         if (trim($input->sku) === '') {
             throw new InvalidArgumentException('SKU is required.');
         }

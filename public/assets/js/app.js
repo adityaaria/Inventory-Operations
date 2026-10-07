@@ -25,14 +25,18 @@
     function enhanceLinks() {
         document.addEventListener('click', (event) => {
             const link = event.target.closest('a[href]');
-            if (!link || link.target || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (!link || link.target || link.hasAttribute('download') || event.button !== 0 || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
             const href = link.getAttribute('href') || '';
             if (/\/(create|edit)(\?|$)/.test(href)) {
                 event.preventDefault();
                 modal.openFormModal(href);
                 return;
             }
-            if (href.startsWith('/') && !href.endsWith('.csv')) modal.setPageLoading(true);
+            const destination = new URL(href, window.location.href);
+            const samePage = destination.pathname === window.location.pathname
+                && destination.search === window.location.search && destination.hash;
+            if (destination.origin === window.location.origin && !samePage
+                && !destination.pathname.endsWith('.csv')) modal.setPageLoading(true);
         });
     }
 

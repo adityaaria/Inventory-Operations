@@ -8,7 +8,7 @@ use App\Http\Response;
 
 final class CsvResponse
 {
-    public static function download(string $filename, string $body): Response
+    public static function download(string $filename, string|\Closure $body): Response
     {
         return new Response($body, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',

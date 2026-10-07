@@ -8,6 +8,8 @@ use App\Entity\Customer;
 use App\Exception\HttpException;
 use App\Repository\Contract\CustomerRepositoryInterface;
 use App\Security\AuthContext;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 use InvalidArgumentException;
 
 final class CustomerService
@@ -26,10 +28,21 @@ final class CustomerService
         return $this->customers->all();
     }
 
+    /** @return PaginatedResult<Customer> */
+    public function paginate(AuthContext $actor, Pagination $pagination): PaginatedResult
+    {
+        if (!$this->authorization->canRead($actor)) {
+            throw new HttpException(403, 'Forbidden');
+        }
+        return $this->customers->paginate($pagination);
+    }
+
     public function create(AuthContext $actor, string $name, string $email, string $phone, string $address): Customer
     {
         $this->assertCanWrite($actor);
         $this->assertValid($name, $email);
+        \App\Validation\InputValidator::optionalString('phone', $phone, 40);
+        \App\Validation\InputValidator::optionalString('address', $address, 255);
         return $this->customers->create(trim($name), trim($email), trim($phone), trim($address), true);
     }
 
@@ -37,6 +50,8 @@ final class CustomerService
     {
         $this->assertCanWrite($actor);
         $this->assertValid($name, $email);
+        \App\Validation\InputValidator::optionalString('phone', $phone, 40);
+        \App\Validation\InputValidator::optionalString('address', $address, 255);
         return $this->customers->update($id, trim($name), trim($email), trim($phone), trim($address));
     }
 
@@ -55,6 +70,8 @@ final class CustomerService
 
     private function assertValid(string $name, string $email): void
     {
+        \App\Validation\InputValidator::requiredString('name', $name, 120);
+        \App\Validation\InputValidator::optionalString('email', $email, 190);
         if (trim($name) === '') {
             throw new InvalidArgumentException('Name is required.');
         }

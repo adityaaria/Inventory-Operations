@@ -17,8 +17,8 @@ use App\Repository\Contract\PurchaseOrderRepositoryInterface;
 use App\Security\AuthGuard;
 use App\Service\PurchaseOrderService;
 use App\Support\OrderSearchCriteria;
-use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
+use App\Validation\InputValidator;
 
 final class PurchaseOrderController
 {
@@ -87,17 +87,18 @@ final class PurchaseOrderController
         try {
             $this->purchaseOrders->createDraft(
                 $actor,
-                (string) ($post['order_number'] ?? ''),
-                (int) ($post['supplier_id'] ?? 0),
-                (int) ($post['warehouse_id'] ?? 0),
+                InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
+                InputValidator::positiveInt('supplier_id', $post['supplier_id'] ?? ''),
+                InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
                 [[
-                    'product_id' => (int) ($post['product_id'] ?? 0),
-                    'quantity' => (int) ($post['quantity'] ?? 0),
-                    'purchase_price' => (float) ($post['purchase_price'] ?? 0),
+                    'product_id' => InputValidator::positiveInt('product_id', $post['product_id'] ?? ''),
+                    'quantity' => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
+                    'purchase_price' => InputValidator::nonNegativeMoney('purchase_price', $post['purchase_price'] ?? ''),
                 ]],
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('purchase-orders/create.php', [
+                'old' => $post,
                 'suppliers' => $this->suppliers,
                 'warehouses' => $this->warehouses,
                 'products' => $this->activeProducts(),
@@ -110,7 +111,7 @@ final class PurchaseOrderController
 
     public function order(Request $request): Response
     {
-        $this->purchaseOrders->markOrdered($this->guard->requireAuth(), (int) ($request->post()['id'] ?? 0));
+        $this->purchaseOrders->markOrdered($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
         return new Response('', 302, ['Location' => '/purchase-orders']);
     }
@@ -119,12 +120,12 @@ final class PurchaseOrderController
     {
         $actor = $this->guard->requireAuth();
         $post = $request->post();
-        $id = (int) ($post['id'] ?? 0);
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
         $order = $this->findOrder($id);
 
         try {
             $this->purchaseOrders->receive($actor, $id, [
-                (int) ($post['item_id'] ?? 0) => (int) ($post['quantity'] ?? 0),
+                InputValidator::positiveInt('item_id', $post['item_id'] ?? '') => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
             ]);
         } catch (InvalidArgumentException $exception) {
             return $this->render('purchase-orders/show.php', [
@@ -142,7 +143,7 @@ final class PurchaseOrderController
 
     public function cancel(Request $request): Response
     {
-        $this->purchaseOrders->cancel($this->guard->requireAuth(), (int) ($request->post()['id'] ?? 0));
+        $this->purchaseOrders->cancel($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
         return new Response('', 302, ['Location' => '/purchase-orders']);
     }
@@ -155,7 +156,7 @@ final class PurchaseOrderController
     /** @return list<Product> */
     private function activeProducts(): array
     {
-        return $this->products->search(ProductSearchCriteria::fromArray(['per_page' => '100']))->items();
+        return $this->products->active();
     }
 
     /** @param array<string, mixed> $data */

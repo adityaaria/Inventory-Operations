@@ -680,6 +680,10 @@ For dashboard, choose and document whether a product is considered low stock whe
 
 All sort columns must use server-side allow-lists; never interpolate arbitrary user-provided column names.
 
+### Management lists
+
+Users, Categories, Warehouses, Suppliers and Customers use server-side pagination with a fixed 10 rows/page. This aligns the main-list pagination behavior with FIND-01. Existing read/write authorization remains unchanged. Invalid page inputs normalize to page 1; pages beyond the result count clamp to the last page. MySQL repositories bind integer LIMIT/OFFSET values and use deterministic ordering (Users by id; other management lists by name then id). Shared pagination keeps query parameters in Previous/Next links. Full `all()`/`active()` repository reads remain available for dropdowns and workflow dependencies.
+
 ---
 
 ## 14. Dashboard Queries
@@ -1537,3 +1541,44 @@ An optional feature can be merged only when:
 10. feature can be explained in technical defense.
 
 Do not implement an optional feature if it threatens submission readiness.
+
+### Stable workspace rendering
+
+UI-01: authenticated templates render shared workspace/sidebar/breadcrumb/Profile PHP partials before first paint. JavaScript enhances mobile drawer interactions without reparenting the main content. The front controller provides session-derived role as presentation context; route and service authorization remain authoritative. Reports evaluates its view like other HTML controllers. Custom CSS supplies optional native cross-document transitions with reduced-motion opt-out and native fallback.
+
+### Reporting workspace enhancement
+
+REPORT-01 / UI-01 / FIND-01: `/reports` displays date-filtered order-status or stock-movement recap cards, two charts and paginated detail (10 rows). ReportService derives recap from the same role/date-scoped OperationalQueryRepository rows as CSV exports; preview pagination does not limit the exported CSV. Sales own-order scope is session-derived; Sales stock preview is rejected by service authorization and stock CSV remains server-guarded. Warehouse defaults to stock movements while existing export permissions remain intact.
+
+Calendar/range and query-shape validation returns 422 without presenting stale report totals. Stock end dates include the whole day; global union queries use unique native prepared placeholders. Filters and pagination remain adjacent to the detail table and retain report type/dates. Default interval is explicitly all dates, a UI default rather than a new official requirement. SQL aggregation/paged detail/streaming may be introduced for larger datasets; current recap loads the existing filtered report rows. Evidence: docs/testing/reports-enhancement-2026-10-06.md.
+
+### Mobile fit and contained table regions
+
+UI-01 / VIEW-01 / FIND-01: all table-bearing views render named, focusable scroll regions so the main page stays within its viewport. Mobile/tablet workspace switches to a drawer at <=960px, with compact Menu/breadcrumb header, fitting toolbar/form/pagination layouts and contained long text. Drawer focus/inert handling remains presentation-only; service/route authorization is unchanged. Dialogs use dynamic viewport bounds and visible separated action footers. Wide tables retain local horizontal scrolling; vertical scrolling remains normal for long content.
+
+Evidence: docs/testing/mobile-fit-2026-10-06.md (290 browser page checks, 110 dialog checks; physical-device limitations recorded).
+
+
+## Audit remediation — 2026-10-06
+
+Requirement IDs: AUTH-01, USR-01, PRD-01, WH-01, PO-01, SO-01, VIEW-01, FIND-01, REPORT-01, VAL-01, ERR-01, UI-01, ARCH-01/02, TEST-01/02/03.
+
+- Source-order status/receipt state is locked and validated inside StockService's transaction, before sorted stock locks; every order state transition follows this ordering. Stock quantity reads inside a transaction use current locking reads. Movement audit is strict and commits with order/stock/ledger; request/auth telemetry remains best-effort.
+- AuthGuard resolves active state/current role from UserRepository on authenticated requests. Deactivation logs out the session on its next request; role downgrade removes old privileges without trusting the login-time role.
+- Raw scalar/integer/money input is validated before coercion; known repository constraints become safe validation errors. Import batches use CsvImportService/TransactionManagerInterface and roll back in full on a bad row.
+- Product detail is read-only for authenticated roles, with total/per-warehouse stock, prices/category/status and Admin-only editing.
+- Product/PO/SO supported sort links sort the full filtered result; other heading sorting is explicitly local. Generic export is explicitly current-page export. Both CSV paths neutralize formula-leading values. Reports uses DB aggregation/LIMIT and streams full authorized filtered CSV, including stable empty headers.
+- Docker quality profile has a PHP/Node test target and disposable MySQL test service. Test connections refuse application database names; quality runner reseeds before/after checks. PHPStan is 2.3.0 at level 5.
+- Obsolete drawer CSS and duplicate header breakpoint blocks are consolidated. Physical iOS/Android/Safari and keyboard verification remains pending; no physical-device result is claimed.
+
+Evidence: docs/testing/audit-remediation-2026-10-06.md and docs/architecture/ADR-004-atomic-workflows-and-imports.md. Historical audit reproductions remain preserved; current regression tests specify the corrected outcomes. No trainer decision or new order status was introduced.
+
+## Session lifecycle hardening — 7 October 2026
+
+AUTH-01/02, USR-01, API-01, ERR-01, ARCH-01/02, TEST-01/03: SessionPolicy provides inclusive idle/absolute expiry and periodic rotation; NativeSessionManager owns strict cookie-only PHP lifecycle/storage and closes before response streaming. Engineering defaults are 30-minute idle, 8-hour absolute and 15-minute rotation, configurable through environment. AuthService binds credential version at login; AuthGuard revokes missing/inactive/changed-password accounts and refreshes current role without extending session origin. Identity/CSRF rotate at login/logout/privilege changes; routine rotation keeps open-form CSRF stable. Old IDs contain no authenticated data. Production requires Secure cookies; dynamic responses forbid caching. Compose persists sessions in an independent non-root-writable volume. Fetch expiry gets a sign-in action without retrying the mutation. ADR-005 explains concurrency and single-host limits; training-module-alignment maps the five curricula without changing the mandated native stack.
+
+## End-to-end corrections — 7 October 2026
+
+PRD-01/WH-01/DASH-01/JOB-01/DB-01/ARCH-01/02: ProductService and WarehouseService receive the shared StockService in production. StockCatalogRepository (MySQL/in-memory) enumerates deterministic IDs and locks the immutable phase-0 bootstrap row before creation/zero-pair initialization. Missing ProductStock rows are initialized at zero in the same transaction as the master record; populated quantities and StockLedger remain unchanged. MySqlTransactionManager joins the same connection-owned outer transaction so product/warehouse CSV imports remain atomic. Clean seed has a complete stock matrix; historical databases use initialize-stock-balances CLI, not reseeding. ADR-006 explains mutex/zero-movement boundaries and scaling limits.
+
+VAL-01/ERR-01/PO-01/SO-01: rejected order states produce typed 422 validation failures; IDs are validated before transitions. FormState preserves scalar attempted inputs across 422 responses for every create/edit template, including selected options and textarea details; output escaping remains at the HTML boundary, password/CSRF never restored. Order selectors use ProductRepository.active(), not paginated search. Read-only SQL E2E assertions and separate MySQL worker processes verify resulting states, balances, ledger, audit and rollback.

@@ -6,6 +6,8 @@ namespace App\Repository\InMemory;
 
 use App\Entity\User;
 use App\Repository\Contract\UserRepositoryInterface;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 use RuntimeException;
 
 final class InMemoryUserRepository implements UserRepositoryInterface
@@ -40,6 +42,20 @@ final class InMemoryUserRepository implements UserRepositoryInterface
     public function findById(int $id): ?User
     {
         return $this->users[$id] ?? null;
+    }
+
+    public function paginate(Pagination $pagination): PaginatedResult
+    {
+        $items = $this->all();
+        usort($items, static fn (User $a, User $b): int => $a->id() <=> $b->id());
+        $total = count($items);
+
+        return new PaginatedResult(
+            array_slice($items, $pagination->offsetForTotal($total), Pagination::PER_PAGE),
+            $total,
+            $pagination->pageForTotal($total),
+            Pagination::PER_PAGE,
+        );
     }
 
     public function all(): array

@@ -56,6 +56,13 @@ final class MySqlProductRepository implements ProductRepositoryInterface
         return new PaginatedResult($items, $count, $criteria->page(), $criteria->perPage());
     }
 
+    public function active(): array
+    {
+        $statement = $this->pdo->prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY name ASC, id ASC');
+        $statement->execute();
+        return array_map(fn (array $row): Product => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     public function findById(int $id): ?Product
     {
         $statement = $this->pdo->prepare(
@@ -69,45 +76,51 @@ final class MySqlProductRepository implements ProductRepositoryInterface
 
     public function create(ProductInput $input, bool $isActive): Product
     {
-        $statement = $this->pdo->prepare(
-            'INSERT INTO products (sku, name, unit, purchase_price, selling_price, price, reorder_point, category_id, is_active)
-             VALUES (:sku, :name, :unit, :purchase_price, :selling_price, :price, :reorder_point, :category_id, :is_active)'
-        );
-        $statement->execute([
-            'sku' => $input->sku,
-            'name' => $input->name,
-            'unit' => $input->unit,
-            'purchase_price' => $input->purchasePrice,
-            'selling_price' => $input->sellingPrice,
-            'price' => $input->sellingPrice,
-            'reorder_point' => $input->reorderPoint,
-            'category_id' => $input->categoryId,
-            'is_active' => $isActive ? 1 : 0,
-        ]);
+        return PersistenceErrors::write(function () use ($input, $isActive): Product {
+            $statement = $this->pdo->prepare(
+                'INSERT INTO products (sku, name, unit, purchase_price, selling_price, price, reorder_point, category_id, is_active)
+                 VALUES (:sku, :name, :unit, :purchase_price, :selling_price, :price, :reorder_point, :category_id, :is_active)'
+            );
+            $statement->execute([
+                'sku' => $input->sku,
+                'name' => $input->name,
+                'unit' => $input->unit,
+                'purchase_price' => $input->purchasePrice,
+                'selling_price' => $input->sellingPrice,
+                'price' => $input->sellingPrice,
+                'reorder_point' => $input->reorderPoint,
+                'category_id' => $input->categoryId,
+                'is_active' => $isActive ? 1 : 0,
+            ]);
 
-        return $this->findRequired((int) $this->pdo->lastInsertId());
+            return $this->findRequired((int) $this->pdo->lastInsertId());
+
+        });
     }
 
     public function update(int $id, ProductInput $input): Product
     {
-        $statement = $this->pdo->prepare(
-            'UPDATE products
-             SET sku = :sku, name = :name, unit = :unit, purchase_price = :purchase_price, selling_price = :selling_price, price = :price, reorder_point = :reorder_point, category_id = :category_id
-             WHERE id = :id'
-        );
-        $statement->execute([
-            'id' => $id,
-            'sku' => $input->sku,
-            'name' => $input->name,
-            'unit' => $input->unit,
-            'purchase_price' => $input->purchasePrice,
-            'selling_price' => $input->sellingPrice,
-            'price' => $input->sellingPrice,
-            'reorder_point' => $input->reorderPoint,
-            'category_id' => $input->categoryId,
-        ]);
+        return PersistenceErrors::write(function () use ($id, $input): Product {
+            $statement = $this->pdo->prepare(
+                'UPDATE products
+                 SET sku = :sku, name = :name, unit = :unit, purchase_price = :purchase_price, selling_price = :selling_price, price = :price, reorder_point = :reorder_point, category_id = :category_id
+                 WHERE id = :id'
+            );
+            $statement->execute([
+                'id' => $id,
+                'sku' => $input->sku,
+                'name' => $input->name,
+                'unit' => $input->unit,
+                'purchase_price' => $input->purchasePrice,
+                'selling_price' => $input->sellingPrice,
+                'price' => $input->sellingPrice,
+                'reorder_point' => $input->reorderPoint,
+                'category_id' => $input->categoryId,
+            ]);
 
-        return $this->findRequired($id);
+            return $this->findRequired($id);
+
+        });
     }
 
     public function setActive(int $id, bool $isActive): void
@@ -138,6 +151,22 @@ final class MySqlProductRepository implements ProductRepositoryInterface
             (int) $row['quantity'],
             (int) $row['reorder_point'],
         ), $statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function stocksForProducts(array $productIds): array
+    {
+        if ($productIds === []) return [];
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $statement = $this->pdo->prepare("SELECT ps.product_id, ps.warehouse_id, p.sku, p.name AS product_name,
+            w.name AS warehouse_name, ps.quantity, p.reorder_point FROM product_stocks ps
+            INNER JOIN products p ON p.id = ps.product_id INNER JOIN warehouses w ON w.id = ps.warehouse_id
+            WHERE ps.product_id IN ({$placeholders}) ORDER BY ps.product_id, w.name");
+        $statement->execute($productIds);
+        $result = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $result[(int) $row['product_id']][] = new ProductStock((int) $row['product_id'], (int) $row['warehouse_id'], (string) $row['sku'], (string) $row['product_name'], (string) $row['warehouse_name'], (int) $row['quantity'], (int) $row['reorder_point']);
+        }
+        return $result;
     }
 
     /** @return array{0: string, 1: array<string, mixed>} */

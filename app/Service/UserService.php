@@ -9,6 +9,8 @@ use App\Exception\HttpException;
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Security\AuthContext;
 use App\Security\Authorization;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 use InvalidArgumentException;
 
 final class UserService
@@ -27,6 +29,13 @@ final class UserService
         return $this->users->all();
     }
 
+    /** @return PaginatedResult<User> */
+    public function paginate(AuthContext $actor, Pagination $pagination): PaginatedResult
+    {
+        $this->assertCanManageUsers($actor);
+        return $this->users->paginate($pagination);
+    }
+
     public function createUser(AuthContext $actor, string $name, string $email, string $password, string $role): User
     {
         $this->assertCanManageUsers($actor);
@@ -37,13 +46,6 @@ final class UserService
         }
 
         $hash = password_hash($password, PASSWORD_BCRYPT);
-        // Unreachable in practice: password_hash() with PASSWORD_BCRYPT on a non-empty string
-        // input does not return a non-string value on supported PHP versions. Kept as a
-        // defensive guard against a hypothetical hashing failure.
-        if (!is_string($hash)) {
-            throw new InvalidArgumentException('Unable to hash password.');
-        }
-
         return $this->users->create(trim($name), strtolower(trim($email)), $hash, $role, true);
     }
 
@@ -70,6 +72,8 @@ final class UserService
 
     private function assertValidUserInput(string $name, string $email, string $role): void
     {
+        \App\Validation\InputValidator::optionalString('name', $name, 120);
+        \App\Validation\InputValidator::optionalString('email', $email, 190);
         if (trim($name) === '') {
             throw new InvalidArgumentException('Name is required.');
         }

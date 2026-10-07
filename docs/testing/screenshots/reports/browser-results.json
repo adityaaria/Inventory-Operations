@@ -1,0 +1,298 @@
+{
+  "results": [
+    {
+      "email": "admin@example.test",
+      "width": 1440,
+      "type": "orders",
+      "total": 50,
+      "rows": 10,
+      "first": 50,
+      "charts": [
+        50,
+        50
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 50,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=1",
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=3"
+      ]
+    },
+    {
+      "email": "admin@example.test",
+      "width": 1440,
+      "type": "stock-ledger",
+      "total": 15,
+      "rows": 5,
+      "first": 15,
+      "charts": [
+        15,
+        15
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 15,
+      "filterValues": {
+        "type": "stock-ledger",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=stock-ledger&from=2000-01-01&to=2100-01-01&page=1"
+      ]
+    },
+    {
+      "email": "admin@example.test",
+      "width": 360,
+      "type": "orders",
+      "total": 50,
+      "rows": 10,
+      "first": 50,
+      "charts": [
+        50,
+        50
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 50,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=1",
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=3"
+      ]
+    },
+    {
+      "email": "admin@example.test",
+      "width": 360,
+      "type": "stock-ledger",
+      "total": 15,
+      "rows": 5,
+      "first": 15,
+      "charts": [
+        15,
+        15
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 15,
+      "filterValues": {
+        "type": "stock-ledger",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=stock-ledger&from=2000-01-01&to=2100-01-01&page=1"
+      ]
+    },
+    {
+      "email": "sales1@example.test",
+      "width": 1440,
+      "type": "orders",
+      "total": 6,
+      "rows": 6,
+      "first": 6,
+      "charts": [
+        6,
+        6
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 6,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": false,
+      "paginationLinks": []
+    },
+    {
+      "email": "sales1@example.test",
+      "width": 360,
+      "type": "orders",
+      "total": 6,
+      "rows": 6,
+      "first": 6,
+      "charts": [
+        6,
+        6
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 6,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": false,
+      "paginationLinks": []
+    },
+    {
+      "email": "warehouse1@example.test",
+      "width": 1440,
+      "type": "orders",
+      "total": 50,
+      "rows": 10,
+      "first": 50,
+      "charts": [
+        50,
+        50
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 50,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=1",
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=3"
+      ]
+    },
+    {
+      "email": "warehouse1@example.test",
+      "width": 1440,
+      "type": "stock-ledger",
+      "total": 15,
+      "rows": 5,
+      "first": 15,
+      "charts": [
+        15,
+        15
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 15,
+      "filterValues": {
+        "type": "stock-ledger",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=stock-ledger&from=2000-01-01&to=2100-01-01&page=1"
+      ]
+    },
+    {
+      "email": "warehouse1@example.test",
+      "width": 360,
+      "type": "orders",
+      "total": 50,
+      "rows": 10,
+      "first": 50,
+      "charts": [
+        50,
+        50
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 50,
+      "filterValues": {
+        "type": "orders",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=1",
+        "/reports?type=orders&from=2000-01-01&to=2100-01-01&page=3"
+      ]
+    },
+    {
+      "email": "warehouse1@example.test",
+      "width": 360,
+      "type": "stock-ledger",
+      "total": 15,
+      "rows": 5,
+      "first": 15,
+      "charts": [
+        15,
+        15
+      ],
+      "csvStatus": 200,
+      "csvType": "text/csv; charset=UTF-8",
+      "csvRows": 15,
+      "filterValues": {
+        "type": "stock-ledger",
+        "from": "2000-01-01",
+        "to": "2100-01-01"
+      },
+      "duplicateExport": 0,
+      "overflow": false,
+      "filterGap": 0,
+      "paginationGap": 0,
+      "stockOption": true,
+      "paginationLinks": [
+        "/reports?type=stock-ledger&from=2000-01-01&to=2100-01-01&page=1"
+      ]
+    }
+  ],
+  "empty": {
+    "empty": true,
+    "total": "0",
+    "chartEmpty": 2
+  },
+  "invalid": [
+    422,
+    422,
+    422,
+    422,
+    422,
+    422
+  ],
+  "errors": []
+}

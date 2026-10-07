@@ -9,9 +9,12 @@ use App\Http\Request;
 use App\Http\Response;
 use App\Repository\Contract\CustomerRepositoryInterface;
 use App\Security\AuthGuard;
+use App\Security\AuthContext;
+use App\Support\Pagination;
 use App\Service\CustomerService;
 use App\Support\CsvImport;
 use InvalidArgumentException;
+use App\Validation\InputValidator;
 
 final class CustomerController
 {
@@ -19,18 +22,13 @@ final class CustomerController
         private readonly CustomerService $customers,
         private readonly CustomerRepositoryInterface $repository,
         private readonly AuthGuard $guard,
+        private readonly ?\App\Service\CsvImportService $imports = null,
     ) {
     }
 
     public function index(Request $request): Response
     {
-        $actor = $this->guard->requireAuth();
-
-        return $this->render('customers/index.php', [
-            'customers' => $this->customers->all($actor),
-            'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
-            'error' => '',
-        ]);
+        return $this->renderIndex($this->guard->requireAuth(), $request);
     }
 
     public function create(Request $request): Response
@@ -48,13 +46,13 @@ final class CustomerController
         try {
             $this->customers->create(
                 $actor,
-                (string) ($post['name'] ?? ''),
-                (string) ($post['email'] ?? ''),
-                (string) ($post['phone'] ?? ''),
-                (string) ($post['address'] ?? ''),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('email', $post['email'] ?? '', 190),
+                InputValidator::optionalString('phone', $post['phone'] ?? '', 255),
+                InputValidator::optionalString('address', $post['address'] ?? '', 1000),
             );
         } catch (InvalidArgumentException $exception) {
-            return $this->render('customers/create.php', ['error' => $exception->getMessage()], 422);
+            return $this->render('customers/create.php', ['old' => $post, 'error' => $exception->getMessage()], 422);
         }
 
         return new Response('', 302, ['Location' => '/customers']);
@@ -65,7 +63,8 @@ final class CustomerController
         $actor = $this->guard->requireUserManagement();
 
         try {
-            foreach (CsvImport::rowsFromRequest($request) as $row) {
+            if ($this->imports === null) throw new \LogicException('CSV import service is not configured.');
+            $this->imports->import(CsvImport::rowsFromRequest($request), function (array $row) use ($actor): void {
                 $this->customers->create(
                     $actor,
                     $row['name'] ?? '',
@@ -73,13 +72,9 @@ final class CustomerController
                     $row['phone'] ?? '',
                     $row['address'] ?? '',
                 );
-            }
-        } catch (\Throwable $exception) {
-            return $this->render('customers/index.php', [
-                'customers' => $this->customers->all($actor),
-                'canWrite' => true,
-                'error' => $exception->getMessage(),
-            ], 422);
+            });
+        } catch (InvalidArgumentException $exception) {
+            return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
         return new Response('', 302, ['Location' => '/customers']);
@@ -100,19 +95,20 @@ final class CustomerController
     {
         $actor = $this->guard->requireUserManagement();
         $post = $request->post();
-        $id = (int) ($post['id'] ?? 0);
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
 
         try {
             $this->customers->update(
                 $actor,
                 $id,
-                (string) ($post['name'] ?? ''),
-                (string) ($post['email'] ?? ''),
-                (string) ($post['phone'] ?? ''),
-                (string) ($post['address'] ?? ''),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('email', $post['email'] ?? '', 190),
+                InputValidator::optionalString('phone', $post['phone'] ?? '', 255),
+                InputValidator::optionalString('address', $post['address'] ?? '', 1000),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('customers/edit.php', [
+                'old' => $post,
                 'customer' => $this->repository->findById($id),
                 'error' => $exception->getMessage(),
             ], 422);
@@ -133,6 +129,21 @@ final class CustomerController
         $this->customers->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), false);
 
         return new Response('', 302, ['Location' => '/customers']);
+    }
+
+    private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
+    {
+        $result = $this->customers->paginate($actor, Pagination::fromArray($request->query()));
+
+        return $this->render('customers/index.php', [
+            'customers' => $result->items(),
+            'result' => $result,
+            'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
+            'paginationPath' => '/customers',
+            'paginationLabel' => 'Customers',
+            'paginationQuery' => $request->query(),
+            'error' => $error,
+        ], $status);
     }
 
     /** @param array<string, mixed> $data */

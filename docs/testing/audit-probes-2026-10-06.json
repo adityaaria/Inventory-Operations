@@ -1,0 +1,30 @@
+{
+  "same_po_interleaving": {
+    "ordered_quantity": 10,
+    "received_quantity": 10,
+    "status": "PartiallyReceived"
+  },
+  "same_so_interleaving": {
+    "ordered_quantity": 1,
+    "stock_decrease": 2,
+    "ledger_rows": 2,
+    "status": "Fulfilled"
+  },
+  "revoked_user_session": {
+    "database_role": "Sales",
+    "database_active": false,
+    "guard_role": "Admin"
+  },
+  "invalid_numeric_input": {
+    "http_status": 302,
+    "stored": {
+      "purchase_price": "0.00",
+      "selling_price": "0.00",
+      "reorder_point": 2
+    }
+  },
+  "partial_failed_import": {
+    "http_status": 422,
+    "first_row_persisted": 1
+  }
+}

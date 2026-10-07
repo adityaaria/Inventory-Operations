@@ -1,0 +1,1 @@
+{"pages":303,"sizes":[[320,568],[360,800],[390,844],[430,932],[568,320],[844,390],[768,1024],[960,600],[1440,900]],"errors":0,"checks":"no document/main overflow, controls fit and >=44px, all tables contained, zero filter/table/pagination gaps, drawer close/focus/inert, local horizontal table scrolling"}

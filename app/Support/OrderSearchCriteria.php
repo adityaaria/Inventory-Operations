@@ -23,6 +23,9 @@ final class OrderSearchCriteria
     /** @param array<string, mixed> $input */
     public static function fromArray(array $input): self
     {
+        foreach ($input as $key => $value) {
+            if (!is_string($value) && !is_int($value)) unset($input[$key]);
+        }
         $status = isset($input['status']) && in_array($input['status'], self::STATUSES, true) ? (string) $input['status'] : null;
         $sortBy = isset($input['sort']) && in_array($input['sort'], self::SORT_COLUMNS, true) ? (string) $input['sort'] : 'order_date';
         $direction = isset($input['direction']) && in_array(strtolower((string) $input['direction']), self::DIRECTIONS, true)

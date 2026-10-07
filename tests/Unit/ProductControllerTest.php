@@ -67,6 +67,7 @@ final class ProductControllerTest extends TestCase
             $products,
             new InMemoryCategoryRepository([new Category(1, 'Finished Goods', 'Ready-to-sell inventory', true)]),
             new AuthGuard($session),
+            new \App\Service\CsvImportService(new \Tests\Support\ImmediateTransactions()),
         );
 
         $response = $controller->import(new Request('POST', '/products/import', [], [
@@ -89,6 +90,7 @@ final class ProductControllerTest extends TestCase
             $products,
             new InMemoryCategoryRepository([new Category(1, 'Finished Goods', 'Ready-to-sell inventory', true)]),
             new AuthGuard($session),
+            new \App\Service\CsvImportService(new \Tests\Support\ImmediateTransactions()),
         );
     }
 }

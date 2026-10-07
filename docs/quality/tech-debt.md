@@ -1,6 +1,10 @@
 # Technical Debt Register
 
-## Open Items
+## Current status — 6 October 2026
+
+Audit findings and remediation are tracked in `docs/quality/project-audit-2026-10-06.md` and `docs/testing/audit-remediation-2026-10-06.md`. The historical register below is retained as evidence. TD-001/002/009 are resolved: Git exists and the official PDF was read. TD-005 is no longer observed: the app runs on 8080. TD-006 is mitigated by Docker quality tooling (host PHP remains 7.4). TD-010 is resolved by PHPStan 2.3.0. TD-011 is resolved for critical stock movements through transactional audit; request/auth telemetry remains explicitly best-effort. TD-007/008/012 remain maintenance items. Physical-device verification remains pending.
+
+## Historical Open Items
 
 | ID | Area | Debt | Impact | Planned Action |
 |---|---|---|---|---|
@@ -22,3 +26,11 @@
 | TD-003 | Local PHP tooling | Local `php` pointed to a broken PHP 7.4 installation and `composer` was unavailable. | Homebrew PHP was relinked to PHP 8.5.10, Composer 2.10.3 was installed, `composer install` completed, PHPUnit passed, and PHPStan reported no errors on 2026-08-31. |
 | TD-004 | Docker Desktop | Docker build failed with BuildKit/containerd metadata I/O errors and classic builder read-only filesystem errors. | Docker Desktop was restarted, the corrupt app/base image path was isolated, Dockerfile was moved to PHP 8.3 CLI, `unzip` and `composer.lock` handling were added, Docker build passed, containers started, and Docker-hosted HTTP smoke test passed on 2026-08-31. |
 | TD-013 | Login brute-force protection | Login had no per-subject throttling in the mandatory baseline. | Added `login_attempts`, `LoginRateLimiter`, auth audit events, and runtime smoke evidence on 2026-09-01. |
+
+## Session deployment boundary — 7 October 2026
+
+Session hardening is implemented and verified; ADR-005 records remaining deployment scope. Native files use a dedicated persistent volume and per-session PHP locks for this single-host application. Multi-host shared storage, active-session inventory/remote logout-all, production HTTP worker/TLS setup and storage-cleanup monitoring are separate operational work, not claims of this enhancement. Previously authenticated sessions require one fresh login after rollout. At ID rotation boundaries queued old-ID requests fail authentication; no grace-period credential alias or automatic mutation replay is provided.
+
+## End-to-end closure — 7 October 2026
+
+Product-picker truncation, invalid-state 500s, failed-form retention and missing zero stock pairs are fixed. Actual concurrent stock and catalog operations now have passing integration coverage. Sustained load benchmarking and production deployment boundaries remain open; see [verification evidence](../testing/end-to-end-verification-2026-10-07.md).

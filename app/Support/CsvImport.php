@@ -16,7 +16,9 @@ final class CsvImport
      */
     public static function rowsFromRequest(Request $request): array
     {
-        $csv = trim((string) ($request->post()['csv_data'] ?? ''));
+        $input = $request->post()['csv_data'] ?? '';
+        if (!is_string($input)) throw new InvalidArgumentException('CSV content must be text.');
+        $csv = trim($input);
         if ($csv === '') {
             $csv = self::uploadedCsv($request);
         }
@@ -27,6 +29,13 @@ final class CsvImport
     private static function uploadedCsv(Request $request): string
     {
         $file = $request->files()['csv_file'] ?? null;
+        if (is_array($file)) {
+            foreach (['error', 'size', 'tmp_name'] as $key) {
+                if (isset($file[$key]) && !is_int($file[$key]) && !is_string($file[$key])) {
+                    throw new InvalidArgumentException('Upload one CSV file at a time.');
+                }
+            }
+        }
         if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             throw new InvalidArgumentException('CSV content or file is required.');
         }
@@ -69,7 +78,7 @@ final class CsvImport
         // Unreachable in practice: rowsFromRequest() only reaches parse() with a $csv that is
         // already guaranteed non-empty after trim(), so fgetcsv() always returns at least one
         // field for the header line. Kept as a defensive guard against a malformed stream.
-        if (!is_array($header) || $header === []) {
+        if ($header === false) {
             throw new InvalidArgumentException('CSV header is required.');
         }
 
@@ -80,7 +89,7 @@ final class CsvImport
 
         $rows = [];
         while (($line = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
-            if (!is_array($line) || self::isBlank($line)) {
+            if (self::isBlank($line)) {
                 continue;
             }
 

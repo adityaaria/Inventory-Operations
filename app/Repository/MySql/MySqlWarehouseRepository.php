@@ -6,12 +6,35 @@ namespace App\Repository\MySql;
 
 use App\Entity\Warehouse;
 use App\Repository\Contract\WarehouseRepositoryInterface;
+use App\Support\PaginatedResult;
+use App\Support\Pagination;
 use PDO;
 use RuntimeException;
 
 final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
 {
     public function __construct(private readonly PDO $pdo) {}
+
+    public function paginate(Pagination $pagination): PaginatedResult
+    {
+        $count = $this->pdo->prepare('SELECT COUNT(*) FROM warehouses');
+        $count->execute();
+        $total = (int) $count->fetchColumn();
+        $statement = $this->pdo->prepare(
+            'SELECT id, name, location, is_active FROM warehouses
+             ORDER BY name ASC, id ASC LIMIT :limit OFFSET :offset'
+        );
+        $statement->bindValue('limit', Pagination::PER_PAGE, PDO::PARAM_INT);
+        $statement->bindValue('offset', $pagination->offsetForTotal($total), PDO::PARAM_INT);
+        $statement->execute();
+
+        return new PaginatedResult(
+            array_map(fn (array $row): Warehouse => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC)),
+            $total,
+            $pagination->pageForTotal($total),
+            Pagination::PER_PAGE,
+        );
+    }
 
     public function all(): array
     {
@@ -41,16 +64,22 @@ final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
 
     public function create(string $name, string $location, bool $isActive): Warehouse
     {
-        $statement = $this->pdo->prepare('INSERT INTO warehouses (name, location, is_active) VALUES (:name, :location, :is_active)');
-        $statement->execute(['name' => $name, 'location' => $location, 'is_active' => $isActive ? 1 : 0]);
-        return $this->findRequired((int) $this->pdo->lastInsertId());
+        return PersistenceErrors::write(function () use ($name, $location, $isActive): Warehouse {
+            $statement = $this->pdo->prepare('INSERT INTO warehouses (name, location, is_active) VALUES (:name, :location, :is_active)');
+            $statement->execute(['name' => $name, 'location' => $location, 'is_active' => $isActive ? 1 : 0]);
+            return $this->findRequired((int) $this->pdo->lastInsertId());
+
+        });
     }
 
     public function update(int $id, string $name, string $location): Warehouse
     {
-        $statement = $this->pdo->prepare('UPDATE warehouses SET name = :name, location = :location WHERE id = :id');
-        $statement->execute(['id' => $id, 'name' => $name, 'location' => $location]);
-        return $this->findRequired($id);
+        return PersistenceErrors::write(function () use ($id, $name, $location): Warehouse {
+            $statement = $this->pdo->prepare('UPDATE warehouses SET name = :name, location = :location WHERE id = :id');
+            $statement->execute(['id' => $id, 'name' => $name, 'location' => $location]);
+            return $this->findRequired($id);
+
+        });
     }
 
     public function setActive(int $id, bool $isActive): void

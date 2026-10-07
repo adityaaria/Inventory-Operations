@@ -1,0 +1,435 @@
+ Container inventory-operations-test-db-1 Running
+ Image inventory-operations-test Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 626B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.68kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/composer:2
+#3 DONE 1.0s
+
+#4 [internal] load metadata for docker.io/library/php:8.3-cli
+#4 DONE 1.0s
+
+#5 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#5 DONE 1.9s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 128B done
+#6 DONE 0.0s
+
+#7 [node-runtime 1/1] FROM docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#7 resolve docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 0.0s done
+#7 DONE 0.0s
+
+#8 FROM docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#8 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac 0.0s done
+#8 DONE 0.0s
+
+#9 [runtime  1/12] FROM docker.io/library/php:8.3-cli@sha256:005cf2ef7f7aa8c17cefa1b732e7f027065c9589d69b4abdd644a02782fbc94f
+#9 resolve docker.io/library/php:8.3-cli@sha256:005cf2ef7f7aa8c17cefa1b732e7f027065c9589d69b4abdd644a02782fbc94f 0.0s done
+#9 DONE 0.0s
+
+#10 [internal] load build context
+#10 transferring context: 266.98kB 0.0s done
+#10 DONE 0.0s
+
+#11 [runtime  8/12] COPY config ./config
+#11 CACHED
+
+#12 [runtime  5/12] COPY composer.json composer.lock ./
+#12 CACHED
+
+#13 [runtime  4/12] WORKDIR /var/www/html
+#13 CACHED
+
+#14 [runtime 10/12] COPY scripts ./scripts
+#14 CACHED
+
+#15 [runtime  7/12] COPY app ./app
+#15 CACHED
+
+#16 [runtime  6/12] RUN composer install --no-interaction --prefer-dist
+#16 CACHED
+
+#17 [runtime 12/12] RUN mkdir -p /var/www/html/var/log /var/www/html/var/sessions     && chown -R www-data:www-data /var/www/html
+#17 CACHED
+
+#18 [runtime  2/12] RUN apt-get update     && apt-get install -y --no-install-recommends unzip autoconf 		dpkg-dev 		file 		g++ 		gcc 		libc-dev 		make 		pkg-config 		re2c     && docker-php-ext-install pdo_mysql     && pecl install pcov xdebug     && docker-php-ext-enable pcov xdebug     && {         echo 'pcov.enabled=1';         echo 'pcov.directory=/var/www/html/app';     } > /usr/local/etc/php/conf.d/pcov.ini     && {         echo 'xdebug.mode=off';         echo 'xdebug.discover_client_host=1';         echo 'xdebug.client_host=host.docker.internal';     } > /usr/local/etc/php/conf.d/xdebug-custom.ini
+#18 CACHED
+
+#19 [runtime 11/12] COPY views ./views
+#19 CACHED
+
+#20 [runtime  3/12] COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#20 CACHED
+
+#21 [runtime  9/12] COPY public ./public
+#21 CACHED
+
+#22 [test 1/5] COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
+#22 CACHED
+
+#23 [test 2/5] COPY tests ./tests
+#23 DONE 0.0s
+
+#24 [test 3/5] COPY database ./database
+#24 DONE 0.0s
+
+#25 [test 4/5] COPY phpunit.xml phpstan.neon ./
+#25 DONE 0.0s
+
+#26 [test 5/5] RUN chown -R www-data:www-data /var/www/html
+#26 DONE 2.2s
+
+#27 exporting to image
+#27 exporting layers
+#27 exporting layers 0.5s done
+#27 exporting manifest sha256:14649a1a433b84505f8433ea0cbe9fd0b72d99a941e0e0edfdf32a02c0b436c8 done
+#27 exporting config sha256:159aa848d7c85ff1bcb6da783035f5eaaee285a1b6d5211fa4daffe717ebbee4 done
+#27 exporting attestation manifest sha256:7af0bed94fccf9fd9cb6d42d183027a899b6d8c5352f0178ede39d10db797255 done
+#27 exporting manifest list sha256:446c9b7635fdec8ce6dfa4975209c80bfb1631c0c2c88c3d72a854abe9e13e71 done
+#27 naming to docker.io/library/inventory-operations-test:latest done
+#27 unpacking to docker.io/library/inventory-operations-test:latest 0.0s done
+#27 DONE 0.6s
+
+#28 resolving provenance for metadata file
+#28 DONE 0.0s
+ Image inventory-operations-test Built
+ Container inventory-operations-test-db-1 Waiting
+ Container inventory-operations-test-db-1 Healthy
+ Container inventory-operations-test-run-6d3844ee4afa Creating
+ Container inventory-operations-test-run-6d3844ee4afa Created
+PHPUnit 10.5.64 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.35
+Configuration: /var/www/html/phpunit.xml
+
+...............................................................  63 / 306 ( 20%)
+............................................................... 126 / 306 ( 41%)
+............................................................... 189 / 306 ( 61%)
+............................................................... 252 / 306 ( 82%)
+......................................................          306 / 306 (100%)
+
+Time: 00:03.736, Memory: 14.00 MB
+
+OK (306 tests, 1236 assertions)
+Note: Using configuration file /var/www/html/phpstan.neon.
+   0/115 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%[1G[2K  19/115 [▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░]  16%[1G[2K  77/115 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░]  66%[1G[2K 115/115 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+
+ [OK] No errors
+
+TAP version 13
+# Subtest: chart renderer exposes accessible roles for populated and empty states
+ok 1 - chart renderer exposes accessible roles for populated and empty states
+  ---
+  duration_ms: 0.503583
+  type: 'test'
+  ...
+# Subtest: CSV export neutralizes formula-leading values after whitespace normalization
+ok 2 - CSV export neutralizes formula-leading values after whitespace normalization
+  ---
+  duration_ms: 1.29425
+  type: 'test'
+  ...
+# Subtest: defines semantic core interaction tokens
+ok 3 - defines semantic core interaction tokens
+  ---
+  duration_ms: 1.491
+  type: 'test'
+  ...
+# Subtest: defines canonical component modifiers
+ok 4 - defines canonical component modifiers
+  ---
+  duration_ms: 0.972
+  type: 'test'
+  ...
+# Subtest: keeps reduced-motion and visible keyboard focus contracts
+ok 5 - keeps reduced-motion and visible keyboard focus contracts
+  ---
+  duration_ms: 0.088458
+  type: 'test'
+  ...
+# Subtest: defines canonical button, field, and alert components
+ok 6 - defines canonical button, field, and alert components
+  ---
+  duration_ms: 0.188916
+  type: 'test'
+  ...
+# Subtest: defines canonical status modifiers and keeps legacy aliases
+ok 7 - defines canonical status modifiers and keeps legacy aliases
+  ---
+  duration_ms: 0.144167
+  type: 'test'
+  ...
+# Subtest: defines modal footer and accessible dialog states
+ok 8 - defines modal footer and accessible dialog states
+  ---
+  duration_ms: 0.474416
+  type: 'test'
+  ...
+# Subtest: defines data-heavy component states
+ok 9 - defines data-heavy component states
+  ---
+  duration_ms: 0.142167
+  type: 'test'
+  ...
+# Subtest: defines dashboard chart state styling
+ok 10 - defines dashboard chart state styling
+  ---
+  duration_ms: 0.088875
+  type: 'test'
+  ...
+# Subtest: defines layout and navigation component hooks
+ok 11 - defines layout and navigation component hooks
+  ---
+  duration_ms: 0.367
+  type: 'test'
+  ...
+# Subtest: defines typography scale and weight tokens
+ok 12 - defines typography scale and weight tokens
+  ---
+  duration_ms: 0.494
+  type: 'test'
+  ...
+# Subtest: uses typography tokens in primary content selectors
+ok 13 - uses typography tokens in primary content selectors
+  ---
+  duration_ms: 0.250459
+  type: 'test'
+  ...
+# Subtest: defines active palette aliases for migrated surfaces
+ok 14 - defines active palette aliases for migrated surfaces
+  ---
+  duration_ms: 0.216333
+  type: 'test'
+  ...
+# Subtest: defines selection control and bulk action hooks
+ok 15 - defines selection control and bulk action hooks
+  ---
+  duration_ms: 0.069542
+  type: 'test'
+  ...
+# Subtest: defines cross-page form and detail component hooks
+ok 16 - defines cross-page form and detail component hooks
+  ---
+  duration_ms: 0.065417
+  type: 'test'
+  ...
+# Subtest: required fields report an error when empty and clear it when filled
+ok 17 - required fields report an error when empty and clear it when filled
+  ---
+  duration_ms: 0.925459
+  type: 'test'
+  ...
+# Subtest: number fields enforce valid values and min/max constraints
+ok 18 - number fields enforce valid values and min/max constraints
+  ---
+  duration_ms: 0.129167
+  type: 'test'
+  ...
+# Subtest: optional empty fields are accepted
+ok 19 - optional empty fields are accepted
+  ---
+  duration_ms: 0.080125
+  type: 'test'
+  ...
+# Subtest: validateFields returns field errors keyed by field name
+ok 20 - validateFields returns field errors keyed by field name
+  ---
+  duration_ms: 0.453333
+  type: 'test'
+  ...
+# Subtest: fetchHtml returns response and body for successful responses
+ok 21 - fetchHtml returns response and body for successful responses
+  ---
+  duration_ms: 0.848208
+  type: 'test'
+  ...
+# Subtest: fetchHtml rejects unexpected HTTP responses with body context
+ok 22 - fetchHtml rejects unexpected HTTP responses with body context
+  ---
+  duration_ms: 0.355083
+  type: 'test'
+  ...
+# Subtest: fetchHtml permits explicitly allowed validation responses
+ok 23 - fetchHtml permits explicitly allowed validation responses
+  ---
+  duration_ms: 0.115875
+  type: 'test'
+  ...
+# Subtest: fetchHtml forwards an abort signal to fetch
+ok 24 - fetchHtml forwards an abort signal to fetch
+  ---
+  duration_ms: 0.144292
+  type: 'test'
+  ...
+# Subtest: fetchHtml classifies non-abort transport failures
+ok 25 - fetchHtml classifies non-abort transport failures
+  ---
+  duration_ms: 0.17875
+  type: 'test'
+  ...
+# Subtest: request coordinator aborts the previous request and marks it stale
+ok 26 - request coordinator aborts the previous request and marks it stale
+  ---
+  duration_ms: 1.1245
+  type: 'test'
+  ...
+# Subtest: expired sessions produce a sign-in message; forbidden and network errors remain distinct
+ok 27 - expired sessions produce a sign-in message; forbidden and network errors remain distinct
+  ---
+  duration_ms: 0.15725
+  type: 'test'
+  ...
+# Subtest: a protected fetch receiving 401 is rejected and is never retried automatically
+ok 28 - a protected fetch receiving 401 is rejected and is never retried automatically
+  ---
+  duration_ms: 0.11575
+  type: 'test'
+  ...
+# Subtest: server validation reuses the dialog renderer and keeps the native page intact
+ok 29 - server validation reuses the dialog renderer and keeps the native page intact
+  ---
+  duration_ms: 5.152625
+  type: 'test'
+  ...
+# Subtest: expired modal submission keeps the form and offers sign-in without retrying the mutation
+ok 30 - expired modal submission keeps the form and offers sign-in without retrying the mutation
+  ---
+  duration_ms: 1.888875
+  type: 'test'
+  ...
+# Subtest: enhancement preserves server-rendered layout and initializes the mobile drawer once
+ok 31 - enhancement preserves server-rendered layout and initializes the mobile drawer once
+  ---
+  duration_ms: 4.064041
+  type: 'test'
+  ...
+# Subtest: navigation exposes accessible active route and drawer contracts
+ok 32 - navigation exposes accessible active route and drawer contracts
+  ---
+  duration_ms: 0.601333
+  type: 'test'
+  ...
+# Subtest: fast navigation and cancelled loading never flash an indicator
+ok 33 - fast navigation and cancelled loading never flash an indicator
+  ---
+  duration_ms: 2.637167
+  type: 'test'
+  ...
+# Subtest: slow navigation shows feedback once and Back restores an idle page
+ok 34 - slow navigation shows feedback once and Back restores an idle page
+  ---
+  duration_ms: 0.568
+  type: 'test'
+  ...
+# Subtest: table selection exposes accessible presentation-only contracts
+ok 35 - table selection exposes accessible presentation-only contracts
+  ---
+  duration_ms: 0.781209
+  type: 'test'
+  ...
+# Subtest: products table opts into selection without changing its business form contract
+ok 36 - products table opts into selection without changing its business form contract
+  ---
+  duration_ms: 0.183208
+  type: 'test'
+  ...
+# Subtest: table sorting exposes ascending and none aria-sort states
+ok 37 - table sorting exposes ascending and none aria-sort states
+  ---
+  duration_ms: 0.605291
+  type: 'test'
+  ...
+# Subtest: export joins the page header toolbar without duplicate search or filter submission
+ok 38 - export joins the page header toolbar without duplicate search or filter submission
+  ---
+  duration_ms: 1.252791
+  type: 'test'
+  ...
+# Subtest: server reports keep the full-result export instead of generating a page-only export
+ok 39 - server reports keep the full-result export instead of generating a page-only export
+  ---
+  duration_ms: 0.377917
+  type: 'test'
+  ...
+# Subtest: confirmation is required only for state-changing action paths
+ok 40 - confirmation is required only for state-changing action paths
+  ---
+  duration_ms: 0.844333
+  type: 'test'
+  ...
+# Subtest: filter matching ignores surrounding whitespace and letter case
+ok 41 - filter matching ignores surrounding whitespace and letter case
+  ---
+  duration_ms: 0.143
+  type: 'test'
+  ...
+# Subtest: table values sort numeric values numerically and text values alphabetically
+ok 42 - table values sort numeric values numerically and text values alphabetically
+  ---
+  duration_ms: 6.453458
+  type: 'test'
+  ...
+# Subtest: CSV cells escape quotes and normalize whitespace
+ok 43 - CSV cells escape quotes and normalize whitespace
+  ---
+  duration_ms: 0.135166
+  type: 'test'
+  ...
+# Subtest: debounce keeps only the latest call and can cancel pending work
+ok 44 - debounce keeps only the latest call and can cancel pending work
+  ---
+  duration_ms: 0.547375
+  type: 'test'
+  ...
+# Subtest: resolveCancelTarget closes the modal when the cancel button is inside one
+ok 45 - resolveCancelTarget closes the modal when the cancel button is inside one
+  ---
+  duration_ms: 0.095917
+  type: 'test'
+  ...
+# Subtest: resolveCancelTarget navigates to the cancel href when not inside a modal
+ok 46 - resolveCancelTarget navigates to the cancel href when not inside a modal
+  ---
+  duration_ms: 0.114166
+  type: 'test'
+  ...
+# Subtest: error pages share the styled error-page contract
+ok 47 - error pages share the styled error-page contract
+  ---
+  duration_ms: 0.624958
+  type: 'test'
+  ...
+# Subtest: create and edit pages share form component contracts
+ok 48 - create and edit pages share form component contracts
+  ---
+  duration_ms: 2.448208
+  type: 'test'
+  ...
+# Subtest: order detail pages share detail component contracts
+ok 49 - order detail pages share detail component contracts
+  ---
+  duration_ms: 0.29625
+  type: 'test'
+  ...
+# Subtest: list, dashboard, reports, and auth contracts remain identifiable
+ok 50 - list, dashboard, reports, and auth contracts remain identifiable
+  ---
+  duration_ms: 0.990375
+  type: 'test'
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 122.189125

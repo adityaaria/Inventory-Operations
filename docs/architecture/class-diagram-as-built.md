@@ -3,6 +3,8 @@
 Date: 2026-08-31  
 Source checked: `app/**/*.php`, `public/index.php`, `composer.json`
 
+Management pagination update: 2026-10-06. Existing grouped layer structure retained; `Pagination` now joins the Support value objects used by Management controllers/services/repositories.
+
 This diagram reflects the implemented native PHP architecture after Phase 6. It intentionally groups repeated CRUD classes where the dependency shape is the same.
 
 ```mermaid
@@ -14,6 +16,11 @@ classDiagram
         CSRF gate
     }
 
+    class CsvImportService
+    class TransactionManagerInterface {
+        <<interface>>
+    }
+    class MySqlTransactionManager
     class Router
     class Request
     class Response
@@ -99,6 +106,7 @@ classDiagram
         Config
         DatabaseFactory
         PaginatedResult
+        Pagination
         ProductSearchCriteria
         OrderSearchCriteria
         CsvResponse
@@ -143,6 +151,7 @@ classDiagram
 
     AuthGuard --> SessionManager
     AuthGuard --> Authorization
+    AuthGuard --> RepositoryInterfaces : current user state
     NativeSessionManager --|> SessionManager
     NativeSessionManager --> Csrf
 
@@ -158,7 +167,11 @@ classDiagram
     ProductAvailabilityService --> RepositoryInterfaces
     LowStockService --> RepositoryInterfaces
 
-    StockService --> RepositoryInterfaces
+    StockService --> RepositoryInterfaces : source transaction, ledger and strict audit
+    MasterDataControllers --> CsvImportService
+    UserController --> CsvImportService
+    CsvImportService --> TransactionManagerInterface
+    TransactionManagerInterface <|.. MySqlTransactionManager
     RepositoryInterfaces <|.. MySqlRepositories
     RepositoryInterfaces <|.. InMemoryRepositories
     MySqlRepositories --> Entities
@@ -177,3 +190,22 @@ Key evidence:
 - `StockService` is the only service that begins stock transactions and writes stock ledger entries.
 - `NativeSessionManager` owns PHP session persistence; controllers and services consume `AuthContext` through `AuthGuard`/`SessionManager`.
 - Search and pagination criteria are value objects under `app/Support`, not SQL fragments from controllers.
+
+Audit remediation update (6 October 2026): source-order locks precede deterministic stock locks; order, stock, ledger and critical audit share one transaction. AuthGuard resolves current users through the repository boundary. CsvImportService uses TransactionManagerInterface for atomic batches, while report preview uses repository aggregates/LIMIT and HTTP CSV streams rows. Supplier/customer/warehouse lookups are loaded only for their order routes; list stock/items use batch queries.
+
+## Catalog balance initialization — 7 October 2026
+
+```mermaid
+classDiagram
+    ProductService --> StockService : atomic create + zero pairs
+    WarehouseService --> StockService : atomic create + zero pairs
+    StockService --> StockCatalogRepositoryInterface : catalog mutex + sorted IDs
+    StockService --> TransactionManagerInterface : shared transaction owner
+    StockService --> StockRepositoryInterface : lock existing or insert zero
+    MySqlStockCatalogRepository ..|> StockCatalogRepositoryInterface
+    InMemoryStockCatalogRepository ..|> StockCatalogRepositoryInterface
+    MySqlTransactionManager ..|> TransactionManagerInterface
+    CsvImportService --> TransactionManagerInterface : enclosing atomic batch
+```
+
+The runtime manually injects one shared StockService/TransactionManager. Opening zero pairs generate no goods movement; existing stock/ledger deltas remain exclusively in receipt/issue transactions. FormState is presentation input recovery; it does not mutate repositories/entities. ADR-006 records the initialization mutex and import nesting behavior.

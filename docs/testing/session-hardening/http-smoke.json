@@ -1,0 +1,21 @@
+{
+  "checks": 16,
+  "passed": [
+    "Anonymous protected page redirects to login",
+    "Anonymous API returns JSON 401",
+    "API errors forbid caching",
+    "Session cookie is HttpOnly / SameSite=Lax / Path=/",
+    "Session cookie expires on browser close",
+    "Invalid login CSRF is denied",
+    "Unknown caller-supplied session ID is replaced",
+    "Login response forbids caching",
+    "Successful login rotates anonymous ID",
+    "No companion role cookie",
+    "Successful login rotates CSRF token",
+    "Authenticated dashboard succeeds",
+    "Authenticated API remains JSON 200",
+    "Logout redirects and rotates ID",
+    "Previous authenticated ID cannot be replayed after logout",
+    "Logout denies protected API"
+  ]
+}

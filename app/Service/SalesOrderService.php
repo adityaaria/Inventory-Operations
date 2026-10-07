@@ -13,7 +13,7 @@ use App\Exception\HttpException;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Repository\Contract\SalesOrderRepositoryInterface;
 use App\Security\AuthContext;
-use InvalidArgumentException;
+use App\Exception\ValidationException;
 
 final class SalesOrderService
 {
@@ -44,58 +44,70 @@ final class SalesOrderService
 
     public function submit(AuthContext $actor, int $id): void
     {
-        $order = $this->findOrder($id);
-        $this->assertOwnOrAdmin($actor, $order);
-        if ($order->status() !== SalesOrder::STATUS_DRAFT) {
-            throw new InvalidArgumentException('Only Draft sales orders can be submitted.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $order = $this->findOrder($id);
+            $this->assertOwnOrAdmin($actor, $order);
+            if ($order->status() !== SalesOrder::STATUS_DRAFT) {
+                throw new ValidationException('Only Draft sales orders can be submitted.');
+            }
 
-        $this->orders->submit($id);
+            $this->orders->submit($id);
+
+        });
     }
 
     public function approve(AuthContext $actor, int $id): void
     {
-        $this->assertAdmin($actor);
-        $order = $this->findOrder($id);
-        if ($order->status() !== SalesOrder::STATUS_PENDING_APPROVAL) {
-            throw new InvalidArgumentException('Only PendingApproval sales orders can be approved.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $this->assertAdmin($actor);
+            $order = $this->findOrder($id);
+            if ($order->status() !== SalesOrder::STATUS_PENDING_APPROVAL) {
+                throw new ValidationException('Only PendingApproval sales orders can be approved.');
+            }
 
-        $this->orders->approve($id, $actor->userId());
+            $this->orders->approve($id, $actor->userId());
+
+        });
     }
 
     public function rejectOrCancel(AuthContext $actor, int $id): void
     {
-        $this->assertAdmin($actor);
-        $order = $this->findOrder($id);
-        if ($order->status() === SalesOrder::STATUS_FULFILLED) {
-            throw new InvalidArgumentException('Fulfilled sales orders cannot be cancelled.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $this->assertAdmin($actor);
+            $order = $this->findOrder($id);
+            if ($order->status() === SalesOrder::STATUS_FULFILLED) {
+                throw new ValidationException('Fulfilled sales orders cannot be cancelled.');
+            }
 
-        $this->orders->cancel($id);
+            $this->orders->cancel($id);
+
+        });
     }
 
     public function issue(AuthContext $actor, int $id): void
     {
-        $this->assertCanIssue($actor);
-        $order = $this->findOrder($id);
-        if ($order->status() !== SalesOrder::STATUS_APPROVED) {
-            throw new InvalidArgumentException('Only Approved sales orders can be issued.');
-        }
+        $this->stockService->transaction(function () use ($actor, $id): void {
+            $this->assertCanIssue($actor);
+            $order = $this->findOrder($id);
+            if ($order->status() !== SalesOrder::STATUS_APPROVED) {
+                throw new ValidationException('Only Approved sales orders can be issued.');
+            }
 
-        $movements = [];
-        foreach ($order->items() as $item) {
-            $movements[] = new StockMovement($item->productId(), $item->quantity());
-        }
+            $movements = [];
+            foreach ($order->items() as $item) {
+                $movements[] = new StockMovement($item->productId(), $item->quantity());
+            }
 
-        $this->stockService->issue(
-            $order->sourceWarehouseId(),
-            $movements,
-            $actor->userId(),
-            'SO',
-            $order->id(),
-            fn (): null => $this->markFulfilled($order->id()),
-        );
+            $this->stockService->issue(
+                $order->sourceWarehouseId(),
+                $movements,
+                $actor->userId(),
+                'SO',
+                $order->id(),
+                fn (): null => $this->markFulfilled($order->id()),
+            );
+
+        });
     }
 
     private function assertCanCreate(AuthContext $actor): void
@@ -131,16 +143,17 @@ final class SalesOrderService
 
     private function assertHeader(string $orderNumber, int $customerId, int $warehouseId): void
     {
+        \App\Validation\InputValidator::requiredString('order_number', $orderNumber, 50);
         if (trim($orderNumber) === '') {
-            throw new InvalidArgumentException('Order number is required.');
+            throw new ValidationException('Order number is required.');
         }
         $customer = $this->customers[$customerId] ?? null;
         if (!$customer instanceof Customer || !$customer->isActive()) {
-            throw new InvalidArgumentException('Active customer is required.');
+            throw new ValidationException('Active customer is required.');
         }
         $warehouse = $this->warehouses[$warehouseId] ?? null;
         if (!$warehouse instanceof Warehouse || !$warehouse->isActive()) {
-            throw new InvalidArgumentException('Active warehouse is required.');
+            throw new ValidationException('Active warehouse is required.');
         }
     }
 
@@ -150,22 +163,23 @@ final class SalesOrderService
     private function assertItems(array $items): void
     {
         if ($items === []) {
-            throw new InvalidArgumentException('At least one item is required.');
+            throw new ValidationException('At least one item is required.');
         }
         $seenProducts = [];
         foreach ($items as $item) {
             $product = $this->products->findById($item['product_id']);
             if (!$product instanceof Product || !$product->isActive()) {
-                throw new InvalidArgumentException('Active product is required.');
+                throw new ValidationException('Active product is required.');
             }
             if (isset($seenProducts[$item['product_id']])) {
-                throw new InvalidArgumentException('Duplicate product lines are not allowed.');
+                throw new ValidationException('Duplicate product lines are not allowed.');
             }
             if ($item['quantity'] <= 0) {
-                throw new InvalidArgumentException('Quantity must be positive.');
+                throw new ValidationException('Quantity must be positive.');
             }
+            \App\Validation\InputValidator::nonNegativeMoney('selling_price', $item['selling_price']);
             if ($item['selling_price'] < 0) {
-                throw new InvalidArgumentException('Selling price cannot be negative.');
+                throw new ValidationException('Selling price cannot be negative.');
             }
             $seenProducts[$item['product_id']] = true;
         }
@@ -173,7 +187,7 @@ final class SalesOrderService
 
     private function findOrder(int $id): SalesOrder
     {
-        return $this->orders->findById($id) ?? throw new InvalidArgumentException('Sales order not found.');
+        return $this->orders->lockById($id) ?? throw new ValidationException('Sales order not found.');
     }
 
     private function markFulfilled(int $id): null

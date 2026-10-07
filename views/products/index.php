@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Products'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div>
                 <p class="app-title">Inventory Operations</p>
@@ -26,7 +27,7 @@
                 <p class="page-subtitle">Search, filter, and review product stock levels.</p>
             </div>
             <nav class="toolbar">
-                <a href="/">Home</a>
+
                 <?php if ($canWrite): ?><a href="/products/create">Create Product</a><?php endif; ?>
                 <?php if ($canWrite): ?><button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button><?php endif; ?>
             </nav>
@@ -62,6 +63,7 @@
                             <label>Import CSV <textarea name="csv_data" rows="3" placeholder="sku,name,unit,purchase_price,selling_price,reorder_point,category_id"></textarea></label>
                             <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
                             <div class="modal-footer">
+                                <button type="button" class="button button-quiet" data-dialog-close>Cancel</button>
                                 <button type="submit">Import CSV</button>
                             </div>
                         </form>
@@ -69,17 +71,18 @@
                 </section>
             </div>
         <?php endif; ?>
-        <table class="data-table" data-selectable="products">
+        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="data-table" data-selectable="products">
             <thead>
                 <tr>
                     <th class="selection-column" scope="col"><input class="table-select-all" type="checkbox" aria-label="Select all products on this page"></th>
-                    <th>SKU</th>
-                    <th>Name</th>
+                    <?php $sortPath = '/products'; $sortKey = 'sku'; $sortLabel = 'SKU'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
+                    <?php $sortPath = '/products'; $sortKey = 'name'; $sortLabel = 'Name'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <th>Unit</th>
                     <th>Purchase Price</th>
-                    <th>Selling Price</th>
+                    <?php $sortPath = '/products'; $sortKey = 'price'; $sortLabel = 'Selling Price'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <th>Reorder</th>
-                    <th>Warehouse Stock</th>
+                    <?php $sortPath = '/products'; $sortKey = 'quantity'; $sortLabel = 'Warehouse Stock'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <?php if ($canWrite): ?><th>Action</th><?php endif; ?>
                 </tr>
             </thead>
@@ -93,7 +96,7 @@
                     <tr>
                         <td class="selection-cell"><input class="table-row-select" type="checkbox" aria-label="Select product <?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?>"></td>
                         <td><?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><a href="/products/show?id=<?= $product->id() ?>"><?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?></a></td>
                         <td><?= htmlspecialchars($product->unit(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= number_format($product->purchasePrice(), 2) ?></td>
                         <td><?= number_format($product->sellingPrice(), 2) ?></td>
@@ -115,6 +118,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+</div>
         <?php
         $baseQuery = [
             'q' => $criteria->term(),
@@ -136,5 +140,6 @@
             </div>
         </nav>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

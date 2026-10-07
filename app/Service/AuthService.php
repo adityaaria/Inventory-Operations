@@ -42,7 +42,7 @@ final class AuthService
             return false;
         }
 
-        $this->session->login(new AuthContext($user->id(), $user->email(), $user->role()));
+        $this->session->login(new AuthContext($user->id(), $user->email(), $user->role()), $user->passwordHash());
         $this->rateLimiter?->recordSuccess($email, $ipAddress);
         $this->auditLogger?->record($user->id(), 'auth.login_success', 'auth', $user->id(), 'success', $ipAddress, $userAgent, ['email' => $email]);
 

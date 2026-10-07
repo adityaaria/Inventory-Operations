@@ -18,31 +18,86 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Reports'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div>
                 <p class="app-title">Inventory Operations</p>
                 <h1>Reports</h1>
-                <p class="page-subtitle">Download operational CSV exports for orders and stock movement.</p>
+                <p class="page-subtitle"><?= $type === 'orders' ? 'Order status report' : 'Stock movement report' ?> · <?= htmlspecialchars(($from ?? ($to !== null ? 'Beginning' : 'All dates')) . ($to !== null ? ' — ' . $to : ($from !== null ? ' onwards' : '')), ENT_QUOTES, 'UTF-8') ?><?= $actor->role() === \App\Entity\User::ROLE_SALES ? ' · Your orders only' : '' ?></p>
             </div>
-            <nav class="toolbar"><a href="/">Home</a></nav>
+            <nav class="toolbar" aria-label="Report actions">
+                <?php if ($report !== null): ?><a class="button" href="<?= htmlspecialchars($exportUrl, ENT_QUOTES, 'UTF-8') ?>" download>Export CSV</a><?php endif; ?>
+            </nav>
         </header>
-        <section class="report-grid">
-            <article class="report-panel">
-                <form class="form" method="get" action="/reports/orders.csv">
-                    <label class="field"><span class="field-label">From</span><input name="from" type="date"></label>
-                    <label class="field"><span class="field-label">To</span><input name="to" type="date"></label>
-                    <button type="submit">Download Orders CSV</button>
-                </form>
-            </article>
-            <article class="report-panel">
-                <form class="form" method="get" action="/reports/stock-ledger.csv">
-                    <label class="field"><span class="field-label">From</span><input name="from" type="date"></label>
-                    <label class="field"><span class="field-label">To</span><input name="to" type="date"></label>
-                    <button type="submit">Download Stock Ledger CSV</button>
-                </form>
-            </article>
+        <?php if ($error !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+        <?php if ($report !== null): ?>
+            <section class="metric-grid" aria-label="Report summary">
+                <?php foreach ($report['metrics'] as $label => $value): ?>
+                    <article class="metric-card"><span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span><strong><?= number_format($value) ?></strong></article>
+                <?php endforeach; ?>
+            </section>
+            <section class="dashboard-grid report-charts" aria-label="Report charts">
+                <?php foreach ($report['charts'] as $label => $values): ?>
+                    <?php $chartId = 'report-' . strtolower(str_replace(' ', '-', $label)); ?>
+                    <article class="dashboard-panel">
+                        <h2 id="<?= $chartId ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></h2>
+                        <div class="chart" data-chart="<?= htmlspecialchars((string) json_encode($values), ENT_QUOTES, 'UTF-8') ?>" aria-labelledby="<?= $chartId ?>"></div>
+                    </article>
+                <?php endforeach; ?>
+            </section>
+        <?php endif; ?>
+        <section class="report-details" aria-label="Report details">
+            <form class="filters" method="get" action="/reports">
+                <label class="field"><span class="field-label">Report</span><select name="type">
+                    <option value="orders" <?= $type === 'orders' ? 'selected' : '' ?>>Order Status</option>
+                    <?php if ($canViewStock): ?><option value="stock-ledger" <?= $type === 'stock-ledger' ? 'selected' : '' ?>>Stock Movements</option><?php endif; ?>
+                </select></label>
+                <label class="field"><span class="field-label">From</span><input name="from" type="date" value="<?= htmlspecialchars($from ?? '', ENT_QUOTES, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">To</span><input name="to" type="date" value="<?= htmlspecialchars($to ?? '', ENT_QUOTES, 'UTF-8') ?>"></label>
+                <button type="submit">Apply Filters</button>
+                <a class="button button-quiet" href="/reports">Reset</a>
+            </form>
+            <?php if ($report !== null && $result !== null): ?>
+                <div class="table-scroll report-table-scroll" role="region" aria-label="Report table" tabindex="0">
+                    <table class="data-table" data-export="server" id="report-records">
+                        <thead><tr><?php foreach ($report['columns'] as $column): ?><th scope="col"><?= htmlspecialchars((string) preg_replace('/(?<!^)([A-Z][a-z])/', ' $1', $column), ENT_QUOTES, 'UTF-8') ?></th><?php endforeach; ?></tr></thead>
+                        <tbody>
+                            <?php if ($result->items() === []): ?><tr class="empty"><td colspan="<?= count($report['columns']) ?>">No records match this period. Adjust the dates or choose another report.</td></tr><?php endif; ?>
+                            <?php foreach ($result->items() as $row): ?>
+                                <tr>
+                                    <?php foreach ($report['columns'] as $column): ?>
+                                        <td>
+                                            <?php if ($column === 'Status'): ?>
+                                                <?php
+                                                $reportRowStatus = (string) ($row[$column] ?? '');
+                                                $statusClass = match ($reportRowStatus) {
+                                                    'PartiallyReceived' => 'partial',
+                                                    'PendingApproval' => 'pending',
+                                                    default => strtolower(str_replace([' ', '_'], '-', $reportRowStatus)),
+                                                };
+                                                $statusTone = match ($reportRowStatus) {
+                                                    'Received', 'Approved', 'Fulfilled' => 'status-success',
+                                                    'Ordered', 'PartiallyReceived', 'PendingApproval' => 'status-warning',
+                                                    'Cancelled' => 'status-danger',
+                                                    default => 'status-normal',
+                                                };
+                                                ?>
+                                                <span class="status-badge <?= $statusTone ?> status-<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($reportRowStatus, ENT_QUOTES, 'UTF-8') ?></span>
+                                            <?php else: ?>
+                                                <?= htmlspecialchars((string) ($row[$column] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                            <?php endif; ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php require dirname(__DIR__) . '/partials/pagination.php'; ?>
+            <?php endif; ?>
         </section>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

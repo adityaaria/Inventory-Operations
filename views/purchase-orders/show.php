@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = $order->orderNumber(); require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <?php
         $detailStatusClass = $order->status() === 'PartiallyReceived' ? 'partial' : strtolower(str_replace([' ', '_'], '-', $order->status()));
         $detailStatusTone = match ($order->status()) {
@@ -39,7 +40,8 @@
             <div><dt>Destination</dt><dd><?= htmlspecialchars(($warehouses[$order->destinationWarehouseId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></dd></div>
         </dl>
 
-        <table class="detail-table">
+        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="detail-table">
             <thead><tr><th scope="col">Product ID</th><th scope="col">Quantity</th><th scope="col">Received</th><th scope="col">Remaining</th><th scope="col">Purchase Price</th><th scope="col">Receive</th></tr></thead>
             <tbody>
                 <?php foreach ($order->items() as $item): ?>
@@ -64,6 +66,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+</div>
 
         <div class="form-actions">
         <?php if ($canOrderOrCancel && $order->status() === \App\Entity\PurchaseOrder::STATUS_DRAFT): ?>
@@ -82,5 +85,6 @@
         <?php endif; ?>
         </div>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

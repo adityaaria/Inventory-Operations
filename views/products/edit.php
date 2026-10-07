@@ -18,24 +18,26 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Edit Product'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit Product</h1><p class="page-subtitle">Update product pricing and stock policy.</p></div><nav class="toolbar"><a href="/products">Products</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($product !== null): ?>
             <form method="post" action="/products/update" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="id" value="<?= $product->id() ?>">
-                <label class="field"><span class="field-label">SKU</span><input name="sku" required value="<?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label class="field"><span class="field-label">Unit</span><input name="unit" required value="<?= htmlspecialchars($product->unit(), ENT_QUOTES, 'UTF-8') ?>"></label>
-                <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required value="<?= $product->purchasePrice() ?>"></label>
-                <label class="field"><span class="field-label">Selling Price</span><input name="selling_price" type="number" min="0" step="0.01" required value="<?= $product->sellingPrice() ?>"></label>
-                <label class="field"><span class="field-label">Reorder Point</span><input name="reorder_point" type="number" min="0" required value="<?= $product->reorderPoint() ?>"></label>
+                <label class="field"><span class="field-label">SKU</span><input name="sku" required value="<?= htmlspecialchars($formState->value('sku', $product->sku()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', $product->name()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Unit</span><input name="unit" required value="<?= htmlspecialchars($formState->value('unit', $product->unit()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('purchase_price', $product->purchasePrice()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Selling Price</span><input name="selling_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('selling_price', $product->sellingPrice()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                <label class="field"><span class="field-label">Reorder Point</span><input name="reorder_point" type="number" min="0" required value="<?= htmlspecialchars($formState->value('reorder_point', $product->reorderPoint()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
                 <label class="field">
                     <span class="field-label">Category</span>
                     <select name="category_id" required>
                         <?php foreach ($categories as $category): ?>
-                            <option value="<?= $category->id() ?>" <?= $category->id() === $product->categoryId() ? 'selected' : '' ?>>
+                            <option value="<?= $category->id() ?>" <?= $formState->selected('category_id', $category->id(), $category->id() === $product->categoryId()) ?>>
                                 <?= htmlspecialchars($category->name(), ENT_QUOTES, 'UTF-8') ?>
                             </option>
                         <?php endforeach; ?>
@@ -45,5 +47,6 @@
             </form>
         <?php endif; ?>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

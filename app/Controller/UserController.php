@@ -10,9 +10,12 @@ use App\Http\Request;
 use App\Http\Response;
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Security\AuthGuard;
+use App\Security\AuthContext;
+use App\Support\Pagination;
 use App\Service\UserService;
 use App\Support\CsvImport;
 use InvalidArgumentException;
+use App\Validation\InputValidator;
 
 final class UserController
 {
@@ -20,15 +23,13 @@ final class UserController
         private readonly UserService $users,
         private readonly UserRepositoryInterface $repository,
         private readonly AuthGuard $guard,
+        private readonly ?\App\Service\CsvImportService $imports = null,
     ) {
     }
 
     public function index(Request $request): Response
     {
-        $actor = $this->guard->requireUserManagement();
-        $users = $this->users->listUsers($actor);
-
-        return $this->render('users/index.php', ['users' => $users, 'error' => '']);
+        return $this->renderIndex($this->guard->requireUserManagement(), $request);
     }
 
     public function create(Request $request): Response
@@ -46,13 +47,14 @@ final class UserController
         try {
             $this->users->createUser(
                 $actor,
-                (string) ($post['name'] ?? ''),
-                (string) ($post['email'] ?? ''),
-                (string) ($post['password'] ?? ''),
-                (string) ($post['role'] ?? ''),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('email', $post['email'] ?? '', 190),
+                InputValidator::optionalString('password', $post['password'] ?? '', 255),
+                InputValidator::optionalString('role', $post['role'] ?? '', 255),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('users/create.php', [
+                'old' => $post,
                 'roles' => User::ROLES,
                 'error' => $exception->getMessage(),
             ], 422);
@@ -66,7 +68,8 @@ final class UserController
         $actor = $this->guard->requireUserManagement();
 
         try {
-            foreach (CsvImport::rowsFromRequest($request) as $row) {
+            if ($this->imports === null) throw new \LogicException('CSV import service is not configured.');
+            $this->imports->import(CsvImport::rowsFromRequest($request), function (array $row) use ($actor): void {
                 $this->users->createUser(
                     $actor,
                     $row['name'] ?? '',
@@ -74,12 +77,9 @@ final class UserController
                     $row['password'] ?? '',
                     $row['role'] ?? '',
                 );
-            }
-        } catch (\Throwable $exception) {
-            return $this->render('users/index.php', [
-                'users' => $this->users->listUsers($actor),
-                'error' => $exception->getMessage(),
-            ], 422);
+            });
+        } catch (InvalidArgumentException $exception) {
+            return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
         return new Response('', 302, ['Location' => '/users']);
@@ -100,19 +100,20 @@ final class UserController
     {
         $actor = $this->guard->requireUserManagement();
         $post = $request->post();
-        $id = (int) ($post['id'] ?? 0);
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
 
         try {
             $this->users->updateUser(
                 $actor,
                 $id,
-                (string) ($post['name'] ?? ''),
-                (string) ($post['email'] ?? ''),
-                (string) ($post['role'] ?? ''),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('email', $post['email'] ?? '', 190),
+                InputValidator::optionalString('role', $post['role'] ?? '', 255),
             );
         } catch (InvalidArgumentException $exception) {
             $user = $this->repository->findById($id);
             return $this->render('users/edit.php', [
+                'old' => $post,
                 'roles' => User::ROLES,
                 'user' => $user,
                 'error' => $exception->getMessage(),
@@ -136,9 +137,21 @@ final class UserController
         return new Response('', 302, ['Location' => '/users']);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
+    private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
+    {
+        $result = $this->users->paginate($actor, Pagination::fromArray($request->query()));
+
+        return $this->render('users/index.php', [
+            'users' => $result->items(),
+            'result' => $result,
+            'paginationPath' => '/users',
+            'paginationLabel' => 'Users',
+            'paginationQuery' => $request->query(),
+            'error' => $error,
+        ], $status);
+    }
+
+    /** @param array<string, mixed> $data */
     private function render(string $view, array $data = [], int $status = 200): Response
     {
         extract($data, EXTR_SKIP);

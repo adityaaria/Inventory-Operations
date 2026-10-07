@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Users'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header">
             <div>
                 <p class="app-title">Inventory Operations</p>
@@ -26,13 +27,9 @@
                 <p class="page-subtitle">Manage internal access for operational roles.</p>
             </div>
             <nav class="toolbar">
-                <a href="/">Home</a>
+
                 <a class="button-primary" href="/users/create">Create User</a>
                 <button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button>
-                <form method="post" action="/logout">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                    <button type="submit">Logout</button>
-                </form>
             </nav>
         </header>
         <?php if ($error !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
@@ -48,13 +45,15 @@
                         <label>Import CSV <textarea name="csv_data" rows="3" placeholder="name,email,password,role"></textarea></label>
                         <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
                         <div class="modal-footer">
-                            <button type="submit">Import CSV</button>
+                            <button type="button" class="button button-quiet" data-dialog-close>Cancel</button>
+                                <button type="submit">Import CSV</button>
                         </div>
                     </form>
                 </div>
             </section>
         </div>
-        <table class="data-table">
+        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="data-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -83,6 +82,9 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+</div>
+        <?php require dirname(__DIR__) . "/partials/pagination.php"; ?>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

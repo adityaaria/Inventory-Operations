@@ -1,0 +1,582 @@
+[
+  {
+    "width": 320,
+    "route": "/dashboard",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/reports",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 1
+  },
+  {
+    "width": 320,
+    "route": "/reports?type=stock-ledger",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 1
+  },
+  {
+    "width": 320,
+    "route": "/products",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/products/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/products/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/users",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/users/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/users/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/categories",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/categories/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/categories/edit?id=2",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/warehouses",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/warehouses/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/warehouses/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/suppliers",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/suppliers/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/suppliers/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/customers",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/customers/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/customers/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/purchase-orders",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/purchase-orders/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/sales-orders",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/sales-orders/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/purchase-orders/show?id=1",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/sales-orders/show?id=1",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/login",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 320,
+    "route": "/mobile-not-found",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 320,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/dashboard",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/reports",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 1
+  },
+  {
+    "width": 768,
+    "route": "/reports?type=stock-ledger",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 1
+  },
+  {
+    "width": 768,
+    "route": "/products",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/products/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/products/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/users",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/users/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/users/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/categories",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/categories/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/categories/edit?id=2",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/warehouses",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/warehouses/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/warehouses/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/suppliers",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/suppliers/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/suppliers/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/customers",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/customers/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/customers/edit?id=1",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/purchase-orders",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/purchase-orders/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/sales-orders",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/sales-orders/create",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/purchase-orders/show?id=1",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/sales-orders/show?id=1",
+    "documentOverflow": false,
+    "mainOverflow": true,
+    "mainWidth": 568,
+    "controlsOut": 0,
+    "tables": 1,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/login",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 512,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  },
+  {
+    "width": 768,
+    "route": "/mobile-not-found",
+    "documentOverflow": false,
+    "mainOverflow": false,
+    "mainWidth": 732,
+    "controlsOut": 0,
+    "tables": 0,
+    "localTables": 0
+  }
+]

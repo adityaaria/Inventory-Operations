@@ -7,7 +7,7 @@ namespace App\Http;
 final class Request
 {
     /**
-     * @param array<string, string> $query
+     * @param array<string, mixed> $query
      * @param array<string, mixed> $post
      * @param array<string, mixed> $server
      * @param array<string, mixed> $files
@@ -48,7 +48,7 @@ final class Request
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function query(): array
     {

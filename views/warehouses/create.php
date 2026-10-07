@@ -18,15 +18,18 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $formState = new \App\Support\FormState($old ?? []); ?>
+    <?php $workspaceTitle = 'Create Warehouse'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Warehouse</h1><p class="page-subtitle">Add a warehouse for stock operations.</p></div><nav class="toolbar"><a href="/warehouses">Warehouses</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/warehouses" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label class="field"><span class="field-label">Name</span><input name="name" required></label>
-            <label class="field"><span class="field-label">Location</span><input name="location"></label>
+            <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Location</span><input name="location" value="<?= htmlspecialchars($formState->value('location', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <div class="form-actions"><button type="submit">Create</button><button type="button" class="button button-quiet" data-cancel-href="/warehouses">Cancel</button></div>
         </form>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

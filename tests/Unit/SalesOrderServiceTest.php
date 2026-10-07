@@ -304,6 +304,19 @@ final class SalesOrderServiceTest extends TestCase
     /**
      * @return array{0: SalesOrderService, 1: InMemorySalesOrderRepository}
      */
+    public function testRepeatedApprovalIsAnHttp422ValidationFailure(): void
+    {
+        [$service] = $this->service();
+        $actor = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
+        $order = $service->createDraft($actor, 'SO-STATE', 1, 1, [['product_id'=>10,'quantity'=>1,'selling_price'=>20.0]]);
+        $service->submit($actor, $order->id()); $service->approve($actor, $order->id());
+        try { $service->approve($actor, $order->id()); self::fail('Transition must fail.'); }
+        catch (\App\Exception\ValidationException $exception) {
+            self::assertSame(422, $exception->statusCode());
+            self::assertSame(422, \App\Http\ErrorResponder::browser($exception, false)->statusCode());
+        }
+    }
+
     private function service(int $stockQuantity = 0): array
     {
         $orders = new InMemorySalesOrderRepository();

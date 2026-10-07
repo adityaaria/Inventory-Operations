@@ -21,6 +21,9 @@ interface SalesOrderRepositoryInterface
 
     public function findById(int $id): ?SalesOrder;
 
+    /** Lock the source order inside the caller transaction. */
+    public function lockById(int $id): ?SalesOrder;
+
     /**
      * @param list<array{product_id: int, quantity: int, selling_price: float}> $items
      */

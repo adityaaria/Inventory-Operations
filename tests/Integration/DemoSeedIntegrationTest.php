@@ -13,12 +13,7 @@ final class DemoSeedIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = new PDO(
-            sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_PORT') ?: '3306', getenv('DB_DATABASE') ?: 'inventory_order_management'),
-            getenv('DB_USERNAME') ?: 'inventory_app',
-            getenv('DB_PASSWORD') ?: 'change_me_for_local_only',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC],
-        );
+        $this->pdo = \Tests\Support\TestDatabase::connect();
     }
 
     public function testDemoSeedHasRequiredVolumeAndStatuses(): void
@@ -27,6 +22,11 @@ final class DemoSeedIntegrationTest extends TestCase
         self::assertGreaterThanOrEqual(25, $this->rowCount('purchase_orders') + $this->rowCount('sales_orders'));
         self::assertGreaterThanOrEqual(1, $this->countWhere('sales_orders', 'status', 'PendingApproval'));
         self::assertGreaterThanOrEqual(1, $this->countWhere('sales_orders', 'status', 'Cancelled'));
+    }
+
+    public function testSeedHasAStockRowForEveryProductWarehousePair(): void
+    {
+        self::assertSame($this->rowCount('products') * $this->rowCount('warehouses'), $this->rowCount('product_stocks'));
     }
 
     private function rowCount(string $table): int

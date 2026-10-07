@@ -20,6 +20,11 @@
         }
     }
 
+    function sessionFailureMessage(error) {
+        return error instanceof HttpResponseError && error.status === 401
+            ? 'Your session has ended. Sign in again to continue.' : null;
+    }
+
     class NetworkRequestError extends Error {
         constructor(cause) {
             super('Network request failed.');
@@ -86,5 +91,5 @@
         return {cancel, start};
     }
 
-    return {createRequestCoordinator, fetchHtml, HttpResponseError, NetworkRequestError};
+    return {createRequestCoordinator, fetchHtml, HttpResponseError, NetworkRequestError, sessionFailureMessage};
 });

@@ -1,0 +1,261 @@
+ Container inventory-operations-test-db-1 Creating
+ Container inventory-operations-test-db-1 Created
+ Container inventory-operations-test-db-1 Starting
+ Container inventory-operations-test-db-1 Started
+ Image inventory-operations-test Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 626B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.68kB 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/php:8.3-cli
+#3 ...
+
+#4 [auth] library/composer:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/php:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/composer:2
+#6 ...
+
+#7 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#7 ...
+
+#8 [auth] library/node:pull token for registry-1.docker.io
+#8 DONE 0.0s
+
+#7 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#7 DONE 19.4s
+
+#6 [internal] load metadata for docker.io/library/composer:2
+#6 DONE 21.3s
+
+#3 [internal] load metadata for docker.io/library/php:8.3-cli
+#3 DONE 22.3s
+
+#9 [internal] load .dockerignore
+#9 transferring context: 128B 0.0s done
+#9 DONE 0.0s
+
+#10 [internal] load build context
+#10 DONE 0.0s
+
+#11 [runtime  1/12] FROM docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319
+#11 resolve docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319 0.0s done
+#11 DONE 0.0s
+
+#12 FROM docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#12 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#12 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac 0.0s done
+#12 DONE 0.0s
+
+#10 [internal] load build context
+#10 transferring context: 428.94kB 0.1s done
+#10 DONE 0.1s
+
+#13 [node-runtime 1/1] FROM docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#13 resolve docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 0.0s done
+#13 CACHED
+
+#14 [runtime  2/12] RUN apt-get update     && apt-get install -y --no-install-recommends unzip autoconf 		dpkg-dev 		file 		g++ 		gcc 		libc-dev 		make 		pkg-config 		re2c     && docker-php-ext-install pdo_mysql     && pecl install pcov xdebug     && docker-php-ext-enable pcov xdebug     && {         echo 'pcov.enabled=1';         echo 'pcov.directory=/var/www/html/app';     } > /usr/local/etc/php/conf.d/pcov.ini     && {         echo 'xdebug.mode=off';         echo 'xdebug.discover_client_host=1';         echo 'xdebug.client_host=host.docker.internal';     } > /usr/local/etc/php/conf.d/xdebug-custom.ini
+#14 CACHED
+
+#15 [runtime  3/12] COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#15 CACHED
+
+#16 [runtime  4/12] WORKDIR /var/www/html
+#16 CACHED
+
+#17 [runtime  5/12] COPY composer.json composer.lock ./
+#17 CACHED
+
+#18 [runtime  6/12] RUN composer install --no-interaction --prefer-dist
+#18 0.567 Installing dependencies from lock file (including require-dev)
+#18 0.569 Verifying lock file contents can be installed on current platform.
+#18 3.925 Package operations: 27 installs, 0 updates, 0 removals
+#18 3.943   - Downloading phpstan/phpstan (2.3.0)
+#18 3.949   - Downloading sebastian/version (4.0.1)
+#18 3.949   - Downloading sebastian/type (4.0.0)
+#18 3.953   - Downloading sebastian/recursion-context (5.0.2)
+#18 3.954   - Downloading sebastian/object-reflector (3.0.0)
+#18 3.957   - Downloading sebastian/object-enumerator (5.0.0)
+#18 3.962   - Downloading sebastian/global-state (6.0.2)
+#18 3.968   - Downloading sebastian/exporter (5.1.4)
+#18 3.971   - Downloading sebastian/environment (6.1.0)
+#18 3.977   - Downloading sebastian/diff (5.1.1)
+#18 3.980   - Downloading sebastian/comparator (5.0.5)
+#18 3.983   - Downloading sebastian/code-unit (2.0.0)
+#18 3.985   - Downloading sebastian/cli-parser (2.0.1)
+#18 3.988   - Downloading phpunit/php-timer (6.0.0)
+#18 3.993   - Downloading phpunit/php-text-template (3.0.1)
+#18 3.998   - Downloading phpunit/php-invoker (4.0.0)
+#18 3.998   - Downloading phpunit/php-file-iterator (4.1.0)
+#18 4.000   - Downloading theseer/tokenizer (1.3.1)
+#18 4.005   - Downloading nikic/php-parser (v5.8.0)
+#18 4.013   - Downloading sebastian/lines-of-code (2.0.2)
+#18 4.014   - Downloading sebastian/complexity (3.2.0)
+#18 4.019   - Downloading sebastian/code-unit-reverse-lookup (3.0.0)
+#18 4.024   - Downloading phpunit/php-code-coverage (10.1.16)
+#18 4.031   - Downloading phar-io/version (3.2.1)
+#18 4.033   - Downloading phar-io/manifest (2.0.4)
+#18 4.034   - Downloading myclabs/deep-copy (1.14.0)
+#18 4.036   - Downloading phpunit/phpunit (10.5.64)
+#18 4.068   0/27 [>---------------------------]   0%
+#18 13.68   1/27 [=>--------------------------]   3%
+#18 13.81   3/27 [===>------------------------]  11%
+#18 14.07   7/27 [=======>--------------------]  25%
+#18 14.98  10/27 [==========>-----------------]  37%
+#18 15.24  12/27 [============>---------------]  44%
+#18 17.98  13/27 [=============>--------------]  48%
+#18 18.11  14/27 [==============>-------------]  51%
+#18 18.65  17/27 [=================>----------]  62%
+#18 20.64  20/27 [====================>-------]  74%
+#18 21.60  22/27 [======================>-----]  81%
+#18 22.63  25/27 [=========================>--]  92%
+#18 33.11  26/27 [==========================>-]  96%
+#18 340.1  27/27 [============================] 100%The following exception probably indicates you have misconfigured DNS resolver(s)
+#18 340.4 If you intend to run Composer without connecting to the internet, run the command again prefixed with COMPOSER_DISABLE_NETWORK=1 to make Composer run in offline mode.
+#18 340.4
+#18 340.4 In CurlDownloader.php line 407:
+#18 340.4
+#18 340.4   curl error 28 while downloading https://codeload.github.com/phpstan/phpstan
+#18 340.4   /legacy.zip/b1f9890d9af53a25c58129e78f0aadd31f90d7f4: Resolving timed out a
+#18 340.4   fter 10000 milliseconds
+#18 340.4
+#18 340.4
+#18 340.4 install [--prefer-source] [--prefer-dist] [--prefer-install PREFER-INSTALL] [--dry-run] [--download-only] [--dev] [--no-suggest] [--no-dev] [--no-security-blocking] [--no-blocking] [--no-autoloader] [--no-progress] [--no-install] [--audit] [--audit-format AUDIT-FORMAT] [-v|vv|vvv|--verbose] [-o|--optimize-autoloader] [-a|--classmap-authoritative] [--strict-psr-autoloader] [--apcu-autoloader] [--apcu-autoloader-prefix APCU-AUTOLOADER-PREFIX] [--ignore-platform-req IGNORE-PLATFORM-REQ] [--ignore-platform-reqs] [--] [<packages>...]
+#18 340.4
+#18 ERROR: process "/bin/sh -c composer install --no-interaction --prefer-dist" did not complete successfully: exit code: 100
+------
+ > [runtime  6/12] RUN composer install --no-interaction --prefer-dist:
+340.4
+340.4 In CurlDownloader.php line 407:
+340.4
+340.4   curl error 28 while downloading https://codeload.github.com/phpstan/phpstan
+340.4   /legacy.zip/b1f9890d9af53a25c58129e78f0aadd31f90d7f4: Resolving timed out a
+340.4   fter 10000 milliseconds
+340.4
+340.4
+340.4 install [--prefer-source] [--prefer-dist] [--prefer-install PREFER-INSTALL] [--dry-run] [--download-only] [--dev] [--no-suggest] [--no-dev] [--no-security-blocking] [--no-blocking] [--no-autoloader] [--no-progress] [--no-install] [--audit] [--audit-format AUDIT-FORMAT] [-v|vv|vvv|--verbose] [-o|--optimize-autoloader] [-a|--classmap-authoritative] [--strict-psr-autoloader] [--apcu-autoloader] [--apcu-autoloader-prefix APCU-AUTOLOADER-PREFIX] [--ignore-platform-req IGNORE-PLATFORM-REQ] [--ignore-platform-reqs] [--] [<packages>...]
+340.4
+------
+Dockerfile:26
+
+--------------------
+
+  24 |
+
+  25 |     COPY composer.json composer.lock ./
+
+  26 | >>> RUN composer install --no-interaction --prefer-dist
+
+  27 |
+
+  28 |     COPY app ./app
+
+--------------------
+
+failed to solve: process "/bin/sh -c composer install --no-interaction --prefer-dist" did not complete successfully: exit code: 100
+
+275  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+
+github.com/moby/buildkit/executor/runcexecutor.exitError
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/executor/runcexecutor/executor.go:457
+
+github.com/moby/buildkit/executor/runcexecutor.(*runcExecutor).Run
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/executor/runcexecutor/executor.go:405
+
+github.com/moby/buildkit/solver/llbsolver/ops.(*ExecOp).Exec
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/ops/exec.go:528
+
+github.com/moby/buildkit/solver.(*sharedOp).Exec.func2
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/jobs.go:1254
+
+github.com/moby/buildkit/util/flightcontrol.(*call[...]).run
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/flightcontrol/flightcontrol.go:122
+
+sync.(*Once).doSlow
+
+	/usr/local/go/src/sync/once.go:78
+
+sync.(*Once).Do
+
+	/usr/local/go/src/sync/once.go:69
+
+runtime.goexit
+
+	/usr/local/go/src/runtime/asm_arm64.s:1447
+
+
+
+46759 v0.37.2 /Users/karyawan/.docker/cli-plugins/docker-buildx bake --file - --progress rawjson --metadata-file /var/folders/yt/k6b9qs1d7l79j3v39qm7wpc40000gp/T/compose-build-metadataFile-4a0a1de4-bb73-457d-a9df-bf34e6d4ba22.json --allow fs.read=/Users/karyawan/Documents/Neuron/Tugas Akhir /Inventory-Operations
+
+google.golang.org/grpc.(*ClientConn).Invoke
+
+	google.golang.org/grpc@v1.83.2/call.go:35
+
+github.com/moby/buildkit/api/services/control.(*controlClient).Solve
+
+	github.com/moby/buildkit@v0.33.1/api/services/control/control_grpc.pb.go:88
+
+github.com/moby/buildkit/client.(*Client).solve.func2
+
+	github.com/moby/buildkit@v0.33.1/client/solve.go:339
+
+golang.org/x/sync/errgroup.(*Group).Go.func1
+
+	golang.org/x/sync@v0.22.0/errgroup/errgroup.go:93
+
+runtime.goexit
+
+	runtime/asm_arm64.s:1447
+
+
+
+275  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+
+github.com/moby/buildkit/solver.(*edge).execOp
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/edge.go:979
+
+github.com/moby/buildkit/solver/internal/pipe.NewWithFunction[...].func2
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/internal/pipe/pipe.go:78
+
+runtime.goexit
+
+	/usr/local/go/src/runtime/asm_arm64.s:1447
+
+
+
+46759 v0.37.2 /Users/karyawan/.docker/cli-plugins/docker-buildx bake --file - --progress rawjson --metadata-file /var/folders/yt/k6b9qs1d7l79j3v39qm7wpc40000gp/T/compose-build-metadataFile-4a0a1de4-bb73-457d-a9df-bf34e6d4ba22.json --allow fs.read=/Users/karyawan/Documents/Neuron/Tugas Akhir /Inventory-Operations
+
+github.com/moby/buildkit/client.(*Client).solve.func2
+
+	github.com/moby/buildkit@v0.33.1/client/solve.go:341
+
+golang.org/x/sync/errgroup.(*Group).Go.func1
+
+	golang.org/x/sync@v0.22.0/errgroup/errgroup.go:93
+
+
+
+275  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+
+github.com/moby/buildkit/solver/llbsolver/ops.(*ExecOp).Exec
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/ops/exec.go:559
+
+github.com/moby/buildkit/solver.(*sharedOp).Exec.func2
+
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/jobs.go:1254

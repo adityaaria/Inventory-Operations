@@ -26,6 +26,9 @@ final class ProductSearchCriteria
      */
     public static function fromArray(array $input): self
     {
+        foreach ($input as $key => $value) {
+            if (!is_string($value) && !is_int($value)) unset($input[$key]);
+        }
         $categoryId = isset($input['category_id']) && (int) $input['category_id'] > 0
             ? (int) $input['category_id']
             : null;

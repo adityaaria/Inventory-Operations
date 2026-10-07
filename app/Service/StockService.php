@@ -5,16 +5,87 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\Contract\StockLedgerRepositoryInterface;
+use App\Repository\Contract\AuditLogRepositoryInterface;
 use App\Repository\Contract\StockRepositoryInterface;
 use InvalidArgumentException;
 use Throwable;
 
 final class StockService
 {
+    private bool $transactionActive = false;
     public function __construct(
         private readonly StockRepositoryInterface $stocks,
         private readonly StockLedgerRepositoryInterface $ledger,
+        private readonly ?AuditLogRepositoryInterface $audit = null,
+        private readonly ?\App\Repository\Contract\StockCatalogRepositoryInterface $catalog = null,
+        private readonly ?\App\Repository\Contract\TransactionManagerInterface $transactions = null,
     ) {
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     */
+    public function transaction(callable $operation): mixed
+    {
+        if ($this->transactions !== null) return $this->transactions->run($operation);
+        if ($this->transactionActive) {
+            return $operation();
+        }
+        $this->stocks->beginTransaction();
+        $this->transactionActive = true;
+        try {
+            $result = $operation();
+            $this->stocks->commit();
+            return $result;
+        } catch (Throwable $exception) {
+            $this->stocks->rollBack();
+            throw $exception;
+        } finally {
+            $this->transactionActive = false;
+        }
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     */
+    public function catalogTransaction(callable $operation): mixed
+    {
+        return $this->transaction(function () use ($operation): mixed {
+            if ($this->catalog === null) throw new \LogicException('Catalog repository is required.');
+            $this->catalog->lockCreation();
+            return $operation();
+        });
+    }
+
+    private function catalogRepository(): \App\Repository\Contract\StockCatalogRepositoryInterface
+    {
+        return $this->catalog ?? throw new \LogicException('Catalog repository is required.');
+    }
+
+    /** Initialize empty balances only: never increment/decrement quantities or fabricate zero ledger entries. */
+    public function initializeProduct(int $productId): void
+    {
+        $this->catalogTransaction(function () use ($productId): void {
+            foreach ($this->catalogRepository()->warehouseIds() as $warehouseId) $this->stocks->lockByProductWarehouse($productId, $warehouseId);
+        });
+    }
+
+    public function initializeWarehouse(int $warehouseId): void
+    {
+        $this->catalogTransaction(function () use ($warehouseId): void {
+            foreach ($this->catalogRepository()->productIds() as $productId) $this->stocks->lockByProductWarehouse($productId, $warehouseId);
+        });
+    }
+
+    /** Idempotent repair for historical missing pairs, one product per transaction. */
+    public function initializeCatalog(): void
+    {
+        if ($this->catalog === null) throw new \LogicException('Catalog repository is required.');
+        foreach ($this->catalogRepository()->productIds() as $productId) $this->initializeProduct($productId);
     }
 
     /**
@@ -55,8 +126,7 @@ final class StockService
             static fn (StockMovement $a, StockMovement $b): int => $a->productId() <=> $b->productId(),
         );
 
-        $this->stocks->beginTransaction();
-        try {
+        $this->transaction(function () use ($warehouseId, $movements, $performedBy, $referenceType, $referenceId, $afterMovements): void {
             foreach ($movements as $movement) {
                 $this->stocks->lockByProductWarehouse($movement->productId(), $warehouseId);
             }
@@ -74,11 +144,8 @@ final class StockService
             if ($afterMovements !== null) {
                 $afterMovements();
             }
-            $this->stocks->commit();
-        } catch (Throwable $exception) {
-            $this->stocks->rollBack();
-            throw $exception;
-        }
+            $this->audit?->append($performedBy, 'purchase-orders.receive', $referenceType, $referenceId, 'success', '', '', ['movement_count' => count($movements)]);
+        });
     }
 
     /**
@@ -95,8 +162,7 @@ final class StockService
         $this->assertCommonInput($warehouseId, $movements, $performedBy, $referenceType, $referenceId, 'Issue');
         usort($movements, static fn (StockMovement $a, StockMovement $b): int => $a->productId() <=> $b->productId());
 
-        $this->stocks->beginTransaction();
-        try {
+        $this->transaction(function () use ($warehouseId, $movements, $performedBy, $referenceType, $referenceId, $afterMovements): void {
             foreach ($movements as $movement) {
                 $this->stocks->lockByProductWarehouse($movement->productId(), $warehouseId);
             }
@@ -119,11 +185,8 @@ final class StockService
             if ($afterMovements !== null) {
                 $afterMovements();
             }
-            $this->stocks->commit();
-        } catch (Throwable $exception) {
-            $this->stocks->rollBack();
-            throw $exception;
-        }
+            $this->audit?->append($performedBy, 'sales-orders.issue', $referenceType, $referenceId, 'success', '', '', ['movement_count' => count($movements)]);
+        });
     }
 
     /**

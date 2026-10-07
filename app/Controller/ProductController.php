@@ -16,6 +16,7 @@ use App\Support\CsvImport;
 use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
+use App\Validation\InputValidator;
 
 final class ProductController
 {
@@ -24,6 +25,7 @@ final class ProductController
         private readonly ProductRepositoryInterface $repository,
         private readonly CategoryRepositoryInterface $categories,
         private readonly AuthGuard $guard,
+        private readonly ?\App\Service\CsvImportService $imports = null,
     ) {
     }
 
@@ -54,6 +56,18 @@ final class ProductController
         ]);
     }
 
+    public function show(Request $request): Response
+    {
+        $actor = $this->guard->requireAuth();
+        $product = $this->products->detail($actor, InputValidator::positiveInt('id', $request->query()['id'] ?? ''));
+        return $this->render('products/show.php', [
+            'product' => $product,
+            'category' => $this->categories->findById($product->categoryId()),
+            'stocks' => $this->repository->stocksForProduct($product->id()),
+            'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
+        ]);
+    }
+
     public function store(Request $request): Response
     {
         $actor = $this->guard->requireUserManagement();
@@ -61,16 +75,17 @@ final class ProductController
 
         try {
             $this->products->create($actor, new ProductInput(
-                (string) ($post['sku'] ?? ''),
-                (string) ($post['name'] ?? ''),
-                (string) ($post['unit'] ?? ''),
-                (float) ($post['purchase_price'] ?? 0),
-                (float) ($post['selling_price'] ?? 0),
-                (int) ($post['reorder_point'] ?? 0),
-                (int) ($post['category_id'] ?? 0),
+                InputValidator::optionalString('sku', $post['sku'] ?? '', 255),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('unit', $post['unit'] ?? '', 255),
+                InputValidator::nonNegativeMoney('purchase_price', $post['purchase_price'] ?? ''),
+                InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
+                InputValidator::nonNegativeInt('reorder_point', $post['reorder_point'] ?? ''),
+                InputValidator::positiveInt('category_id', $post['category_id'] ?? ''),
             ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/create.php', [
+                'old' => $post,
                 'categories' => $this->categories->active(),
                 'error' => $exception->getMessage(),
             ], 422);
@@ -84,18 +99,19 @@ final class ProductController
         $actor = $this->guard->requireUserManagement();
 
         try {
-            foreach (CsvImport::rowsFromRequest($request) as $row) {
+            if ($this->imports === null) throw new \LogicException('CSV import service is not configured.');
+            $this->imports->import(CsvImport::rowsFromRequest($request), function (array $row) use ($actor): void {
                 $this->products->create($actor, new ProductInput(
                     $row['sku'] ?? '',
                     $row['name'] ?? '',
                     $row['unit'] ?? '',
-                    (float) ($row['purchase_price'] ?? 0),
-                    (float) ($row['selling_price'] ?? 0),
-                    (int) ($row['reorder_point'] ?? 0),
-                    (int) ($row['category_id'] ?? 0),
+                    InputValidator::nonNegativeMoney('purchase_price', $row['purchase_price'] ?? ''),
+                    InputValidator::nonNegativeMoney('selling_price', $row['selling_price'] ?? ''),
+                    InputValidator::nonNegativeInt('reorder_point', $row['reorder_point'] ?? ''),
+                    InputValidator::positiveInt('category_id', $row['category_id'] ?? ''),
                 ));
-            }
-        } catch (\Throwable $exception) {
+            });
+        } catch (InvalidArgumentException $exception) {
             $criteria = ProductSearchCriteria::fromArray([]);
             $result = $this->products->search($actor, $criteria);
 
@@ -131,20 +147,21 @@ final class ProductController
     {
         $actor = $this->guard->requireUserManagement();
         $post = $request->post();
-        $id = (int) ($post['id'] ?? 0);
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
 
         try {
             $this->products->update($actor, $id, new ProductInput(
-                (string) ($post['sku'] ?? ''),
-                (string) ($post['name'] ?? ''),
-                (string) ($post['unit'] ?? ''),
-                (float) ($post['purchase_price'] ?? 0),
-                (float) ($post['selling_price'] ?? 0),
-                (int) ($post['reorder_point'] ?? 0),
-                (int) ($post['category_id'] ?? 0),
+                InputValidator::optionalString('sku', $post['sku'] ?? '', 255),
+                InputValidator::optionalString('name', $post['name'] ?? '', 120),
+                InputValidator::optionalString('unit', $post['unit'] ?? '', 255),
+                InputValidator::nonNegativeMoney('purchase_price', $post['purchase_price'] ?? ''),
+                InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
+                InputValidator::nonNegativeInt('reorder_point', $post['reorder_point'] ?? ''),
+                InputValidator::positiveInt('category_id', $post['category_id'] ?? ''),
             ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/edit.php', [
+                'old' => $post,
                 'product' => $this->repository->findById($id),
                 'categories' => $this->categories->active(),
                 'error' => $exception->getMessage(),
@@ -174,12 +191,7 @@ final class ProductController
      */
     private function stocksByProduct(array $products): array
     {
-        $stocks = [];
-        foreach ($products as $product) {
-            $stocks[$product->id()] = $this->repository->stocksForProduct($product->id());
-        }
-
-        return $stocks;
+        return $this->repository->stocksForProducts(array_map(static fn (Product $product): int => $product->id(), $products));
     }
 
     /** @param array<string, mixed> $data */

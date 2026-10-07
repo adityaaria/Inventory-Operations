@@ -33,7 +33,9 @@
     }
 
     function escapeCsvCell(value) {
-        return `"${String(value).replace(/\s+/g, ' ').trim().replace(/"/g, '""')}"`;
+        let text = String(value).replace(/\s+/g, ' ').trim();
+        if (/^[\u0000-\u0020]*[=+\-@]/.test(text)) text = "'" + text;
+        return `"${text.replace(/"/g, '""')}"`;
     }
 
     function escapeHtml(value) {

@@ -18,7 +18,8 @@
     <script defer src="/assets/js/app.js"></script>
 </head>
 <body>
-    <main class="page">
+    <?php $workspaceTitle = 'Dashboard'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
+    <main class="page" id="main-content">
         <?php
         $purchaseStatus = isset($dashboard['purchase_orders_by_status']) && is_array($dashboard['purchase_orders_by_status'])
             ? $dashboard['purchase_orders_by_status']
@@ -38,9 +39,21 @@
                 <h1>Dashboard</h1>
                 <p class="page-subtitle">Role: <?= htmlspecialchars((string) $dashboard['role'], ENT_QUOTES, 'UTF-8') ?></p>
             </div>
-            <nav class="toolbar"><a href="/">Home</a><a href="/reports">Reports</a></nav>
+            <nav class="toolbar"><a href="/reports">Reports</a></nav>
         </header>
         <section class="metric-grid">
+        <?php if ($purchaseStatus !== []): ?>
+            <article class="metric-card">
+                <span>Total Purchase Orders</span>
+                <strong><?= array_sum($purchaseStatus) ?></strong>
+            </article>
+        <?php endif; ?>
+        <?php if ($salesStatus !== []): ?>
+            <article class="metric-card">
+                <span>Total Sales Orders</span>
+                <strong><?= array_sum($salesStatus) ?></strong>
+            </article>
+        <?php endif; ?>
         <?php if (isset($dashboard['inventory_value'])): ?>
             <article class="metric-card">
                 <span>Inventory Value</span>
@@ -79,7 +92,8 @@
                 <h2>Purchase Status Data</h2>
                 <?php if ($purchaseStatus === []): ?><div class="empty-state"><strong>No purchase order data</strong><span>Create purchase orders to populate this widget.</span></div><?php endif; ?>
                 <?php if ($purchaseStatus !== []): ?>
-                    <table class="data-table">
+                    <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+<table class="data-table">
                         <thead><tr><th>Status</th><th>Total</th></tr></thead>
                         <tbody>
                             <?php foreach ($purchaseStatus as $status => $total): ?>
@@ -87,6 +101,7 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+</div>
                 <?php endif; ?>
             </article>
             <aside class="quick-panel">
@@ -100,5 +115,6 @@
             </aside>
         </section>
     </main>
+    <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>
 </html>

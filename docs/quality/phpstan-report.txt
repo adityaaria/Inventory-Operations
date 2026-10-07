@@ -1,5 +1,11 @@
-Enterprise security hardening static analysis verification
-Date: 2026-09-01
-Command: composer analyse
-Scope: 107 files
+Audit remediation static analysis verification
+Date: 2026-10-07
+Command: docker compose --profile quality run --rm test
+PHPStan: 2.3.0, level 5, 114 files
 Result: [OK] No errors
+
+Note: Using configuration file /var/www/html/phpstan.neon.
+   0/114 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%  19/114 [▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░]  16%  57/114 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░]  50%  76/114 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░]  66% 114/114 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+
+ [OK] No errors

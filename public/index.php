@@ -58,8 +58,20 @@ use App\Support\RequestAuditRecorder;
 $config = require dirname(__DIR__) . '/config/bootstrap.php';
 
 $router = new Router();
-$session = new NativeSessionManager();
-$GLOBALS['csrf_token'] = $session->csrfToken();
+$request = Request::fromGlobals();
+$secureCookie = $config->string('SESSION_COOKIE_SECURE') === 'auto'
+    ? ($config->string('APP_ENV') === 'production' ? true : null)
+    : $config->bool('SESSION_COOKIE_SECURE');
+if ($config->string('APP_ENV') === 'production' && $secureCookie !== true) {
+    throw new RuntimeException('Production sessions require secure cookies.');
+}
+$session = new NativeSessionManager(
+    new \App\Security\SessionPolicy($config->int('SESSION_IDLE_SECONDS'), $config->int('SESSION_ABSOLUTE_SECONDS'), $config->int('SESSION_ROTATION_SECONDS')),
+    $secureCookie,
+    null,
+    $config->string('SESSION_SAVE_PATH'),
+);
+
 $pdo = (new DatabaseFactory($config))->create();
 $userRepository = new MySqlUserRepository($pdo);
 $categoryRepository = new MySqlCategoryRepository($pdo);
@@ -74,48 +86,64 @@ $stockLedgerRepository = new MySqlStockLedgerRepository($pdo);
 $auditLogRepository = new MySqlAuditLogRepository($pdo);
 $loginAttemptRepository = new MySqlLoginAttemptRepository($pdo);
 $operationalQueries = new MySqlOperationalQueryRepository($pdo);
-$authGuard = new AuthGuard($session);
+$authGuard = new AuthGuard($session, $userRepository);
+// Refresh presentation role from the same authoritative guard used by controllers.
+try {
+    $GLOBALS['workspace_role'] = $authGuard->requireAuth()->role();
+} catch (HttpException $exception) {
+    if ($exception->statusCode() !== 401) throw $exception;
+    $GLOBALS['workspace_role'] = '';
+}
+$GLOBALS['csrf_token'] = $session->csrfToken();
 $auditLogger = new AuditLogger($auditLogRepository);
 $requestAuditRecorder = new RequestAuditRecorder($auditLogger);
 $authController = new AuthController(new AuthService($userRepository, $session, $auditLogger, new LoginRateLimiter($loginAttemptRepository)));
-$userController = new UserController(new UserService($userRepository), $userRepository, $authGuard);
+$transactions = new \App\Repository\MySql\MySqlTransactionManager($pdo);
+$stockService = new StockService($stockRepository, $stockLedgerRepository, $auditLogRepository, new \App\Repository\MySql\MySqlStockCatalogRepository($pdo), $transactions);
+$csvImports = new \App\Service\CsvImportService($transactions);
+$userController = new UserController(new UserService($userRepository), $userRepository, $authGuard, $csvImports);
 $masterDataAuthorization = new MasterDataAuthorizationService();
 $categoryController = new CategoryController(
     new CategoryService($categoryRepository, $masterDataAuthorization),
     $categoryRepository,
     $authGuard,
+    $csvImports,
 );
 $warehouseController = new WarehouseController(
-    new WarehouseService($warehouseRepository, $masterDataAuthorization),
+    new WarehouseService($warehouseRepository, $masterDataAuthorization, $stockService),
     $warehouseRepository,
     $authGuard,
+    $csvImports,
 );
 $productController = new ProductController(
-    new ProductService($productRepository, $masterDataAuthorization),
+    new ProductService($productRepository, $masterDataAuthorization, $stockService),
     $productRepository,
     $categoryRepository,
     $authGuard,
+    $csvImports,
 );
 $supplierController = new SupplierController(
     new SupplierService($supplierRepository, $masterDataAuthorization),
     $supplierRepository,
     $authGuard,
+    $csvImports,
 );
 $customerController = new CustomerController(
     new CustomerService($customerRepository, $masterDataAuthorization),
     $customerRepository,
     $authGuard,
+    $csvImports,
 );
 $suppliersById = [];
-foreach ($supplierRepository->all() as $supplier) {
+foreach (str_starts_with($request->path(), '/purchase-orders') ? $supplierRepository->all() : [] as $supplier) {
     $suppliersById[$supplier->id()] = $supplier;
 }
 $warehousesById = [];
-foreach ($warehouseRepository->all() as $warehouse) {
+foreach (str_starts_with($request->path(), '/purchase-orders') || str_starts_with($request->path(), '/sales-orders') ? $warehouseRepository->all() : [] as $warehouse) {
     $warehousesById[$warehouse->id()] = $warehouse;
 }
 $customersById = [];
-foreach ($customerRepository->all() as $customer) {
+foreach (str_starts_with($request->path(), '/sales-orders') ? $customerRepository->all() : [] as $customer) {
     $customersById[$customer->id()] = $customer;
 }
 $purchaseOrderController = new PurchaseOrderController(
@@ -124,7 +152,7 @@ $purchaseOrderController = new PurchaseOrderController(
         $productRepository,
         $suppliersById,
         $warehousesById,
-        new StockService($stockRepository, $stockLedgerRepository),
+        $stockService,
     ),
     $purchaseOrderRepository,
     $productRepository,
@@ -138,7 +166,7 @@ $salesOrderController = new SalesOrderController(
         $productRepository,
         $customersById,
         $warehousesById,
-        new StockService($stockRepository, $stockLedgerRepository),
+        $stockService,
     ),
     $salesOrderRepository,
     $productRepository,
@@ -187,6 +215,7 @@ $router->get('/products', [$productController, 'index']);
 $router->get('/products/create', [$productController, 'create']);
 $router->post('/products', [$productController, 'store']);
 $router->post('/products/import', [$productController, 'import']);
+$router->get('/products/show', [$productController, 'show']);
 $router->get('/products/edit', [$productController, 'edit']);
 $router->post('/products/update', [$productController, 'update']);
 $router->post('/products/activate', [$productController, 'activate']);
@@ -223,17 +252,20 @@ $router->post('/customers/update', [$customerController, 'update']);
 $router->post('/customers/activate', [$customerController, 'activate']);
 $router->post('/customers/deactivate', [$customerController, 'deactivate']);
 
-$request = Request::fromGlobals();
-
 try {
-    if ($request->method() === 'POST' && !$session->isValidCsrfToken((string) ($request->post()['csrf_token'] ?? ''))) {
+    // Expired protected POSTs are authentication failures, rather than misleading CSRF failures.
+    if ($request->method() === 'POST' && $request->path() !== '/login') $authGuard->requireAuth();
+    $csrfInput = $request->post()['csrf_token'] ?? '';
+    if ($request->method() === 'POST' && (!is_string($csrfInput) || !$session->isValidCsrfToken($csrfInput))) {
         throw new HttpException(403, 'Invalid CSRF token.');
     }
     $response = $router->dispatch($request);
 } catch (HttpException $exception) {
     $response = str_starts_with($request->path(), '/api/')
         ? ErrorResponder::api($exception->statusCode() === 401 ? 'Authentication required' : $exception->getMessage(), $exception->statusCode())
-        : ($exception->statusCode() === 401 ? new Response('', 302, ['Location' => '/login']) : ErrorResponder::browser($exception, $config->bool('APP_DEBUG')));
+        : ($exception->statusCode() === 401 && ($request->server()['HTTP_X_REQUESTED_WITH'] ?? '') !== 'fetch'
+            ? new Response('', 302, ['Location' => '/login'])
+            : ErrorResponder::browser($exception, $config->bool('APP_DEBUG')));
 } catch (Throwable $throwable) {
     $status = method_exists($throwable, 'statusCode') && is_int($throwable->statusCode()) ? $throwable->statusCode() : 500;
     $response = str_starts_with($request->path(), '/api/')
@@ -242,4 +274,5 @@ try {
 }
 
 $requestAuditRecorder->record($request, $response, $session->auth());
-$response->send();
+$session->close();
+$response->withHeaders(['Cache-Control' => 'no-store, private', 'Pragma' => 'no-cache', 'Expires' => '0'])->send();

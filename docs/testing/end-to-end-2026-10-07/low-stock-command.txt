@@ -1,0 +1,7 @@
+SKU-DEMO-001 | Demo Finished Product | Main Warehouse | quantity=0 | reorder=10
+SKU-DEMO-001 | Demo Finished Product | Secondary Warehouse | quantity=4 | reorder=10
+SKU-SEED-005 | Seed Product 005 | Secondary Warehouse | quantity=2 | reorder=13
+SKU-SEED-010 | Seed Product 010 | Secondary Warehouse | quantity=2 | reorder=11
+SKU-SEED-015 | Seed Product 015 | Secondary Warehouse | quantity=2 | reorder=9
+SKU-SEED-020 | Seed Product 020 | Secondary Warehouse | quantity=2 | reorder=14
+SKU-SEED-025 | Seed Product 025 | Secondary Warehouse | quantity=2 | reorder=12

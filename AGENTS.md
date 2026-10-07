@@ -17,6 +17,8 @@ When instructions conflict, use this precedence:
 
 Never silently reinterpret the official brief.
 
+For requirement navigation before enhancements and bug fixes, read `KNOWLEDGE.md`; use its PDF page references to check the official brief. The summary does not override the authority order above.
+
 ## 2. Non-Negotiable Constraints
 
 - PHP 8.2+ Native OOP.

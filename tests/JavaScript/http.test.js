@@ -92,3 +92,20 @@ test('request coordinator aborts the previous request and marks it stale', () =>
     assert.equal(controllers[1].aborted, true);
     assert.equal(second.isCurrent(), false);
 });
+
+
+test('expired sessions produce a sign-in message; forbidden and network errors remain distinct', () => {
+    const {sessionFailureMessage} = require('../../public/assets/js/http.js');
+    assert.match(sessionFailureMessage(new HttpResponseError({status:401}, '')), /Sign in/);
+    assert.equal(sessionFailureMessage(new HttpResponseError({status:403}, '')), null);
+    assert.equal(sessionFailureMessage(new NetworkRequestError(new Error('offline'))), null);
+});
+
+test('a protected fetch receiving 401 is rejected and is never retried automatically', async () => {
+    let calls = 0;
+    await assert.rejects(fetchHtml('/categories', {method:'POST', fetchImpl:async () => {
+        calls++;
+        return {ok:false,status:401,text:async ()=>'Authentication required'};
+    }}), error => error instanceof HttpResponseError && error.status === 401);
+    assert.equal(calls, 1);
+});

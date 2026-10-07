@@ -1,0 +1,1 @@
+{"checks":110,"sizes":[[320,568],[390,844],[568,320],[768,1024],[1440,900]],"errors":0,"serverValidation":true,"cancelCloses":true}

@@ -42,6 +42,11 @@ final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepositoryIn
         return $this->orders[$id] ?? null;
     }
 
+    public function lockById(int $id): ?PurchaseOrder
+    {
+        return $this->findById($id);
+    }
+
     public function createDraft(string $orderNumber, int $supplierId, int $warehouseId, int $createdBy, array $items): PurchaseOrder
     {
         $this->assertUniqueProducts($items);

@@ -15,7 +15,7 @@ Date: 2026-08-31
 - The manual composition root in `public/index.php` is verbose and will become harder to maintain if many optional features are added.
 - Validation is partly centralized through `InputValidator`, but older service validation still uses direct `InvalidArgumentException` checks.
 - The UI has been upgraded into a custom operational SaaS shell with dashboard charts, datatable tools, modal forms, confirmations, loading states, and empty states.
-- Git evidence is unavailable in this workspace because the folder is not a Git repository.
+- The original Git limitation is resolved: Git history is available as of 6 October 2026. See the current audit/remediation evidence for remaining maintenance and physical-device limitations.
 
 ## Stock Safety
 

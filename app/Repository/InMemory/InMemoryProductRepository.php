@@ -50,6 +50,13 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
         );
     }
 
+    public function active(): array
+    {
+        $items = array_values(array_filter($this->products, static fn (Product $product): bool => $product->isActive()));
+        usort($items, static fn (Product $a, Product $b): int => strcasecmp($a->name(), $b->name()) ?: $a->id() <=> $b->id());
+        return $items;
+    }
+
     public function findById(int $id): ?Product
     {
         return $this->products[$id] ?? null;
@@ -115,6 +122,13 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
         }
 
         return $stocks;
+    }
+
+    public function stocksForProducts(array $productIds): array
+    {
+        $result = [];
+        foreach ($productIds as $id) $result[$id] = $this->stocksForProduct($id);
+        return $result;
     }
 
     private function findRequired(int $id): Product
