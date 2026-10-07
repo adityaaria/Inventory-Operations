@@ -12,8 +12,16 @@
 # Local training modules and official project brief (retain local files).
 Training Programmer - *.pdf
 Project Brief - *.pdf
+/.env.*
+!/.env.example
+/deploy/.env.production
+/deploy/tls/
+__pycache__/
 /.codex/skills/
 /.codex/hooks/
 /.codex-cli-plugin/
 /.codex/.spark-managed.json
 /.spark-lock.json
+
+# SonarScanner working directory
+/.scannerwork/

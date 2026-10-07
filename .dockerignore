@@ -1,4 +1,9 @@
 /.env
+/.env.*
+/deploy/.env.production
+/deploy/tls/
+Training Programmer - *.pdf
+Project Brief - *.pdf
 /vendor/
 /var/
 /coverage/

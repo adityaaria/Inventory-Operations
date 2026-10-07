@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository\InMemory;
 
 use App\Repository\Contract\OperationalQueryRepositoryInterface;
+use App\Support\OutstandingCriteria;
 
 final class InMemoryOperationalQueryRepository implements OperationalQueryRepositoryInterface
 {
@@ -46,7 +47,7 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
     public function reportSummary(string $type, ?string $from, ?string $to, ?int $salesUserId): array
     {
         $counts = $distribution = [];
-        $received = $issued = 0;
+        $received = $issued = $adjusted = 0;
         foreach ($this->reportRows as $row) {
             $group = (string) ($row[$type === 'orders' ? 'Status' : 'Movement'] ?? 'Unknown');
             $bucket = (string) ($row[$type === 'orders' ? 'Type' : 'Warehouse'] ?? 'Unknown');
@@ -54,10 +55,11 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
             $distribution[$bucket] = ($distribution[$bucket] ?? 0) + 1;
             $received += $group === 'Receipt' ? (int) ($row['Quantity'] ?? 0) : 0;
             $issued += $group === 'Issue' ? (int) ($row['Quantity'] ?? 0) : 0;
+            $adjusted += $group === 'Adjustment' ? (int) ($row['Quantity'] ?? 0) : 0;
         }
         ksort($counts);
         ksort($distribution);
-        return ['total' => count($this->reportRows), 'counts' => $counts, 'distribution' => $distribution, 'received' => $received, 'issued' => $issued];
+        return ['total' => count($this->reportRows), 'counts' => $counts, 'distribution' => $distribution, 'received' => $received, 'issued' => $issued, 'adjusted' => $adjusted];
     }
 
     public function reportPage(string $type, ?string $from, ?string $to, ?int $salesUserId, int $limit, int $offset): array
@@ -68,6 +70,43 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
     public function iterateReportRows(string $type, ?string $from, ?string $to, ?int $salesUserId): iterable
     {
         yield from $this->reportRows;
+    }
+
+    public function outstandingSummary(OutstandingCriteria $criteria): array
+    {
+        $rows = $this->outstandingRows($criteria);
+        $buckets = array_fill_keys(self::AGE_BUCKETS, 0);
+        $statuses = [];
+        $inbound = $outbound = $oldest = 0;
+        foreach ($rows as $row) {
+            $bucket = (string) ($row['AgeBucket'] ?? self::AGE_BUCKETS[0]);
+            $buckets[$bucket] = ($buckets[$bucket] ?? 0) + 1;
+            $status = ($row['Type'] ?? '') . ' ' . ($row['Status'] ?? '');
+            $statuses[$status] = ($statuses[$status] ?? 0) + 1;
+            $inbound += ($row['Type'] ?? '') === 'PO' ? (int) ($row['OutstandingQty'] ?? 0) : 0;
+            $outbound += ($row['Type'] ?? '') === 'SO' ? (int) ($row['OutstandingQty'] ?? 0) : 0;
+            $oldest = max($oldest, (int) ($row['AgeDays'] ?? 0));
+        }
+        ksort($statuses);
+        return ['total' => count($rows), 'buckets' => $buckets, 'statuses' => $statuses, 'inbound_units' => $inbound, 'outbound_units' => $outbound, 'oldest_days' => $oldest];
+    }
+
+    public function outstandingPage(OutstandingCriteria $criteria, int $limit, int $offset): array
+    {
+        return array_slice($this->outstandingRows($criteria), $offset, $limit);
+    }
+
+    public function iterateOutstandingRows(OutstandingCriteria $criteria): iterable
+    {
+        yield from $this->outstandingRows($criteria);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function outstandingRows(OutstandingCriteria $criteria): array
+    {
+        return array_values(array_filter($this->reportRows, static fn (array $row): bool =>
+            ($criteria->document === '' || ($row['Type'] ?? '') === $criteria->document)
+            && ($criteria->bucket === '' || ($row['AgeBucket'] ?? '') === $criteria->bucket)));
     }
 
     public function productAvailability(string $sku): ?array

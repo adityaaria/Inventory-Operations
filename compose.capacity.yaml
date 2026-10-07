@@ -1,0 +1,11 @@
+# Verification only. Use scripts/verify-capacity.py; never merge into live deployment.
+services:
+  db:
+    volumes:
+      - ./database/schema-and-seed.sql:/docker-entrypoint-initdb.d/001-schema-and-seed.sql:ro
+  app:
+    environment:
+      APP_ENV: test
+      CAPACITY_PROJECT: "${CAPACITY_PROJECT:?Disposable capacity project required}"
+    volumes:
+      - ./tests/Support/large-dataset.php:/var/www/html/tests/Support/large-dataset.php:ro

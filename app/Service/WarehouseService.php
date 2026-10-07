@@ -43,7 +43,7 @@ final class WarehouseService
         $this->assertCanWrite($actor);
         $this->assertName($name);
         \App\Validation\InputValidator::optionalString('location', $location, 190);
-        if ($this->stock === null) return $this->warehouses->create(trim($name), trim($location), true);
+        if ($this->stock === null) { return $this->warehouses->create(trim($name), trim($location), true); }
         return $this->stock->catalogTransaction(function () use ($name, $location): Warehouse {
             $warehouse = $this->warehouses->create(trim($name), trim($location), true);
             $this->stock->initializeWarehouse($warehouse->id());

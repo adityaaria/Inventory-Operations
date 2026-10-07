@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <script src="/assets/js/page-transitions.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Purchase Order - Inventory & Order Management</title>
@@ -16,6 +17,7 @@
     <script defer src="/assets/js/forms.js"></script>
     <script defer src="/assets/js/tables.js"></script>
     <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/inventory-operations.js"></script>
 </head>
 <body>
     <?php $workspaceTitle = $order->orderNumber(); require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
@@ -31,7 +33,7 @@
         ?>
         <header class="page-header">
             <div><p class="app-title">Purchase Order</p><h1><?= htmlspecialchars($order->orderNumber(), ENT_QUOTES, 'UTF-8') ?></h1><p class="page-subtitle">Review order lines and available receiving actions.</p></div>
-            <nav class="toolbar"><a href="/purchase-orders">Purchase Orders</a></nav>
+            <nav class="toolbar" aria-label="Document actions"><a href="/timeline?kind=PO&amp;id=<?= $order->id() ?>">Transaction Timeline</a><a href="/purchase-orders">Purchase Orders</a></nav>
         </header>
         <?php if (($error ?? '') !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <dl class="detail-summary">
@@ -42,22 +44,24 @@
 
         <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
 <table class="detail-table">
-            <thead><tr><th scope="col">Product ID</th><th scope="col">Quantity</th><th scope="col">Received</th><th scope="col">Remaining</th><th scope="col">Purchase Price</th><th scope="col">Receive</th></tr></thead>
+            <thead><tr><th scope="col">Product</th><th scope="col">Quantity</th><th scope="col">Received</th><th scope="col">Remaining</th><th scope="col">Purchase Price</th><th scope="col">Receive</th></tr></thead>
             <tbody>
                 <?php foreach ($order->items() as $item): ?>
                     <tr>
-                        <td><?= $item->productId() ?></td>
+                        <td><?= htmlspecialchars($productLabels[$item->productId()] ?? ('Product #' . $item->productId()), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= $item->quantity() ?></td>
                         <td><?= $item->receivedQuantity() ?></td>
                         <td><?= $item->remainingQuantity() ?></td>
                         <td><?= number_format($item->purchasePrice(), 2) ?></td>
                         <td>
-                            <?php if ($canReceive && in_array($order->status(), \App\Entity\PurchaseOrder::RECEIVABLE_STATUSES, true) && $item->remainingQuantity() > 0): ?>
+                            <?php if ($canReceive && in_array($order->status(), \App\Entity\PurchaseOrder::RECEIVABLE_STATUSES, true) && $item->remainingQuantity() > 0 && ($closure ?? null) === null): ?>
                                 <form method="post" action="/purchase-orders/receive">
+                <input type="hidden" name="operation_key" value="<?= bin2hex(random_bytes(16)) ?>">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                     <input type="hidden" name="id" value="<?= $order->id() ?>">
                                     <input type="hidden" name="item_id" value="<?= $item->id() ?>">
-                                    <input name="quantity" type="number" min="1" max="<?= $item->remainingQuantity() ?>" required>
+                                    <label class="visually-hidden" for="receive-quantity-<?= $item->id() ?>">Receive quantity</label>
+                                    <input id="receive-quantity-<?= $item->id() ?>" name="quantity" type="number" min="1" max="<?= $item->remainingQuantity() ?>" required>
                                     <button type="submit">Receive</button>
                                 </form>
                             <?php endif; ?>
@@ -68,6 +72,11 @@
         </table>
 </div>
 
+        <?php if(($closure??null)!==null): ?><p class="alert">Remaining supply closed: <?= htmlspecialchars($closure['reason'],ENT_QUOTES,'UTF-8') ?>. Received quantities remain recorded.</p><?php endif; ?>
+        <?php if($canOrderOrCancel && $order->status()==='PartiallyReceived' && ($closure??null)===null): ?>
+        <form method="post" action="/purchase-orders/close-remainder" class="form"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string)($GLOBALS['csrf_token']??''),ENT_QUOTES,'UTF-8') ?>"><input type="hidden" name="id" value="<?= $order->id() ?>"><label class="field"><span class="field-label">Reason to close remaining supply</span><textarea name="reason" maxlength="500" required></textarea></label><div class="form-actions"><button type="submit">Close Remaining Supply</button></div></form>
+        <?php endif; ?>
+        <?php if($canReceive && ($movements??[])!==[]): ?><section class="card"><div class="card-body"><h2>Receipts and Supplier Returns</h2><?php foreach($movements as $movement): ?><p>Receipt #<?= $movement->id() ?> · quantity <?= $movement->quantity() ?> <a href="/inventory-operations/create?kind=SupplierReturn&amp;source_ledger_id=<?= $movement->id() ?>">Propose Supplier Return</a></p><?php endforeach; ?></div></section><?php endif; ?>
         <div class="form-actions">
         <?php if ($canOrderOrCancel && $order->status() === \App\Entity\PurchaseOrder::STATUS_DRAFT): ?>
             <form method="post" action="/purchase-orders/order">

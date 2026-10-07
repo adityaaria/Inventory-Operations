@@ -17,7 +17,7 @@ final class CsvImport
     public static function rowsFromRequest(Request $request): array
     {
         $input = $request->post()['csv_data'] ?? '';
-        if (!is_string($input)) throw new InvalidArgumentException('CSV content must be text.');
+        if (!is_string($input)) { throw new InvalidArgumentException('CSV content must be text.'); }
         $csv = trim($input);
         if ($csv === '') {
             $csv = self::uploadedCsv($request);

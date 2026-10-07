@@ -33,6 +33,8 @@ final class PurchaseOrderController
         private readonly array $suppliers,
         private readonly array $warehouses,
         private readonly AuthGuard $guard,
+        private readonly ?\App\Service\OrderExceptionService $exceptions = null,
+        private readonly ?\App\Repository\Contract\StockLedgerRepositoryInterface $ledger = null,
     ) {
     }
 
@@ -71,12 +73,53 @@ final class PurchaseOrderController
             throw new HttpException(403, 'Forbidden');
         }
 
+        $old = array_intersect_key(array_filter($request->query(), 'is_string'), array_flip(['warehouse_id','product_id','quantity']));
+        $error = '';
+        try {
+            $old = $this->replenishmentPrefill($request->query()) + $old;
+        } catch (InvalidArgumentException $exception) {
+            $error = $exception->getMessage();
+        }
+
         return $this->render('purchase-orders/create.php', [
             'suppliers' => $this->suppliers,
             'warehouses' => $this->warehouses,
             'products' => $this->activeProducts(),
-            'error' => '',
-        ]);
+            'error' => $error,
+            'old' => $old,
+        ], $error === '' ? 200 : 422);
+    }
+
+    /**
+     * Turns selected replenishment recommendations (`pick[]=productId:quantity`) into reviewable lines.
+     * Prefill only: supplier, quantities and prices are still reviewed and fully revalidated on submit.
+     *
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
+     */
+    private function replenishmentPrefill(array $query): array
+    {
+        if (!array_key_exists('pick', $query)) {
+            return [];
+        }
+        $picks = $query['pick'];
+        if (!is_array($picks) || $picks === [] || count($picks) > \App\Validation\OrderItemsInput::MAX_ITEMS) {
+            throw new InvalidArgumentException('Select between 1 and ' . \App\Validation\OrderItemsInput::MAX_ITEMS . ' recommendations.');
+        }
+        $lines = [];
+        foreach ($picks as $pick) {
+            if (!is_string($pick) || preg_match('/^([1-9][0-9]{0,9}):([1-9][0-9]{0,9})$/', $pick, $match) !== 1 || isset($lines[$match[1]])) {
+                throw new InvalidArgumentException('Invalid replenishment selection.');
+            }
+            $lines[$match[1]] = ['product_id' => $match[1], 'quantity' => $match[2]];
+        }
+        $first = array_shift($lines);
+        $items = [];
+        foreach (array_values($lines) as $index => $line) {
+            $items[$index + 1] = $line;
+        }
+
+        return ['product_id' => $first['product_id'], 'quantity' => $first['quantity'], 'items' => $items];
     }
 
     public function store(Request $request): Response
@@ -90,11 +133,7 @@ final class PurchaseOrderController
                 InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
                 InputValidator::positiveInt('supplier_id', $post['supplier_id'] ?? ''),
                 InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
-                [[
-                    'product_id' => InputValidator::positiveInt('product_id', $post['product_id'] ?? ''),
-                    'quantity' => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
-                    'purchase_price' => InputValidator::nonNegativeMoney('purchase_price', $post['purchase_price'] ?? ''),
-                ]],
+                \App\Validation\OrderItemsInput::purchase($post),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('purchase-orders/create.php', [
@@ -126,7 +165,7 @@ final class PurchaseOrderController
         try {
             $this->purchaseOrders->receive($actor, $id, [
                 InputValidator::positiveInt('item_id', $post['item_id'] ?? '') => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
-            ]);
+            ], \App\Service\OperationIdempotency::validateKey($post['operation_key'] ?? null));
         } catch (InvalidArgumentException $exception) {
             return $this->render('purchase-orders/show.php', [
                 'order' => $order,
@@ -148,6 +187,14 @@ final class PurchaseOrderController
         return new Response('', 302, ['Location' => '/purchase-orders']);
     }
 
+    public function closeRemainder(Request $request): Response
+    {
+        $actor=$this->guard->requireAuth();$id=InputValidator::positiveInt('id',$request->post()['id']??'');
+        if($this->exceptions===null) { throw new \LogicException('Order exceptions service is required.'); }
+        $this->exceptions->close($actor,$id,\App\Service\BusinessOperationInput::reason($request->post()['reason']??null));
+        return new Response('',302,['Location'=>'/purchase-orders/show?id='.$id]);
+    }
+
     private function findOrder(int $id): PurchaseOrder
     {
         return $this->repository->findById($id) ?? throw new HttpException(404, 'Purchase order not found.');
@@ -159,9 +206,27 @@ final class PurchaseOrderController
         return $this->products->active();
     }
 
+    /**
+     * Readable "SKU — name" per ordered product for detail pages; inactive products stay visible as history.
+     *
+     * @param list<\App\Entity\PurchaseOrderItem> $items
+     * @return array<int, string>
+     */
+    private function productLabels(array $items): array
+    {
+        $labels = [];
+        foreach ($items as $item) {
+            $product = $this->products->findById($item->productId());
+            $labels[$item->productId()] = $product === null ? 'Product #' . $item->productId() : $product->sku() . ' — ' . $product->name();
+        }
+
+        return $labels;
+    }
+
     /** @param array<string, mixed> $data */
     private function render(string $view, array $data = [], int $statusCode = 200): Response
     {
+        if(isset($data['order']) && $data['order'] instanceof PurchaseOrder){$data['closure']=$this->exceptions?->closure($data['order']->id());$data['movements']=$this->ledger?->forReference('PO',$data['order']->id())??[];$data['productLabels']=$this->productLabels($data['order']->items());}
         extract($data, EXTR_SKIP);
         ob_start();
         require dirname(__DIR__, 2) . '/views/' . $view;

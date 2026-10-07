@@ -25,7 +25,7 @@ final class PersistenceErrors
                 3819 => 'A value violates a required data constraint.',
                 default => null,
             };
-            if ($message !== null) throw new ValidationException($message);
+            if ($message !== null) { throw new ValidationException($message); }
             throw $exception;
         }
     }

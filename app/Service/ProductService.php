@@ -35,7 +35,7 @@ final class ProductService
         $this->assertCanWrite($actor);
         $this->assertValid($input);
 
-        if ($this->stock === null) return $this->products->create($input->trimmed(), true);
+        if ($this->stock === null) { return $this->products->create($input->trimmed(), true); }
         return $this->stock->catalogTransaction(function () use ($input): Product {
             $product = $this->products->create($input->trimmed(), true);
             $this->stock->initializeProduct($product->id());

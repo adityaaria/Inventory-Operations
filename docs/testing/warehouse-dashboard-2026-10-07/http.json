@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "checks": 11,
+  "results": [
+    "Admin login succeeds",
+    "Admin dashboard renders without PHP errors",
+    "Admin low-stock count matches active database warehouse pairs",
+    "WarehouseStaff login succeeds",
+    "WarehouseStaff dashboard renders without PHP errors",
+    "WarehouseStaff low-stock count matches active database warehouse pairs",
+    "Warehouse low-stock appears independently of Inventory Value",
+    "Sales login succeeds",
+    "Sales dashboard renders without PHP errors",
+    "Sales does not receive global inventory metrics",
+    "Stock and ledger remain unchanged by acceptance"
+  ],
+  "low_stock_pairs": 7,
+  "stock_mutations_performed": false
+}

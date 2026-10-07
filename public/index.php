@@ -89,17 +89,27 @@ $operationalQueries = new MySqlOperationalQueryRepository($pdo);
 $authGuard = new AuthGuard($session, $userRepository);
 // Refresh presentation role from the same authoritative guard used by controllers.
 try {
-    $GLOBALS['workspace_role'] = $authGuard->requireAuth()->role();
+    $workspaceActor = $authGuard->requireAuth();
+    $GLOBALS['workspace_role'] = $workspaceActor->role();
+    // Scopes browser-local form drafts to one user and role; never used for authorization.
+    $GLOBALS['workspace_draft_owner'] = $workspaceActor->userId() . ':' . $workspaceActor->role();
+    $GLOBALS['workspace_draft_ttl'] = $config->int('SESSION_ABSOLUTE_SECONDS');
 } catch (HttpException $exception) {
-    if ($exception->statusCode() !== 401) throw $exception;
+    if ($exception->statusCode() !== 401) { throw $exception; }
     $GLOBALS['workspace_role'] = '';
+    $GLOBALS['workspace_draft_owner'] = '';
 }
 $GLOBALS['csrf_token'] = $session->csrfToken();
 $auditLogger = new AuditLogger($auditLogRepository);
 $requestAuditRecorder = new RequestAuditRecorder($auditLogger);
 $authController = new AuthController(new AuthService($userRepository, $session, $auditLogger, new LoginRateLimiter($loginAttemptRepository)));
 $transactions = new \App\Repository\MySql\MySqlTransactionManager($pdo);
+$orderExceptionsRepository = new \App\Repository\MySql\MySqlOrderExceptionRepository($pdo);
+$operationIdempotency = new \App\Service\OperationIdempotency(new \App\Repository\MySql\MySqlOperationRequestRepository($pdo));
 $stockService = new StockService($stockRepository, $stockLedgerRepository, $auditLogRepository, new \App\Repository\MySql\MySqlStockCatalogRepository($pdo), $transactions);
+$orderExceptions = new \App\Service\OrderExceptionService($orderExceptionsRepository, $purchaseOrderRepository, $salesOrderRepository, $stockService, $auditLogRepository);
+$businessOperations = new \App\Service\BusinessOperationService(new \App\Repository\MySql\MySqlBusinessOperationRepository($pdo), $stockService, $auditLogRepository);
+$businessController = new \App\Controller\BusinessOperationController($businessOperations, $authGuard, $productRepository, $warehouseRepository);
 $csvImports = new \App\Service\CsvImportService($transactions);
 $userController = new UserController(new UserService($userRepository), $userRepository, $authGuard, $csvImports);
 $masterDataAuthorization = new MasterDataAuthorizationService();
@@ -153,12 +163,16 @@ $purchaseOrderController = new PurchaseOrderController(
         $suppliersById,
         $warehousesById,
         $stockService,
+        $operationIdempotency,
+        $orderExceptionsRepository,
     ),
     $purchaseOrderRepository,
     $productRepository,
     $suppliersById,
     $warehousesById,
     $authGuard,
+    $orderExceptions,
+    $stockLedgerRepository,
 );
 $salesOrderController = new SalesOrderController(
     new SalesOrderService(
@@ -167,12 +181,15 @@ $salesOrderController = new SalesOrderController(
         $customersById,
         $warehousesById,
         $stockService,
+        $operationIdempotency,
     ),
     $salesOrderRepository,
     $productRepository,
     $customersById,
     $warehousesById,
     $authGuard,
+    $orderExceptions,
+    $stockLedgerRepository,
 );
 $dashboardController = new DashboardController(new DashboardService($operationalQueries), $authGuard);
 $reportController = new ReportController(new ReportService($operationalQueries), $authGuard);
@@ -180,9 +197,29 @@ $availabilityController = new ProductAvailabilityController(new ProductAvailabil
 
 $router->get('/', [$dashboardController, 'index']);
 $router->get('/dashboard', [$dashboardController, 'index']);
+$auditTrailController = new \App\Controller\AuditTrailController(new \App\Service\AuditTrailService(new \App\Repository\MySql\MySqlAuditQueryRepository($pdo)), $authGuard);
+$router->get('/audit-trail', [$auditTrailController, 'index']);
+$router->get('/inventory-operations', [$businessController, 'index']);
+$router->get('/inventory-operations/create', [$businessController, 'create']);
+$router->get('/inventory-operations/show', [$businessController, 'show']);
+$router->get('/inventory-operations/balance', [$businessController, 'balance']);
+$router->get('/inventory-operations/source', [$businessController, 'source']);
+$router->post('/inventory-operations', [$businessController, 'store']);
+$router->post('/inventory-operations/decide', [$businessController, 'decide']);
+$router->post('/inventory-operations/post', [$businessController, 'post']);
+$workQueueController = new \App\Controller\WorkQueueController(new \App\Service\WorkQueueService(new \App\Repository\MySql\MySqlWorkQueueRepository($pdo)), $authGuard);
+$draftCheckController = new \App\Controller\DraftCheckController(new \App\Service\DraftCheckService($productRepository, $warehouseRepository, $stockRepository), $authGuard);
+$timelineController = new \App\Controller\DocumentTimelineController(new \App\Service\DocumentTimelineService(new \App\Repository\MySql\MySqlDocumentTimelineRepository($pdo)), $authGuard);
+$router->get('/timeline', [$timelineController, 'index']);
+$router->get('/work-queue', [$workQueueController, 'index']);
+$router->get('/drafts/check', [$draftCheckController, 'check']);
+$router->get('/replenishment', [$businessController, 'recommendations']);
+$router->post('/purchase-orders/close-remainder', [$purchaseOrderController, 'closeRemainder']);
+$router->post('/sales-orders/reject', [$salesOrderController, 'reject']);
 $router->get('/reports', [$reportController, 'index']);
 $router->get('/reports/stock-ledger.csv', [$reportController, 'stockLedger']);
 $router->get('/reports/orders.csv', [$reportController, 'orders']);
+$router->get('/reports/outstanding.csv', [$reportController, 'outstanding']);
 $router->get('/api/products/{sku}/availability', [$availabilityController, 'show']);
 $router->get('/login', [$authController, 'showLogin']);
 $router->post('/login', [$authController, 'login']);
@@ -254,7 +291,7 @@ $router->post('/customers/deactivate', [$customerController, 'deactivate']);
 
 try {
     // Expired protected POSTs are authentication failures, rather than misleading CSRF failures.
-    if ($request->method() === 'POST' && $request->path() !== '/login') $authGuard->requireAuth();
+    if ($request->method() === 'POST' && $request->path() !== '/login') { $authGuard->requireAuth(); }
     $csrfInput = $request->post()['csrf_token'] ?? '';
     if ($request->method() === 'POST' && (!is_string($csrfInput) || !$session->isValidCsrfToken($csrfInput))) {
         throw new HttpException(403, 'Invalid CSRF token.');
@@ -268,6 +305,15 @@ try {
             : ErrorResponder::browser($exception, $config->bool('APP_DEBUG')));
 } catch (Throwable $throwable) {
     $status = method_exists($throwable, 'statusCode') && is_int($throwable->statusCode()) ? $throwable->statusCode() : 500;
+    if ($status >= 500) {
+        (new \App\Support\JsonFileLogger(dirname(__DIR__) . '/var/log/app.log'))->log('error', 'HTTP request failed.', [
+            'exception' => $throwable::class,
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'request_id' => preg_match('/^[a-f0-9]{32}$/D', (string) ($request->server()['HTTP_X_REQUEST_ID'] ?? ''))
+                ? $request->server()['HTTP_X_REQUEST_ID'] : null,
+        ]);
+    }
     $response = str_starts_with($request->path(), '/api/')
         ? ErrorResponder::api($status === 500 ? 'Unexpected server error.' : $throwable->getMessage(), $status)
         : ErrorResponder::browser($throwable, $config->bool('APP_DEBUG'));

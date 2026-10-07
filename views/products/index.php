@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <script src="/assets/js/page-transitions.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Products - Inventory & Order Management</title>
@@ -16,6 +17,7 @@
     <script defer src="/assets/js/forms.js"></script>
     <script defer src="/assets/js/tables.js"></script>
     <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/inventory-operations.js"></script>
 </head>
 <body>
     <?php $workspaceTitle = 'Products'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
@@ -48,29 +50,9 @@
                 <option value="low" <?= $criteria->stockStatus() === 'low' ? 'selected' : '' ?>>Low stock</option>
                 <option value="normal" <?= $criteria->stockStatus() === 'normal' ? 'selected' : '' ?>>Normal stock</option>
             </select></label>
+            <?php require dirname(__DIR__) . '/partials/sort-state.php'; ?>
             <button type="submit">Filter</button>
         </form>
-        <?php if ($canWrite): ?>
-            <div class="import-dialog" id="import-dialog" <?= $error !== '' ? '' : 'hidden' ?>>
-                <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
-                    <header class="modal-header">
-                        <h2 id="import-dialog-title">Import CSV</h2>
-                        <button class="modal-close" type="button" aria-label="Close dialog">Close</button>
-                    </header>
-                    <div class="modal-body">
-                        <form method="post" action="/products/import" enctype="multipart/form-data" class="form">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                            <label>Import CSV <textarea name="csv_data" rows="3" placeholder="sku,name,unit,purchase_price,selling_price,reorder_point,category_id"></textarea></label>
-                            <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
-                            <div class="modal-footer">
-                                <button type="button" class="button button-quiet" data-dialog-close>Cancel</button>
-                                <button type="submit">Import CSV</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-            </div>
-        <?php endif; ?>
         <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
 <table class="data-table" data-selectable="products">
             <thead>
@@ -78,10 +60,10 @@
                     <th class="selection-column" scope="col"><input class="table-select-all" type="checkbox" aria-label="Select all products on this page"></th>
                     <?php $sortPath = '/products'; $sortKey = 'sku'; $sortLabel = 'SKU'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <?php $sortPath = '/products'; $sortKey = 'name'; $sortLabel = 'Name'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <th>Unit</th>
-                    <th>Purchase Price</th>
+                    <?php $sortPath = '/products'; $sortKey = 'unit'; $sortLabel = 'Unit'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
+                    <?php $sortPath = '/products'; $sortKey = 'purchase_price'; $sortLabel = 'Purchase Price'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <?php $sortPath = '/products'; $sortKey = 'price'; $sortLabel = 'Selling Price'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <th>Reorder</th>
+                    <?php $sortPath = '/products'; $sortKey = 'reorder'; $sortLabel = 'Reorder'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <?php $sortPath = '/products'; $sortKey = 'quantity'; $sortLabel = 'Warehouse Stock'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
                     <?php if ($canWrite): ?><th>Action</th><?php endif; ?>
                 </tr>
@@ -139,6 +121,27 @@
                 <?php if ($result->page() < $result->pages()): ?><a href="<?= htmlspecialchars($nextPageUrl, ENT_QUOTES, 'UTF-8') ?>">Next</a><?php else: ?><span aria-disabled="true">Next</span><?php endif; ?>
             </div>
         </nav>
+        <?php if ($canWrite): ?>
+            <div class="import-dialog" id="import-dialog" <?= $error !== '' ? '' : 'hidden' ?>>
+                <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
+                    <header class="modal-header">
+                        <h2 id="import-dialog-title">Import CSV</h2>
+                        <button class="modal-close" type="button" aria-label="Close dialog">Close</button>
+                    </header>
+                    <div class="modal-body">
+                        <form method="post" action="/products/import" enctype="multipart/form-data" class="form">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                            <label>Import CSV <textarea name="csv_data" rows="3" placeholder="sku,name,unit,purchase_price,selling_price,reorder_point,category_id"></textarea></label>
+                            <label>CSV File <input name="csv_file" type="file" accept=".csv,text/csv"></label>
+                            <div class="modal-footer">
+                                <button type="button" class="button button-quiet" data-dialog-close>Cancel</button>
+                                <button type="submit">Import CSV</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        <?php endif; ?>
     </main>
     <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>

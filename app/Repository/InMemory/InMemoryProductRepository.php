@@ -127,7 +127,7 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
     public function stocksForProducts(array $productIds): array
     {
         $result = [];
-        foreach ($productIds as $id) $result[$id] = $this->stocksForProduct($id);
+        foreach ($productIds as $id) { $result[$id] = $this->stocksForProduct($id); }
         return $result;
     }
 

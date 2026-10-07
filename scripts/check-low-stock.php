@@ -7,7 +7,7 @@ use App\Service\LowStockService;
 use App\Support\Config;
 use App\Support\DatabaseFactory;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 /** @var Config $config */
 $config = require dirname(__DIR__) . '/config/config.php';

@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "existing_tables_unchanged": 15,
+  "added_table": "operation_requests",
+  "initial_rows": 0,
+  "backup_created_before_migration": true
+}

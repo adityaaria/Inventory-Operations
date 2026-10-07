@@ -1,0 +1,55 @@
+name: Native PHP quality and operations
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Python operational safety tests
+        run: python3 -m unittest discover -s tests/Operations -v
+      - name: PHP, MySQL, static analysis and JavaScript
+        run: |
+          mkdir -p var/ci-evidence
+          docker compose -p inventory-ci --profile quality run --build --rm test 2>&1 | tee var/ci-evidence/quality.txt
+      - name: Build local and production images
+        run: |
+          docker build --target runtime -t inventory-operations-app:latest .
+          docker compose -f compose.production.yaml build
+        env:
+          DB_DATABASE: inventory_order_management_restore
+          DB_USERNAME: inventory_restore
+          DB_PASSWORD: ci_disposable_only
+          DB_ROOT_PASSWORD: ci_root_disposable_only
+          DB_VOLUME_NAME: inventory-ci-unused-volume
+          TLS_DIRECTORY: /tmp/ci-unused-tls
+      - name: Backup, restore, HTTPS and load verification
+        run: python3 scripts/verify-operations.py --business-flows
+      - name: Large dataset capacity verification
+        run: python3 scripts/verify-capacity.py --evidence var/capacity-evidence
+      - name: Preserve verification evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verification-evidence
+          path: |
+            var/ci-evidence/
+            var/operations-evidence/
+            var/capacity-evidence/
+            var/business-evidence/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Cleanup disposable services
+        if: always()
+        run: docker compose -p inventory-ci --profile quality down -v

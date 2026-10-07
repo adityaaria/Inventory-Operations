@@ -36,6 +36,8 @@
                 table.querySelectorAll('thead th').forEach((th, index) => {
                     if (th.classList.contains('selection-column')) return;
                     if (th.dataset.sortKey) return; // Server-rendered links sort the full filtered result.
+                    // Action columns and blank headers hold controls, not values; data-no-sort opts any other column out.
+                    if ('noSort' in th.dataset || /^(actions?|)$/i.test(th.textContent.trim())) return;
                     th.tabIndex = 0;
                     th.classList.add('sortable');
                     th.setAttribute('aria-sort', th.getAttribute('aria-sort') || 'none');

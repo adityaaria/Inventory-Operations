@@ -1,0 +1,40 @@
+test_authenticated_roundtrip_and_replica_integrity (test_encryption_job.EncryptedBackupTest.test_authenticated_roundtrip_and_replica_integrity) ... ok
+test_bad_outer_checksum_refused_before_openssl (test_encryption_job.EncryptedBackupTest.test_bad_outer_checksum_refused_before_openssl) ... ok
+test_bundle_path_traversal_rejected (test_encryption_job.EncryptedBackupTest.test_bundle_path_traversal_rejected) ... ok
+test_bundle_symlink_rejected (test_encryption_job.EncryptedBackupTest.test_bundle_symlink_rejected) ... ok
+test_existing_replica_never_overwritten (test_encryption_job.EncryptedBackupTest.test_existing_replica_never_overwritten) ... ok
+test_gcm_tampering_rejected_even_if_outer_checksum_rewritten (test_encryption_job.EncryptedBackupTest.test_gcm_tampering_rejected_even_if_outer_checksum_rewritten) ... ok
+test_job_creates_replica_and_next_run_does_not_repeat_backup (test_encryption_job.EncryptedBackupTest.test_job_creates_replica_and_next_run_does_not_repeat_backup) ... ok
+test_missing_replica_mount_fails_without_dump (test_encryption_job.EncryptedBackupTest.test_missing_replica_mount_fails_without_dump) ... ok
+test_nonempty_decryption_target_refused (test_encryption_job.EncryptedBackupTest.test_nonempty_decryption_target_refused) ... ok
+test_overlapping_job_returns_busy_without_dump (test_encryption_job.EncryptedBackupTest.test_overlapping_job_returns_busy_without_dump) ... ok
+test_replica_loss_alert_is_deduplicated (test_encryption_job.EncryptedBackupTest.test_replica_loss_alert_is_deduplicated) ... ok
+test_wrong_private_key_rejected_without_plaintext (test_encryption_job.EncryptedBackupTest.test_wrong_private_key_rejected_without_plaintext) ... ok
+test_before_jakarta_backup_time_is_not_due (test_encryption_job.ScheduleTimezoneTest.test_before_jakarta_backup_time_is_not_due) ... ok
+test_missed_jakarta_schedule_catches_up (test_encryption_job.ScheduleTimezoneTest.test_missed_jakarta_schedule_catches_up) ... ok
+test_successful_day_is_not_repeated (test_encryption_job.ScheduleTimezoneTest.test_successful_day_is_not_repeated) ... ok
+test_render_preserves_spaced_paths_without_creating_deployment_directories (test_encryption_job.SchedulerRenderingTest.test_render_preserves_spaced_paths_without_creating_deployment_directories) ... ok
+test_checksum_mismatch_rejected (test_safety.OperationalSafetyTest.test_checksum_mismatch_rejected) ... ok
+test_corrupt_backup_alert (test_safety.OperationalSafetyTest.test_corrupt_backup_alert) ... ok
+test_disposable_empty_target_allowed (test_safety.OperationalSafetyTest.test_disposable_empty_target_allowed) ... ok
+test_dump_failure_preserves_previous_backup_and_removes_partial (test_safety.OperationalSafetyTest.test_dump_failure_preserves_previous_backup_and_removes_partial) ... ok
+test_filename_collision_preserves_existing_backup (test_safety.OperationalSafetyTest.test_filename_collision_preserves_existing_backup) ... ok
+test_gzip_integrity_checked_even_with_matching_digest (test_safety.OperationalSafetyTest.test_gzip_integrity_checked_even_with_matching_digest) ... ok
+test_load_refuses_external_target (test_safety.OperationalSafetyTest.test_load_refuses_external_target) ... ok
+test_load_refuses_main_application (test_safety.OperationalSafetyTest.test_load_refuses_main_application) ... ok
+test_load_refuses_non_http_scheme (test_safety.OperationalSafetyTest.test_load_refuses_non_http_scheme) ... ok
+test_load_refuses_unbounded_users (test_safety.OperationalSafetyTest.test_load_refuses_unbounded_users) ... ok
+test_missing_backup_alert (test_safety.OperationalSafetyTest.test_missing_backup_alert) ... ok
+test_prune_dry_run_preserves_backups (test_safety.OperationalSafetyTest.test_prune_dry_run_preserves_backups) ... ok
+test_prune_never_removes_good_backup_when_newest_corrupt (test_safety.OperationalSafetyTest.test_prune_never_removes_good_backup_when_newest_corrupt) ... ok
+test_recent_backup_healthy (test_safety.OperationalSafetyTest.test_recent_backup_healthy) ... ok
+test_restore_refuses_application_database (test_safety.OperationalSafetyTest.test_restore_refuses_application_database) ... ok
+test_restore_refuses_application_project (test_safety.OperationalSafetyTest.test_restore_refuses_application_project) ... ok
+test_restore_refuses_nonempty_database (test_safety.OperationalSafetyTest.test_restore_refuses_nonempty_database) ... ok
+test_stale_backup_alert (test_safety.OperationalSafetyTest.test_stale_backup_alert) ... ok
+test_valid_archive_verified (test_safety.OperationalSafetyTest.test_valid_archive_verified) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 1.321s
+
+OK

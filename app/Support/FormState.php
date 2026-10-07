@@ -14,7 +14,7 @@ final class FormState
 
     public function value(string $name, mixed $fallback = ''): string
     {
-        if (in_array($name, ['password', 'csrf_token'], true)) return '';
+        if (in_array($name, ['password', 'csrf_token'], true)) { return ''; }
         $value = array_key_exists($name, $this->input) ? $this->input[$name] : $fallback;
         return is_string($value) || is_int($value) || is_float($value) ? (string) $value : '';
     }

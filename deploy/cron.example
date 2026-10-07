@@ -1,0 +1,6 @@
+# Operator template only; NOT installed automatically.
+# Set the absolute checkout/env/backup paths and alert ownership before use.
+# Scheduler captures exit status/output; route monitor exit 1 to an approved destination.
+15 1 * * * cd /srv/inventory && /usr/bin/python3 scripts/db-operations.py --project inventory-production --file compose.production.yaml --env-file /etc/inventory/production.env backup --directory /var/backups/inventory
+30 1 * * * cd /srv/inventory && /usr/bin/python3 scripts/db-operations.py prune --directory /var/backups/inventory --keep 7 --apply
+*/5 * * * * cd /srv/inventory && /usr/bin/python3 scripts/monitor.py --project inventory-production --file compose.production.yaml --env-file /etc/inventory/production.env --backup-directory /var/backups/inventory

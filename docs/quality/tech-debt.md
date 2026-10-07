@@ -34,3 +34,32 @@ Session hardening is implemented and verified; ADR-005 records remaining deploym
 ## End-to-end closure — 7 October 2026
 
 Product-picker truncation, invalid-state 500s, failed-form retention and missing zero stock pairs are fixed. Actual concurrent stock and catalog operations now have passing integration coverage. Sustained load benchmarking and production deployment boundaries remain open; see [verification evidence](../testing/end-to-end-verification-2026-10-07.md).
+
+## Operational priorities 1–6 — 7 October 2026
+
+TD-012 is improved with locked application log rotation, bounded container logs, read-only readiness, generic HTTP500 error events and local JSON/exit-code alerts. Actual backup/15-table restore and 60-second load tests now have evidence. Standalone production FPM/TLS configuration and CI workflow are ready; neither a live public deployment nor hosted CI execution is inferred. Remaining items: operator-owned scheduler/alert delivery, off-host encrypted backup/certificate renewal, physical Android/iPhone observations, trainer policy answers, composition-root/validation maintenance and representative large-data/capacity tests. Historical debt rows above are retained for chronology. See [operations verification](../testing/operational-enhancements-2026-10-07.md).
+
+## Audit browsing and operation replay — 7 October 2026
+
+Admin audit browsing and transaction-owned receipt/issue replay protection implemented and locally verified. Retention/very-large-table benchmarking for audit/request history, real-device acceptance, hosted CI and external operational activation remain open. Direct trusted unkeyed service calls intentionally retain compatibility and are not guaranteed idempotent partial receipts. Evidence: `../testing/audit-trail-2026-10-07.md` and `../testing/idempotency-2026-10-07.md`.
+
+## Optional business-flow boundaries — 2026-10-07
+
+ADR-009 implements six user-approved flows. Multi-item proposal UI limitation resolved on 7 October 2026 (up to 100 products). Remaining boundaries: no finance/refund, quarantine or in-transit accounting; independent approval needs appropriate Admin staffing. Physical Android/iPhone acceptance, trainer decisions and external deployment/CI/off-host backup activation still require actual external evidence. Chrome emulation does not close physical-device validation.
+
+Resolved 7 October 2026: Warehouse dashboard now derives `low_stock_count` from active low-stock rows and renders the card independently of Inventory Value. Regression covers zero/two warehouse pairs and Warehouse controller output; see docs/testing/warehouse-dashboard-2026-10-07.md.
+
+## Current status — 7 October 2026
+
+- TD-001 resolved: the project is a Git repository with `origin` on GitHub; work after commit `5cef0dd` is pending commit.
+- TD-005 resolved: the local stack runs on `localhost:8080`.
+- TD-002: the official brief PDF is now read directly (see `KNOWLEDGE.md` page references).
+
+New items from the SonarQube analysis (`docs/quality/sonarqube.md`; all ratings A, gate passed):
+
+| ID | Area | Debt | Impact | Planned Action |
+|---|---|---|---|---|
+| TD-020 | Services | Cognitive complexity above 15 in 9 PHP methods, highest in `BusinessOperationService::propose` (60) and `StockService::adjust` (25). | Harder review of optional stock workflows; behaviour is covered by unit, MySQL and process-concurrency tests. | Split per operation kind (adjustment, transfer, return) into private validators before adding features. |
+| TD-021 | Errors | 49 generic `RuntimeException`/`LogicException` throws (php:S112). | Callers cannot distinguish infrastructure from programming errors by type. | Introduce small domain exception types where callers react differently. |
+| TD-022 | CSS/HTML | 47 duplicate selectors (css:S4666) and 24 ARIA roles where native elements exist (Web:S6819). | Larger stylesheet; no functional impact. | Consolidate selectors when the design system is next revised; replace roles with native elements page by page. |
+| TD-023 | Coverage | JavaScript coverage is measured only for modules loaded with `require`; files tested through `vm` are not instrumented. Two inventory-operation templates are not indexed by Sonar's PHP analyzer. | Overall coverage (69.9%) understates tested JavaScript. | Load browser scripts as modules in tests; re-check the two templates after commit. |

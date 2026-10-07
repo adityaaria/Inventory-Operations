@@ -1,0 +1,928 @@
+{
+  "project": "inventory-e2e-ops-1791367933759893000",
+  "url": "http://localhost:18087",
+  "checks": 207,
+  "passed": 207,
+  "failed": 0,
+  "results": [
+    {
+      "name": "admin@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "admin@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "sales1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "sales1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "warehouse1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouse1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "sales2@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "sales2@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "Sales server-denied /users",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /users/create",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /categories/create",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /products/create",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /warehouses/create",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /suppliers/create",
+      "passed": true
+    },
+    {
+      "name": "Sales server-denied /customers/create",
+      "passed": true
+    },
+    {
+      "name": "Sales denied forged user create",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Warehouse server-denied /users",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /users/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /categories/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /products/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /warehouses/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /suppliers/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse server-denied /customers/create",
+      "passed": true
+    },
+    {
+      "name": "Warehouse denied forged user create",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/users",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Duplicate email validation",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "User validation retains safe name/email/role but never password",
+      "passed": true
+    },
+    {
+      "name": "e2e1791367951593897000@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "e2e1791367951593897000@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "/users/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Existing session uses changed role",
+      "passed": true
+    },
+    {
+      "name": "/users/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Existing deactivated session revoked",
+      "passed": true
+    },
+    {
+      "name": "Inactive user cannot login",
+      "passed": true
+    },
+    {
+      "name": "/users/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "e2e1791367951593897000@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "e2e1791367951593897000@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "/categories",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/categories/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "categories edit persisted",
+      "passed": true
+    },
+    {
+      "name": "categories invalid create retains safe detail",
+      "passed": true
+    },
+    {
+      "name": "categories invalid edit retains attempted detail",
+      "passed": true
+    },
+    {
+      "name": "categories validation leaves record unchanged",
+      "passed": true
+    },
+    {
+      "name": "/categories/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "categories deactivation persisted",
+      "passed": true
+    },
+    {
+      "name": "/categories/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/warehouses",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "New warehouse has zero balances for every existing product",
+      "passed": true
+    },
+    {
+      "name": "/warehouses/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouses edit persisted",
+      "passed": true
+    },
+    {
+      "name": "warehouses invalid create retains safe detail",
+      "passed": true
+    },
+    {
+      "name": "warehouses invalid edit retains attempted detail",
+      "passed": true
+    },
+    {
+      "name": "warehouses validation leaves record unchanged",
+      "passed": true
+    },
+    {
+      "name": "/warehouses/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouses deactivation persisted",
+      "passed": true
+    },
+    {
+      "name": "/warehouses/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/suppliers",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/suppliers/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "suppliers edit persisted",
+      "passed": true
+    },
+    {
+      "name": "suppliers invalid create retains safe detail",
+      "passed": true
+    },
+    {
+      "name": "suppliers invalid edit retains attempted detail",
+      "passed": true
+    },
+    {
+      "name": "suppliers validation leaves record unchanged",
+      "passed": true
+    },
+    {
+      "name": "/suppliers/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "suppliers deactivation persisted",
+      "passed": true
+    },
+    {
+      "name": "/suppliers/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/customers",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/customers/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "customers edit persisted",
+      "passed": true
+    },
+    {
+      "name": "customers invalid create retains safe detail",
+      "passed": true
+    },
+    {
+      "name": "customers invalid edit retains attempted detail",
+      "passed": true
+    },
+    {
+      "name": "customers validation leaves record unchanged",
+      "passed": true
+    },
+    {
+      "name": "/customers/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "customers deactivation persisted",
+      "passed": true
+    },
+    {
+      "name": "/customers/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "New product has zero balances for every warehouse",
+      "passed": true
+    },
+    {
+      "name": "New product is present in low-stock data",
+      "passed": true
+    },
+    {
+      "name": "Duplicate SKU validation",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/products/update",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/products/deactivate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "purchase-orders picker excludes inactive product",
+      "passed": true
+    },
+    {
+      "name": "sales-orders picker excludes inactive product",
+      "passed": true
+    },
+    {
+      "name": "/products/activate",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "purchase-orders picker exposes ALL active products",
+      "passed": true,
+      "detail": {
+        "expected": 31,
+        "actual": 31
+      }
+    },
+    {
+      "name": "purchase-orders newly created product selectable",
+      "passed": true
+    },
+    {
+      "name": "sales-orders picker exposes ALL active products",
+      "passed": true,
+      "detail": {
+        "expected": 31,
+        "actual": 31
+      }
+    },
+    {
+      "name": "sales-orders newly created product selectable",
+      "passed": true
+    },
+    {
+      "name": "Invalid product retains safe input",
+      "passed": true
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Draft PO receipt rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Sales cannot order PO",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Repeated mark-ordered is validation error",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Receipt form includes generated operation key",
+      "passed": true
+    },
+    {
+      "name": "Missing receipt key rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Same receipt key replay succeeds",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Same receipt key changed payload conflicts",
+      "passed": true,
+      "detail": 409
+    },
+    {
+      "name": "Receipt replay/conflict leave received quantity unchanged",
+      "passed": true
+    },
+    {
+      "name": "Partial receipt status",
+      "passed": true
+    },
+    {
+      "name": "Partial receipt balance",
+      "passed": true
+    },
+    {
+      "name": "Over-receipt rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Rejected over-receipt rolls back",
+      "passed": true
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Full receipt status",
+      "passed": true
+    },
+    {
+      "name": "Duplicate completed receipt rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Received PO cannot cancel",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Receipt ledger totals match quantity",
+      "passed": true
+    },
+    {
+      "name": "Exactly two atomic receipt audits",
+      "passed": true
+    },
+    {
+      "name": "PO validation retains header/item input",
+      "passed": true
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Malformed PO transition ID rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Malformed SO transition ID rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Malformed transition audit has no invented entity",
+      "passed": true
+    },
+    {
+      "name": "Draft PO cancellation",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales owner sees order",
+      "passed": true
+    },
+    {
+      "name": "Other Sales cannot view order",
+      "passed": true
+    },
+    {
+      "name": "Draft SO cannot issue",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Other Sales cannot submit order",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales cannot approve own SO",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Repeated approval is validation error",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Approver persisted",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot issue",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Issue form includes generated operation key",
+      "passed": true
+    },
+    {
+      "name": "Missing issue key rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/sales-orders/issue",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Same issue key replay succeeds",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Duplicate goods issue rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Fulfilled SO cannot cancel",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "SO Fulfilled with exact remaining stock",
+      "passed": true
+    },
+    {
+      "name": "Exactly one Issue ledger",
+      "passed": true
+    },
+    {
+      "name": "Exactly one atomic issue audit",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Insufficient stock rejected",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Insufficient issue preserves order/balance/ledger",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Pending SO cancellation",
+      "passed": true
+    },
+    {
+      "name": "SO validation retains header/item input",
+      "passed": true
+    },
+    {
+      "name": "Admin read /dashboard",
+      "passed": true
+    },
+    {
+      "name": "Admin read /products",
+      "passed": true
+    },
+    {
+      "name": "Admin read /products/show?id=31",
+      "passed": true
+    },
+    {
+      "name": "Admin read /purchase-orders",
+      "passed": true
+    },
+    {
+      "name": "Admin read /sales-orders",
+      "passed": true
+    },
+    {
+      "name": "Admin read /reports",
+      "passed": true
+    },
+    {
+      "name": "Admin API matches stock",
+      "passed": true
+    },
+    {
+      "name": "Admin unknown SKU API 404",
+      "passed": true
+    },
+    {
+      "name": "Sales read /dashboard",
+      "passed": true
+    },
+    {
+      "name": "Sales read /products",
+      "passed": true
+    },
+    {
+      "name": "Sales read /products/show?id=31",
+      "passed": true
+    },
+    {
+      "name": "Sales read /purchase-orders",
+      "passed": true
+    },
+    {
+      "name": "Sales read /sales-orders",
+      "passed": true
+    },
+    {
+      "name": "Sales read /reports",
+      "passed": true
+    },
+    {
+      "name": "Sales API matches stock",
+      "passed": true
+    },
+    {
+      "name": "Sales unknown SKU API 404",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /dashboard",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /products",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /products/show?id=31",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /purchase-orders",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /sales-orders",
+      "passed": true
+    },
+    {
+      "name": "Warehouse read /reports",
+      "passed": true
+    },
+    {
+      "name": "Warehouse API matches stock",
+      "passed": true
+    },
+    {
+      "name": "Warehouse unknown SKU API 404",
+      "passed": true
+    },
+    {
+      "name": "products filtered list has test data",
+      "passed": true
+    },
+    {
+      "name": "products empty state",
+      "passed": true
+    },
+    {
+      "name": "purchase-orders filtered list has test data",
+      "passed": true
+    },
+    {
+      "name": "purchase-orders empty state",
+      "passed": true
+    },
+    {
+      "name": "sales-orders filtered list has test data",
+      "passed": true
+    },
+    {
+      "name": "sales-orders empty state",
+      "passed": true
+    },
+    {
+      "name": "Admin CSV exports full DB dataset",
+      "passed": true
+    },
+    {
+      "name": "Sales report exports only own SO",
+      "passed": true
+    },
+    {
+      "name": "Sales stock CSV forbidden",
+      "passed": true
+    },
+    {
+      "name": "Sales stock preview forbidden",
+      "passed": true
+    },
+    {
+      "name": "Warehouse date-filtered ledger contains movements",
+      "passed": true
+    },
+    {
+      "name": "Empty CSV keeps header",
+      "passed": true
+    },
+    {
+      "name": "Malformed report date safe 422",
+      "passed": true
+    },
+    {
+      "name": "users pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "categories pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "warehouses pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "suppliers pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "customers pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "products pagination page 2 remains usable",
+      "passed": true
+    },
+    {
+      "name": "Product import initializes stock in enclosing transaction",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Imported product has all warehouse balances",
+      "passed": true
+    },
+    {
+      "name": "Successful CSV import",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Invalid CSV import rejected atomically",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Failed CSV import leaves no earlier rows",
+      "passed": true
+    },
+    {
+      "name": "Invalid product edit retains attempted values",
+      "passed": true
+    },
+    {
+      "name": "Invalid product edit does not update DB",
+      "passed": true
+    },
+    {
+      "name": "CSRF forgery denied",
+      "passed": true
+    },
+    {
+      "name": "CSRF failure does not persist",
+      "passed": true
+    },
+    {
+      "name": "Admin logout",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Admin protected URL blocked after logout",
+      "passed": true
+    },
+    {
+      "name": "Admin API blocked after logout",
+      "passed": true
+    },
+    {
+      "name": "Sales logout",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales protected URL blocked after logout",
+      "passed": true
+    },
+    {
+      "name": "Sales API blocked after logout",
+      "passed": true
+    },
+    {
+      "name": "Warehouse logout",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Warehouse protected URL blocked after logout",
+      "passed": true
+    },
+    {
+      "name": "Warehouse API blocked after logout",
+      "passed": true
+    }
+  ]
+}

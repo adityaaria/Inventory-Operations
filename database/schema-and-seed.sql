@@ -239,8 +239,9 @@ CREATE TABLE IF NOT EXISTS stock_ledger (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
     warehouse_id INT UNSIGNED NOT NULL,
-    movement_type ENUM('Receipt', 'Issue') NOT NULL,
+    movement_type ENUM('Receipt', 'Issue', 'Adjustment') NOT NULL,
     quantity INT UNSIGNED NOT NULL,
+    quantity_delta BIGINT NULL,
     reference_type VARCHAR(20) NOT NULL,
     reference_id INT UNSIGNED NOT NULL,
     performed_by INT UNSIGNED NOT NULL,
@@ -250,10 +251,11 @@ CREATE TABLE IF NOT EXISTS stock_ledger (
     CONSTRAINT fk_stock_ledger_product FOREIGN KEY (product_id) REFERENCES products (id),
     CONSTRAINT fk_stock_ledger_warehouse FOREIGN KEY (warehouse_id) REFERENCES warehouses (id),
     CONSTRAINT fk_stock_ledger_performed_by FOREIGN KEY (performed_by) REFERENCES users (id),
-    CONSTRAINT chk_stock_ledger_quantity_positive CHECK (quantity > 0)
+    CONSTRAINT chk_stock_ledger_quantity_positive CHECK (quantity > 0),
+    CONSTRAINT chk_stock_ledger_direction CHECK ((movement_type='Adjustment' AND quantity_delta IS NOT NULL AND ABS(quantity_delta)=quantity) OR (movement_type<>'Adjustment' AND quantity_delta IS NULL))
 ) ENGINE=InnoDB;
 
-ALTER TABLE stock_ledger MODIFY movement_type ENUM('Receipt', 'Issue') NOT NULL;
+ALTER TABLE stock_ledger MODIFY movement_type ENUM('Receipt', 'Issue', 'Adjustment') NOT NULL;
 
 INSERT INTO schema_versions (version, description)
 VALUES ('phase-3', 'Purchase order receipt workflow and receipt ledger baseline')
@@ -418,3 +420,54 @@ FROM products p
 CROSS JOIN warehouses w
 LEFT JOIN product_stocks ps ON ps.product_id = p.id AND ps.warehouse_id = w.id
 WHERE ps.product_id IS NULL;
+
+CREATE TABLE IF NOT EXISTS operation_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    actor_id INT UNSIGNED NOT NULL,
+    request_key CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    payload_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_operation_request_actor_key (actor_id, request_key),
+    CONSTRAINT fk_operation_request_actor FOREIGN KEY (actor_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS purchase_order_closures (
+ purchase_order_id INT UNSIGNED PRIMARY KEY, closed_by INT UNSIGNED NOT NULL,
+ reason VARCHAR(500) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id), FOREIGN KEY (closed_by) REFERENCES users(id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS sales_order_rejections (
+ sales_order_id INT UNSIGNED PRIMARY KEY, rejected_by INT UNSIGNED NOT NULL,
+ reason VARCHAR(500) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (sales_order_id) REFERENCES sales_orders(id), FOREIGN KEY (rejected_by) REFERENCES users(id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS inventory_operations (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ kind ENUM('Adjustment','Transfer','SupplierReturn','CustomerReturn') NOT NULL,
+ status ENUM('PendingApproval','Approved','Rejected','Posted','Cancelled') NOT NULL DEFAULT 'PendingApproval',
+ warehouse_id INT UNSIGNED NOT NULL, destination_id INT UNSIGNED NULL,
+ reason VARCHAR(500) NOT NULL, decision_reason VARCHAR(500) NULL,
+ condition_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+ created_by INT UNSIGNED NOT NULL, approved_by INT UNSIGNED NULL, posted_by INT UNSIGNED NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, approved_at TIMESTAMP NULL, posted_at TIMESTAMP NULL,
+ KEY idx_inventory_operations_status_time (status,created_at),
+ FOREIGN KEY (warehouse_id) REFERENCES warehouses(id), FOREIGN KEY (destination_id) REFERENCES warehouses(id),
+ FOREIGN KEY (created_by) REFERENCES users(id), FOREIGN KEY (approved_by) REFERENCES users(id), FOREIGN KEY (posted_by) REFERENCES users(id),
+ CONSTRAINT chk_return_condition CHECK (kind<>'CustomerReturn' OR condition_confirmed=TRUE),
+ CONSTRAINT chk_operation_independent_approval CHECK (approved_by IS NULL OR approved_by <> created_by),
+ CONSTRAINT chk_operation_transfer_destination CHECK ((kind='Transfer' AND destination_id IS NOT NULL AND destination_id<>warehouse_id) OR (kind<>'Transfer' AND destination_id IS NULL))
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS inventory_operation_items (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, operation_id INT UNSIGNED NOT NULL,
+ product_id INT UNSIGNED NOT NULL, quantity INT UNSIGNED NOT NULL,
+ baseline INT UNSIGNED NULL, source_ledger_id BIGINT UNSIGNED NULL,
+ UNIQUE KEY uq_operation_product (operation_id,product_id), KEY idx_operation_source (source_ledger_id),
+ FOREIGN KEY (operation_id) REFERENCES inventory_operations(id), FOREIGN KEY (product_id) REFERENCES products(id),
+ FOREIGN KEY (source_ledger_id) REFERENCES stock_ledger(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS inventory_return_totals (
+ source_ledger_id BIGINT UNSIGNED PRIMARY KEY, returned_quantity INT UNSIGNED NOT NULL DEFAULT 0,
+ FOREIGN KEY (source_ledger_id) REFERENCES stock_ledger(id)
+) ENGINE=InnoDB;

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <script src="/assets/js/page-transitions.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sales Orders - Inventory & Order Management</title>
@@ -16,6 +17,7 @@
     <script defer src="/assets/js/forms.js"></script>
     <script defer src="/assets/js/tables.js"></script>
     <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/inventory-operations.js"></script>
 </head>
 <body>
     <?php $workspaceTitle = 'Sales Orders'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
@@ -39,16 +41,13 @@
                     <option value="<?= $status ?>" <?= $criteria->status() === $status ? 'selected' : '' ?>><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></option>
                 <?php endforeach; ?>
             </select></label>
-            <label class="field"><span class="field-label">Order</span><select name="direction">
-                <option value="desc" <?= $criteria->direction() === 'desc' ? 'selected' : '' ?>>Newest</option>
-                <option value="asc" <?= $criteria->direction() === 'asc' ? 'selected' : '' ?>>Oldest</option>
-            </select></label>
+            <?php require dirname(__DIR__) . '/partials/sort-state.php'; ?>
             <button type="submit">Filter</button>
         </form>
         <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
 <table class="data-table">
             <thead>
-                <tr><?php $sortPath = '/sales-orders'; $sortKey = 'order_number'; $sortLabel = 'Order Number'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Customer</th><th>Warehouse</th><?php $sortPath = '/sales-orders'; $sortKey = 'status'; $sortLabel = 'Status'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'order_date'; $sortLabel = 'Date'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Action</th></tr>
+                <tr><?php $sortPath = '/sales-orders'; $sortKey = 'order_number'; $sortLabel = 'Order Number'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'party'; $sortLabel = 'Customer'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'warehouse'; $sortLabel = 'Warehouse'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'status'; $sortLabel = 'Status'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'order_date'; $sortLabel = 'Date'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Action</th></tr>
             </thead>
             <tbody>
                 <?php if ($result->items() === []): ?>

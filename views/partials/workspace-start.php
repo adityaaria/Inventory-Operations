@@ -4,17 +4,25 @@ $workspaceRole = (string) ($GLOBALS['workspace_role'] ?? '');
 $workspacePath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
 $workspaceItems = [
     ['Dashboard', '/dashboard', 'Operations'],
+    ['Work Queue', '/work-queue', 'Operations'],
     ['Products', '/products', 'Operations'],
     ['Purchase Orders', '/purchase-orders', 'Operations', ['Admin', 'WarehouseStaff']],
     ['Sales Orders', '/sales-orders', 'Operations'],
     ['Reports', '/reports', 'Operations'],
+    ['Stock Operations', '/inventory-operations', 'Operations', ['Admin', 'WarehouseStaff']],
+    ['Replenishment', '/replenishment', 'Operations', ['Admin', 'WarehouseStaff']],
     ['Users', '/users', 'Management', ['Admin']],
+    ['Audit Trail', '/audit-trail', 'Management', ['Admin']],
     ['Categories', '/categories', 'Management'],
     ['Warehouses', '/warehouses', 'Management'],
     ['Suppliers', '/suppliers', 'Management', ['Admin', 'WarehouseStaff']],
     ['Customers', '/customers', 'Management', ['Admin', 'Sales']],
 ];
 $workspaceIcons = [
+    'Work Queue' => '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m7 9 1 1 2-2m2 1h5m-10 6 1 1 2-2m2 1h5"/>',
+    'Stock Operations' => '<path d="M3 8h16l-4-4M21 16H5l4 4"/>',
+    'Replenishment' => '<path d="M12 3v18M3 12h18"/>',
+    'Audit Trail' => '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
     'Dashboard' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
     'Products' => '<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>',
     'Orders' => '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
@@ -37,7 +45,7 @@ $workspaceIcons = [
                 <?php foreach ($workspaceItems as $workspaceItem): ?>
                     <?php
                     [$workspaceLabel, $workspaceHref, $workspaceItemGroup] = $workspaceItem;
-                    if ($workspaceItemGroup !== $workspaceGroup || (isset($workspaceItem[3]) && !in_array($workspaceRole, $workspaceItem[3], true))) continue;
+                    if ($workspaceItemGroup !== $workspaceGroup || (isset($workspaceItem[3]) && !in_array($workspaceRole, $workspaceItem[3], true))) { continue; }
                     $workspaceActive = $workspacePath === $workspaceHref || str_starts_with($workspacePath, $workspaceHref . '/') || ($workspaceHref === '/dashboard' && $workspacePath === '/');
                     $workspaceIcon = str_contains($workspaceLabel, 'Orders') ? 'Orders' : (in_array($workspaceLabel, ['Suppliers', 'Customers'], true) ? 'Parties' : $workspaceLabel);
                     ?>
@@ -50,6 +58,8 @@ $workspaceIcons = [
     </aside>
     <button class="sidebar-backdrop" type="button" aria-label="Close navigation menu" tabindex="-1"></button>
     <div class="main-content">
+        <script defer src="/assets/js/order-items.js"></script>
+        <script defer src="/assets/js/form-drafts.js"></script>
         <a class="skip-link" href="#main-content">Skip to main content</a>
         <div class="workspace-header">
         <button class="sidebar-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false">Menu</button>

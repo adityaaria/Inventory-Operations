@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Real HTTP workflows + read-only SQL assertions against an explicitly disposable Docker project."""
-import argparse, csv, http.cookiejar, html.parser, io, json, os, re, subprocess, time, urllib.error, urllib.parse, urllib.request
+import secrets, argparse, csv, http.cookiejar, html.parser, io, json, os, re, subprocess, time, urllib.error, urllib.parse, urllib.request
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--project',required=True)
@@ -52,7 +52,9 @@ class Client:
         self.jar=http.cookiejar.CookieJar();self.opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.jar),NoRedirect());self.csrf=''
     def request(self,path,data=None,fetch=False):
         headers={'X-Requested-With':'fetch'} if fetch else {}
-        if data is not None:data={'csrf_token':self.csrf,**data}
+        if data is not None:
+            data={'csrf_token':self.csrf,**data}
+            if path in ['/purchase-orders/receive','/sales-orders/issue']:data.setdefault('operation_key',secrets.token_hex(16))
         request=urllib.request.Request(args.url+path,urllib.parse.urlencode(data).encode() if data is not None else None,headers)
         try:r=self.opener.open(request,timeout=20)
         except urllib.error.HTTPError as error:r=error
@@ -136,7 +138,15 @@ try:
     sales.post('/purchase-orders/order',{'id':po},403,'Sales cannot order PO')
     admin.post('/purchase-orders/order',{'id':po})
     admin.post('/purchase-orders/order',{'id':po},422,'Repeated mark-ordered is validation error')
-    warehouse.post('/purchase-orders/receive',{'id':po,'item_id':item,'quantity':4})
+    _,receipt_form,_=warehouse.request('/purchase-orders/show?id='+str(po))
+    check('Receipt form includes generated operation key',bool(re.fullmatch('[a-f0-9]{32}',FormParser(receipt_form).values.get('operation_key',''))))
+    warehouse.post('/purchase-orders/receive',{'id':po,'item_id':item,'quantity':4,'operation_key':''},422,'Missing receipt key rejected')
+    receipt_key=secrets.token_hex(16)
+    receipt_request={'id':po,'item_id':item,'quantity':4,'operation_key':receipt_key}
+    warehouse.post('/purchase-orders/receive',receipt_request)
+    warehouse.post('/purchase-orders/receive',receipt_request,label='Same receipt key replay succeeds')
+    warehouse.post('/purchase-orders/receive',{**receipt_request,'quantity':5},409,'Same receipt key changed payload conflicts')
+    check('Receipt replay/conflict leave received quantity unchanged',int(scalar('SELECT received_quantity FROM purchase_order_items WHERE id=?',[item]))==4)
     check('Partial receipt status',scalar('SELECT status FROM purchase_orders WHERE id=?',[po])=='PartiallyReceived')
     check('Partial receipt balance',int(scalar('SELECT quantity FROM product_stocks WHERE product_id=? AND warehouse_id=?',[pid,refs['warehouses']]))==4)
     warehouse.post('/purchase-orders/receive',{'id':po,'item_id':item,'quantity':7},422,'Over-receipt rejected')
@@ -167,7 +177,12 @@ try:
     admin.post('/sales-orders/approve',{'id':so});admin.post('/sales-orders/approve',{'id':so},422,'Repeated approval is validation error')
     check('Approver persisted',int(scalar('SELECT approved_by FROM sales_orders WHERE id=?',[so]))==1)
     sales.post('/sales-orders/issue',{'id':so},403,'Sales cannot issue')
-    warehouse.post('/sales-orders/issue',{'id':so})
+    _,issue_form,_=warehouse.request('/sales-orders/show?id='+str(so))
+    check('Issue form includes generated operation key',bool(re.fullmatch('[a-f0-9]{32}',FormParser(issue_form).values.get('operation_key',''))))
+    warehouse.post('/sales-orders/issue',{'id':so,'operation_key':''},422,'Missing issue key rejected')
+    issue_request={'id':so,'operation_key':secrets.token_hex(16)}
+    warehouse.post('/sales-orders/issue',issue_request)
+    warehouse.post('/sales-orders/issue',issue_request,label='Same issue key replay succeeds')
     warehouse.post('/sales-orders/issue',{'id':so},422,'Duplicate goods issue rejected')
     admin.post('/sales-orders/cancel',{'id':so},422,'Fulfilled SO cannot cancel')
     check('SO Fulfilled with exact remaining stock',scalar('SELECT status FROM sales_orders WHERE id=?',[so])=='Fulfilled' and int(scalar('SELECT quantity FROM product_stocks WHERE product_id=? AND warehouse_id=?',[pid,refs['warehouses']]))==7)

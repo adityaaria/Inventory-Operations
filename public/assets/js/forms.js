@@ -58,23 +58,31 @@
                     const message = `Confirm ${(button?.textContent?.trim() || 'continue').toLowerCase()}?`;
                     if (await modal.askConfirmation(message)) {
                         state.confirmedForms.add(form);
-                        form.requestSubmit();
+                        form.requestSubmit(event.submitter || undefined);
                     }
                     return;
+                }
+                form.querySelector('[data-submitter-value]')?.remove();
+                const submittedData = new FormData(form, event.submitter);
+                if (event.submitter?.name) {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden'; hidden.name = event.submitter.name;
+                    hidden.value = event.submitter.value; hidden.dataset.submitterValue = 'true';
+                    form.append(hidden);
                 }
                 setButtonLoading(form, true);
                 if (form.closest('.modal-backdrop')) {
                     event.preventDefault();
-                    submitModalForm(form);
+                    submitModalForm(form, submittedData);
                     return;
                 }
                 modal.setPageLoading(true);
             }
 
-            async function submitModalForm(form) {
+            async function submitModalForm(form, submittedData) {
                 try {
                     const {html, response} = await InventoryHttp.fetchHtml(form.action, {
-                        allowedStatuses: [422], method: 'POST', body: new FormData(form),
+                        allowedStatuses: [422], method: 'POST', body: submittedData,
                     });
                     if (response.ok && response.url && response.url !== location.href) {
                         location.href = response.url;

@@ -15,9 +15,11 @@ final class StockLedgerEntry
         private readonly string $referenceType,
         private readonly int $referenceId,
         private readonly int $performedBy,
+        private readonly ?int $quantityDelta = null,
     ) {
     }
 
+    public function delta(): int { return $this->movementType==='Adjustment' ? ($this->quantityDelta ?? 0) : ($this->movementType==='Receipt' ? $this->quantity : -$this->quantity); }
     public function id(): int { return $this->id; }
     public function productId(): int { return $this->productId; }
     public function warehouseId(): int { return $this->warehouseId; }

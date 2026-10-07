@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <script src="/assets/js/page-transitions.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Create Warehouse - Inventory & Order Management</title>
@@ -16,6 +17,7 @@
     <script defer src="/assets/js/forms.js"></script>
     <script defer src="/assets/js/tables.js"></script>
     <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/inventory-operations.js"></script>
 </head>
 <body>
     <?php $formState = new \App\Support\FormState($old ?? []); ?>

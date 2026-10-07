@@ -1,0 +1,32 @@
+{
+ "passed": true,
+ "checks": 21,
+ "results": [
+  "report requires login",
+  "csv requires login",
+  "Admin page renders aging metrics, charts, columns and export link",
+  "Admin CSV limited to role scope with age buckets",
+  "Admin invalid date rejected",
+  "Admin unknown age bucket rejected on page and CSV",
+  "Admin document/age filters apply to page links and CSV",
+  "Admin empty state",
+  "WarehouseStaff page renders aging metrics, charts, columns and export link",
+  "WarehouseStaff CSV limited to role scope with age buckets",
+  "WarehouseStaff invalid date rejected",
+  "WarehouseStaff unknown age bucket rejected on page and CSV",
+  "WarehouseStaff document/age filters apply to page links and CSV",
+  "WarehouseStaff empty state",
+  "Sales page renders aging metrics, charts, columns and export link",
+  "Sales CSV limited to role scope with age buckets",
+  "Sales invalid date rejected",
+  "Sales unknown age bucket rejected on page and CSV",
+  "Sales cannot widen document scope",
+  "Sales empty state",
+  "Sales/Warehouse datasets are narrower than Admin"
+ ],
+ "counts": {
+  "Admin": 18,
+  "WarehouseStaff": 7,
+  "Sales": 3
+ }
+}

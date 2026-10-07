@@ -1,5 +1,22 @@
 # Test Results
 
+## Latest run — 7 October 2026
+
+Command: `docker compose --profile quality run --build --rm test` (PHP 8.3.35, PHPUnit 10.5.64, MySQL 8 disposable `_test` database).
+
+| Suite | Result |
+|---|---|
+| PHPUnit unit + integration | **428 tests, 1949 assertions, OK** |
+| PHPStan level 5 | **155 files, no errors** |
+| JavaScript (`node --test`) | **65 passed, 0 failed** |
+| Python operations (`tests/Operations`) | **35 passed** |
+| Coverage (PCOV, `scripts/coverage-report.php`) | **76.6% of statements in `app/` + `views/`** |
+| SonarQube Community | **Quality Gate passed**; see `docs/quality/sonarqube.md` |
+
+End-to-end on fresh disposable Docker stacks the same day: business HTTP 76/76, work queue 13/13, timeline 21/21, business browser 50/50, outstanding 24/24, replenishment 15/15, draft check 7/7, draft browser 18/18, 16-page UI sweep with no findings. Log and evidence: `docs/testing/gap-closure-2026-10-07/`.
+
+## Initial phase results (31 August 2026)
+
 Date: 2026-08-31  
 Runtime: PHP 8.5.10 locally, PHP 8.3 CLI in Docker app image  
 Database: MySQL 8 through Docker Compose

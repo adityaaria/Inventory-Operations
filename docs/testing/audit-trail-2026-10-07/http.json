@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "Admin HTTP access correct",
+    "Admin filters badges pagination empty state and invalid input",
+    "Sales HTTP access correct",
+    "WarehouseStaff HTTP access correct"
+  ]
+}

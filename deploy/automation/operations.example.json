@@ -1,0 +1,17 @@
+{
+  "root": "/srv/inventory",
+  "project": "inventory-production",
+  "compose_files": ["compose.production.yaml"],
+  "env_file": "/etc/inventory/production.env",
+  "docker": "/usr/bin/docker",
+  "openssl": "/usr/bin/openssl",
+  "timezone": "Asia/Jakarta",
+  "daily_time": "01:15",
+  "keep": 7,
+  "backup_directory": "/var/backups/inventory/plain",
+  "encrypted_directory": "/var/backups/inventory/encrypted",
+  "replica_mount": "/mnt/offsite",
+  "replica_directory": "/mnt/offsite/inventory",
+  "recipient_certificate": "/etc/inventory/backup-recipient.pem",
+  "status_directory": "/var/lib/inventory-operations"
+}

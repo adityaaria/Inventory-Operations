@@ -1,0 +1,17 @@
+{
+  "project": "inventory-load-ops-1791363224677583000",
+  "url": "https://localhost:18443",
+  "users": 8,
+  "paced_duration_seconds": 0,
+  "expected_requests": 320,
+  "completed_requests": 320,
+  "elapsed_seconds": 1.243,
+  "requests_per_second": 257.39,
+  "p50_ms": 11.03,
+  "p95_ms": 21.76,
+  "max_ms": 419.28,
+  "p95_budget_ms": 2000,
+  "failures": [],
+  "passed": true,
+  "scope": "authenticated reads; independent sessions; login time excluded from latency but included in elapsed; no stock mutations"
+}

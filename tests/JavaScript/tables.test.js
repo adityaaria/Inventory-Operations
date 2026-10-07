@@ -56,3 +56,9 @@ test('server reports keep the full-result export instead of generating a page-on
     context.InventoryTables.create().enhance();
     assert.equal(table.dataset.enhanced,'true');
 });
+
+test('client sorting skips action, blank and opted-out headers so no meaningless arrows appear', () => {
+    assert.match(source, /'noSort' in th\.dataset \|\| \/\^\(actions\?\|\)\$\/i\.test\(th\.textContent\.trim\(\)\)/);
+    const skip = text => /^(actions?|)$/i.test(text.trim());
+    assert.deepEqual(['Action', 'Actions', ' ', 'Status', 'Action Date'].map(skip), [true, true, true, false, false]);
+});

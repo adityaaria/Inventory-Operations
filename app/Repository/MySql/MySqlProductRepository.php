@@ -18,7 +18,10 @@ final class MySqlProductRepository implements ProductRepositoryInterface
     private const SORT_COLUMNS = [
         'name' => 'p.name',
         'sku' => 'p.sku',
+        'unit' => 'p.unit',
+        'purchase_price' => 'p.purchase_price',
         'price' => 'p.selling_price',
+        'reorder' => 'p.reorder_point',
         'quantity' => 'total_quantity',
     ];
 
@@ -155,7 +158,7 @@ final class MySqlProductRepository implements ProductRepositoryInterface
 
     public function stocksForProducts(array $productIds): array
     {
-        if ($productIds === []) return [];
+        if ($productIds === []) { return []; }
         $placeholders = implode(',', array_fill(0, count($productIds), '?'));
         $statement = $this->pdo->prepare("SELECT ps.product_id, ps.warehouse_id, p.sku, p.name AS product_name,
             w.name AS warehouse_name, ps.quantity, p.reorder_point FROM product_stocks ps

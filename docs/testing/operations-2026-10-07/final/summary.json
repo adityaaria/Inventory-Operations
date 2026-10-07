@@ -1,0 +1,31 @@
+{
+  "checks": 23,
+  "passed": [
+    "business HTTP flows pass before backup",
+    "backup permissions restrict local access",
+    "backup does not mutate any application table",
+    "every table count and row digest survives restore",
+    "stock ledger and source-order digests survive restore",
+    "second restore refuses populated target",
+    "restore refuses main application project",
+    "production TLS certificate validates and login renders",
+    "production session cookie Secure HttpOnly SameSite",
+    "HTTPS security headers",
+    "HTTP redirects to HTTPS",
+    "internal readiness is not public",
+    "arbitrary PHP files are not exposed",
+    "dotfiles are blocked",
+    "anonymous API JSON 401",
+    "production database has no published host port",
+    "production excludes debugger coverage and test packages",
+    "monitor healthy baseline",
+    "monitor alerts on application errors",
+    "monitor alerts on database loss",
+    "readiness recovers after database restart",
+    "8 concurrent sessions / 320 read requests within latency budget",
+    "60-second paced load / 3200 reads within latency budget"
+  ],
+  "failed": 0,
+  "device_scope": "Chrome emulation covered separately; Android/iPhone physical checks pending user execution",
+  "certificate": "one-day self-signed local CA trusted explicitly; not a publicly issued production certificate"
+}

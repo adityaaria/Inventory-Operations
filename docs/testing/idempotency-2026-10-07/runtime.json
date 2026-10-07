@@ -1,0 +1,11 @@
+{
+  "migration_repeat": {
+    "status": "ready",
+    "migration": "20261007-operation-requests",
+    "destructive": false
+  },
+  "readiness": {
+    "status": "ready"
+  },
+  "production_migration_packaged": true
+}

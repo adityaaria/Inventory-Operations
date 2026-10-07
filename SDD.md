@@ -571,6 +571,9 @@ Equivalent CRUD/read routes for categories, warehouses, suppliers, customers.
 - `GET /dashboard`
 - `GET /reports/stock-ledger.csv`
 - `GET /reports/orders.csv`
+- `GET /reports?type=outstanding` and `GET /reports/outstanding.csv` (optional, ADR-012: role-scoped open documents aged in whole days since creation; not an SLA)
+- `GET /replenishment?warehouse_id=` (optional, ADR-013: one-warehouse multi-select prefilling `/purchase-orders/create?warehouse_id=&pick[]=productId:qty`; `POST /purchase-orders` accepts primary line plus `items[n][product_id|quantity|purchase_price]`, and `POST /sales-orders` plus `items[n][product_id|quantity|selling_price]`, up to 100 lines each)
+- `GET /drafts/check?form=&warehouse_id=&product_ids[]=` (optional, ADR-014: read-only revalidation of a restored browser draft; role matrix of the create routes)
 - `GET /api/products/{sku}/availability`
 
 ---
@@ -675,7 +678,7 @@ For dashboard, choose and document whether a product is considered low stock whe
 
 - Search: order number / supplier / customer.
 - Filter status.
-- Sort order date ascending/descending.
+- Sort via column headers (no separate order filter): order number, supplier/customer, warehouse, status and order date, ascending/descending; filters keep the active sort. Products sort by SKU, name, unit, purchase/selling price, reorder point and stock.
 - Pagination 10/page.
 
 All sort columns must use server-side allow-lists; never interpolate arbitrary user-provided column names.
@@ -1582,3 +1585,25 @@ AUTH-01/02, USR-01, API-01, ERR-01, ARCH-01/02, TEST-01/03: SessionPolicy provid
 PRD-01/WH-01/DASH-01/JOB-01/DB-01/ARCH-01/02: ProductService and WarehouseService receive the shared StockService in production. StockCatalogRepository (MySQL/in-memory) enumerates deterministic IDs and locks the immutable phase-0 bootstrap row before creation/zero-pair initialization. Missing ProductStock rows are initialized at zero in the same transaction as the master record; populated quantities and StockLedger remain unchanged. MySqlTransactionManager joins the same connection-owned outer transaction so product/warehouse CSV imports remain atomic. Clean seed has a complete stock matrix; historical databases use initialize-stock-balances CLI, not reseeding. ADR-006 explains mutex/zero-movement boundaries and scaling limits.
 
 VAL-01/ERR-01/PO-01/SO-01: rejected order states produce typed 422 validation failures; IDs are validated before transitions. FormState preserves scalar attempted inputs across 422 responses for every create/edit template, including selected options and textarea details; output escaping remains at the HTML boundary, password/CSRF never restored. Order selectors use ProductRepository.active(), not paginated search. Read-only SQL E2E assertions and separate MySQL worker processes verify resulting states, balances, ledger, audit and rollback.
+
+## Operational enhancement — 7 October 2026
+
+User-authorized priorities 1–6 are implemented as native Docker/Python/PHP operator tooling (ADR-007): consistent backup and guarded recovery, standalone Nginx/PHP-FPM/TLS production topology, CI quality/recovery/build checks, bounded structured logs/readiness/local alerts and burst/sustained benchmarks. No order status, stock transaction, role or trainer business policy changes. Physical-device checklist and trainer insight remain explicitly pending external confirmation.
+
+## Optional audit browsing — 7 October 2026
+
+AuditTrailController → AuditTrailService → AuditQueryRepositoryInterface (MySQL and in-memory implementations), manually injected in public/index.php. Both controller and service enforce Admin access. Queries are read-only; no new persistence schema or stock boundary. See `docs/testing/audit-trail-2026-10-07.md` for actual verification and limits.
+
+## Transactional operation replay — 7 October 2026
+
+PurchaseOrderService/SalesOrderService accept an optional key for trusted callers and use injected OperationIdempotency → OperationRequestRepositoryInterface (MySQL + fake). HTTP controllers require the form key. Authorization → order lock → request claim → existing stock movement/source update/audit → completed marker → commit; completed replay returns before state validation. operation_requests is uniquely indexed by actor/key and included in full backups. Readiness checks its columns. Details and deployment tradeoffs: ADR-008.
+
+## Optional business flows — implementation extension, 2026-10-07
+
+See ADR-009 for user-approved scope, authorization, transitions and invariants. OrderExceptionService handles PO closure/SO rejection through repository interfaces. BusinessOperationController → BusinessOperationService → BusinessOperationRepositoryInterface uses manual constructor injection. Posting delegates signed StockDelta objects to StockService under shared transaction ownership. StockLedger supports Adjustment with positive quantity and signed quantity_delta; historical Receipt/Issue deltas remain NULL. purchase_order_closures, sales_order_rejections, inventory_operations, inventory_operation_items and inventory_return_totals retain source provenance and cumulative return bounds. SQL recommendation pagination subtracts open supply per warehouse. Additive migration: scripts/migrate-business-operations.php; deployment and restore must include it. These optional operation statuses do not extend official PO/SO status sets.
+
+Multi-item Stock Operations (7 October 2026): proposal form supports up to 100 distinct product items with shared kind/warehouse/destination/reason; each row has quantity/baseline/original movement/customer-fit confirmation. Legacy first-item payload retained; supplementary items parsed and validated before service proposal. Source warehouse rules, independent approval and atomic StockService posting remain unchanged. Evidence: docs/testing/multi-item-2026-10-07.md.
+
+Role work queue (7 October 2026): /work-queue, native controller → service → prepared MySQL repository interface with manual injection. Role datasets/age semantics are documented in ADR-010. Sales actor scope is mandatory on server; Admin creator exclusion only for optional stock proposal approval. Closed PO supply is excluded. Existing action routes revalidate permissions/status. No schema, stock mutation, SLA or new status. Evidence: docs/testing/work-queue-2026-10-07.md.
+
+Document timeline (7 October 2026): native read-only timeline linked from PO/SO/stock operation details, repository interface/manual DI and prepared SQL. Admin/Warehouse visibility; Sales own SO with no stock-operation link/events. Original ledger, creation/approval/posting metadata and successful audit events only; reason/decision whitelisted, no private request metadata. Latest 100 events explicitly bounded; names current and missing history not invented. ADR-011/evidence: docs/testing/timeline-2026-10-07.md.

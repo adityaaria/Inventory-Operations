@@ -1,0 +1,7 @@
+{
+  "project": "inventory-e2e-business-1791376160073621000",
+  "url": "http://localhost:18086",
+  "compose_override": "/Users/karyawan/Documents/Neuron/Tugas Akhir /Inventory-Operations/var/inventory-e2e-business-1791376160073621000/runtime.yaml",
+  "kept_running": false,
+  "cleaned_after_browser": true
+}

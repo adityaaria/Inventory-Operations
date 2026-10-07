@@ -1,0 +1,32 @@
+# Disposable empty target; no published ports and no automatic demo seed.
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: "${RESTORE_DATABASE:-inventory_order_management_restore}"
+      MYSQL_USER: "${RESTORE_USERNAME:-inventory_restore}"
+      MYSQL_PASSWORD: "${RESTORE_PASSWORD:-disposable_restore_only}"
+      MYSQL_ROOT_PASSWORD: "${RESTORE_ROOT_PASSWORD:-disposable_restore_root_only}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP --host=127.0.0.1 --user="$${MYSQL_USER}" --database="$${MYSQL_DATABASE}" --execute="SELECT 1" --silent']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+  app:
+    image: inventory-operations-app:latest
+    environment:
+      APP_ENV: test
+      APP_DEBUG: "false"
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: "${RESTORE_DATABASE:-inventory_order_management_restore}"
+      DB_USERNAME: "${RESTORE_USERNAME:-inventory_restore}"
+      DB_PASSWORD: "${RESTORE_PASSWORD:-disposable_restore_only}"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql-data:

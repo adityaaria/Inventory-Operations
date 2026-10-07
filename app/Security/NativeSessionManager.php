@@ -33,7 +33,7 @@ final class NativeSessionManager extends SessionManager
                 session_save_path($savePath);
             }
             session_set_cookie_params(['lifetime' => 0, 'path' => '/', ...self::cookieOptions($this->secure)]);
-            if (!session_start()) throw new \RuntimeException('Unable to start session.');
+            if (!session_start()) { throw new \RuntimeException('Unable to start session.'); }
         }
     }
 
@@ -46,7 +46,7 @@ final class NativeSessionManager extends SessionManager
     public function auth(): ?AuthContext
     {
         $auth = $_SESSION['auth'] ?? null;
-        if ($auth === null) return null;
+        if ($auth === null) { return null; }
         $metadata = $_SESSION['lifecycle'] ?? null;
         if (!is_array($auth) || !is_array($metadata)
             || !is_int($auth['user_id'] ?? null) || $auth['user_id'] < 1
@@ -72,7 +72,7 @@ final class NativeSessionManager extends SessionManager
         $_SESSION = [];
         $this->rotate();
         $this->storeAuth($authContext);
-        if ($passwordHash !== null) $_SESSION['credential_version'] = hash('sha256', $passwordHash);
+        if ($passwordHash !== null) { $_SESSION['credential_version'] = hash('sha256', $passwordHash); }
         $_SESSION['lifecycle'] = ['created_at' => $this->now, 'last_seen_at' => $this->now, 'rotated_at' => $this->now];
         $this->checked = true;
         $this->csrfToken();
@@ -116,7 +116,7 @@ final class NativeSessionManager extends SessionManager
         // Do not copy credentials to the previous ID or accept it as a grace-period alias.
         $data = $_SESSION;
         $_SESSION = [];
-        if (!session_regenerate_id(false)) throw new \RuntimeException('Unable to rotate session.');
+        if (!session_regenerate_id(false)) { throw new \RuntimeException('Unable to rotate session.'); }
         $_SESSION = $data;
     }
 

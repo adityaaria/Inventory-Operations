@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "checks": 21,
+  "results": [
+    "Admin timeline requires authentication",
+    "Admin PO visibility correct",
+    "Admin closure receipt return and original linkage visible",
+    "Admin SO visibility correct",
+    "Admin SO approval issue and related-operation scope correct",
+    "Admin Operation visibility correct",
+    "Admin invalid kind rejected",
+    "WarehouseStaff timeline requires authentication",
+    "WarehouseStaff PO visibility correct",
+    "WarehouseStaff closure receipt return and original linkage visible",
+    "WarehouseStaff SO visibility correct",
+    "WarehouseStaff SO approval issue and related-operation scope correct",
+    "WarehouseStaff Operation visibility correct",
+    "WarehouseStaff invalid kind rejected",
+    "Sales timeline requires authentication",
+    "Sales PO visibility correct",
+    "Sales SO visibility correct",
+    "Sales SO approval issue and related-operation scope correct",
+    "Sales Operation visibility correct",
+    "Sales cannot read another actor SO timeline",
+    "Sales invalid kind rejected"
+  ]
+}

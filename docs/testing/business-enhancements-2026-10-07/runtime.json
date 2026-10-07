@@ -1,0 +1,8 @@
+{
+  "runtime_url": "http://localhost:8080",
+  "readiness": "ready",
+  "production_image": "inventory-operations-production:local",
+  "production_build": "passed",
+  "production_migration_packaging": "passed",
+  "external_deployment": false
+}

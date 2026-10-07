@@ -1,0 +1,377 @@
+{
+  "project": "inventory-e2e-business-1791375403746680000",
+  "url": "http://localhost:18086",
+  "checks": 76,
+  "passed": 76,
+  "failed": 0,
+  "results": [
+    {
+      "name": "admin@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "admin@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "warehouse1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouse1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "sales1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "sales1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "Sales denied /inventory-operations",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /inventory-operations/create",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /replenishment",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /inventory-operations/balance?product_id=1&warehouse_id=1",
+      "passed": true
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Inbound recommendation includes open remainder",
+      "passed": true
+    },
+    {
+      "name": "/purchase-orders/close-remainder",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/purchase-orders/close-remainder",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Close preserves stock and official PO status",
+      "passed": true
+    },
+    {
+      "name": "Closed PO reason visible and new receipt form absent",
+      "passed": true
+    },
+    {
+      "name": "Replenishment shows reviewed PO shortcut",
+      "passed": true
+    },
+    {
+      "name": "PO shortcut prefills product warehouse quantity",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/reject",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/sales-orders/reject",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales sees rejection reason with Cancelled status",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Adjustment posted once",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Transfer atomic pair conserves total",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Supplier return decreases stock once",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Supplier over-return leaves stock untouched",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/issue",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Fit customer return increases stock and preserves Fulfilled",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "All new movements reconcile with both warehouse balances",
+      "passed": true
+    },
+    {
+      "name": "Signed Adjustment exported in stock report",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations?kind=Transfer&status=Posted",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations/create",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations/show?id=1",
+      "passed": true
+    },
+    {
+      "name": "New page renders /replenishment",
+      "passed": true
+    },
+    {
+      "name": "Successful operation replay does not duplicate audit",
+      "passed": true
+    },
+    {
+      "name": "Invalid stock filters rejected",
+      "passed": true
+    }
+  ],
+  "fixtures": {
+    "product_id": 31,
+    "warehouse_id": 1,
+    "destination_id": 2,
+    "current_quantity": 1,
+    "pending_operation": 6,
+    "posted_operation": 1,
+    "po_id": 14,
+    "so_id": 14,
+    "receipt_ledger_id": 1,
+    "issue_ledger_id": 6
+  }
+}

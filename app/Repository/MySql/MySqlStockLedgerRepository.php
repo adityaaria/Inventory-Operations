@@ -8,7 +8,7 @@ use App\Entity\StockLedgerEntry;
 use App\Repository\Contract\StockLedgerRepositoryInterface;
 use PDO;
 
-final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface
+final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface, \App\Repository\Contract\AdjustmentLedgerRepositoryInterface
 {
     public function __construct(private readonly PDO $pdo)
     {
@@ -24,11 +24,17 @@ final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface
         $this->append($productId, $warehouseId, 'Issue', $quantity, $referenceType, $referenceId, $performedBy);
     }
 
-    private function append(int $productId, int $warehouseId, string $movementType, int $quantity, string $referenceType, int $referenceId, int $performedBy): void
+    public function appendAdjustment(int $product,int $warehouse,int $delta,string $reference,int $id,int $actor): void
+    {
+        if($delta===0) { throw new \InvalidArgumentException('Adjustment delta cannot be zero.'); }
+        $this->append($product,$warehouse,'Adjustment',abs($delta),$reference,$id,$actor,$delta);
+    }
+
+    private function append(int $productId, int $warehouseId, string $movementType, int $quantity, string $referenceType, int $referenceId, int $performedBy, ?int $delta = null): void
     {
         $statement = $this->pdo->prepare(
-            'INSERT INTO stock_ledger (product_id, warehouse_id, movement_type, quantity, reference_type, reference_id, performed_by)
-             VALUES (:product_id, :warehouse_id, :movement_type, :quantity, :reference_type, :reference_id, :performed_by)'
+            'INSERT INTO stock_ledger (product_id, warehouse_id, movement_type, quantity, reference_type, reference_id, performed_by, quantity_delta)
+             VALUES (:product_id, :warehouse_id, :movement_type, :quantity, :reference_type, :reference_id, :performed_by, :quantity_delta)'
         );
         $statement->execute([
             'product_id' => $productId,
@@ -38,13 +44,14 @@ final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface
             'reference_type' => $referenceType,
             'reference_id' => $referenceId,
             'performed_by' => $performedBy,
+            'quantity_delta' => $delta,
         ]);
     }
 
     public function forReference(string $referenceType, int $referenceId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, product_id, warehouse_id, movement_type, quantity, reference_type, reference_id, performed_by
+            'SELECT id, product_id, warehouse_id, movement_type, quantity, reference_type, reference_id, performed_by, quantity_delta
              FROM stock_ledger
              WHERE reference_type = :reference_type AND reference_id = :reference_id
              ORDER BY id ASC'
@@ -60,6 +67,7 @@ final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface
             (string) $row['reference_type'],
             (int) $row['reference_id'],
             (int) $row['performed_by'],
+            $row['quantity_delta'] === null ? null : (int) $row['quantity_delta'],
         ), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
 }

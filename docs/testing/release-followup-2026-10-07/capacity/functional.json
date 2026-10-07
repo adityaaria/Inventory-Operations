@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "path": "/products?q=Capacity&page=1000",
+      "status": 200,
+      "rows": 10,
+      "bytes": 25341,
+      "elapsed_ms": 49.812
+    },
+    {
+      "path": "/purchase-orders?q=CAPACITY&page=1000",
+      "status": 200,
+      "rows": 10,
+      "bytes": 15514,
+      "elapsed_ms": 26.181
+    },
+    {
+      "path": "/sales-orders?q=CAPACITY&page=1000",
+      "status": 200,
+      "rows": 10,
+      "bytes": 15463,
+      "elapsed_ms": 21.243
+    },
+    {
+      "path": "/reports?type=orders&page=2000",
+      "status": 200,
+      "rows": 10,
+      "bytes": 26753,
+      "elapsed_ms": 98.295
+    },
+    {
+      "path": "/reports/orders.csv",
+      "status": 200,
+      "rows": 20025,
+      "bytes": 1251436,
+      "elapsed_ms": 81.211
+    },
+    {
+      "path": "/reports/stock-ledger.csv",
+      "status": 200,
+      "rows": 40000,
+      "bytes": 2455825,
+      "elapsed_ms": 165.5
+    }
+  ]
+}

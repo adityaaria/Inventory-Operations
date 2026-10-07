@@ -1,0 +1,173 @@
+{
+  "passed": true,
+  "scope": "Chrome emulation; physical Android/iPhone pending",
+  "results": [
+    {
+      "width": 360,
+      "path": "/inventory-operations",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/inventory-operations?kind=Transfer",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/replenishment",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/inventory-operations/create",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/inventory-operations/show?id=1",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/purchase-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "path": "/sales-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/inventory-operations",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/inventory-operations?kind=Transfer",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/replenishment",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/inventory-operations/create",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/inventory-operations/show?id=1",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/purchase-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "path": "/sales-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/inventory-operations",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/inventory-operations?kind=Transfer",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/replenishment",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/inventory-operations/create",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/inventory-operations/show?id=1",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/purchase-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "path": "/sales-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/inventory-operations",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/inventory-operations?kind=Transfer",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/replenishment",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/inventory-operations/create",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/inventory-operations/show?id=1",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/purchase-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "path": "/sales-orders/show?id=14",
+      "passed": true
+    },
+    {
+      "flow": "duplicate product disables multi-item submission",
+      "passed": true
+    },
+    {
+      "flow": "remove item preserves first count baseline",
+      "passed": true
+    },
+    {
+      "flow": "mobile modal submits two-product proposal awaiting independent approval",
+      "passed": true
+    },
+    {
+      "flow": "modal transfer proposal -> independent Admin approve -> Warehouse post",
+      "sourceWarehouse": 1,
+      "destinationWarehouse": 2,
+      "passed": true
+    },
+    {
+      "flow": "return modal initializes original source and requires goods-fit confirmation",
+      "passed": true
+    },
+    {
+      "flow": "confirmed customer-return proposal submits through modal",
+      "passed": true
+    }
+  ],
+  "exceptions": []
+}

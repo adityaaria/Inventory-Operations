@@ -31,3 +31,8 @@ test('validateFields returns field errors keyed by field name', () => {
         quantity: 'Quantity must be at least 0.',
     });
 });
+
+ test('required checkbox needs explicit confirmation', () => {
+    assert.ok(Validation.validateField({name: 'fit_for_stock', type: 'checkbox', value: '1', required: true, checked: false}));
+    assert.equal(Validation.validateField({name: 'fit_for_stock', type: 'checkbox', value: '1', required: true, checked: true}), null);
+ });

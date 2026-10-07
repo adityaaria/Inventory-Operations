@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "checks": 13,
+  "results": [
+    "Admin queue requires login",
+    "Admin queue renders badges aging and server pagination",
+    "Admin task filters enforce role on server",
+    "Admin wildcard search is literal and empty state works",
+    "WarehouseStaff queue requires login",
+    "WarehouseStaff queue renders badges aging and server pagination",
+    "WarehouseStaff task filters enforce role on server",
+    "WarehouseStaff wildcard search is literal and empty state works",
+    "Sales queue requires login",
+    "Sales queue renders badges aging and server pagination",
+    "Sales task filters enforce role on server",
+    "Sales wildcard search is literal and empty state works",
+    "Sales receives no warehouse/approval task links"
+  ]
+}

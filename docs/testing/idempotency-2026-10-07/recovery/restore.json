@@ -1,0 +1,148 @@
+{
+  "checks": [
+    "business HTTP flows pass before backup",
+    "backup permissions restrict local access",
+    "backup does not mutate any application table",
+    "encrypted replica checksum matches source",
+    "authenticated decryption preserves original dump bytes",
+    "every table count and row digest survives restore",
+    "stock ledger and source-order digests survive restore",
+    "second restore refuses populated target",
+    "restore refuses main application project"
+  ],
+  "tables": 16,
+  "source": {
+    "audit_logs": {
+      "rows": 90,
+      "sha256": "baaeeeec1f3e6fa83afa51d8424bc61ce4976e0db578d977730400520fb9739e"
+    },
+    "categories": {
+      "rows": 4,
+      "sha256": "55480705de24b46a0ffd0a5b9a1b56d7165e46d7b605c8eabd970072e76b17f8"
+    },
+    "customers": {
+      "rows": 3,
+      "sha256": "1f7e3657a8067b8edbf0f5a21459470be5a44e363786dfc5b06a2c2323f2009d"
+    },
+    "login_attempts": {
+      "rows": 6,
+      "sha256": "76bcabe5e7a8b5c0d3cd88d8ffc46ffbd996202d1f2ebea666b880c6235aaa6a"
+    },
+    "operation_requests": {
+      "rows": 3,
+      "sha256": "90b37f6da0d143f0b9848c38192b3fd29beeb8442d4d501aa6290e8fa3dff9bc"
+    },
+    "product_stocks": {
+      "rows": 96,
+      "sha256": "6de8be5bfe75b17ae9852fe6730aadfa47774e5f99e63ec237afa69199b2d579"
+    },
+    "products": {
+      "rows": 32,
+      "sha256": "fb256a58397aecf8e9ecba5f416086de3886420c3a6cbc382dc095bada705e35"
+    },
+    "purchase_order_items": {
+      "rows": 15,
+      "sha256": "078a743b789e31c7aeca860572ebb7be448e2c12c2b60ddc93380707f92ea4dd"
+    },
+    "purchase_orders": {
+      "rows": 15,
+      "sha256": "82406ef2d491916e49d2ffc6b36901557f0da161968dd109986c5d16f0b31937"
+    },
+    "sales_order_items": {
+      "rows": 15,
+      "sha256": "abf3a941e491a51a363c4093b1c56604280fd15726f2189ed618327394516706"
+    },
+    "sales_orders": {
+      "rows": 15,
+      "sha256": "bc04f46d437a38ed8d25eff7dd25ac36312b5b046561e6d94184d61707dc3be4"
+    },
+    "schema_versions": {
+      "rows": 6,
+      "sha256": "2b5f5208cf9fc79f3c3fb79ed30bf73f13d0ca408b89ba5bccd45befd3cb0a0c"
+    },
+    "stock_ledger": {
+      "rows": 3,
+      "sha256": "f1d038826472ecd590e3819c29d0cbbea5e6ff967662499f450581243222f42c"
+    },
+    "suppliers": {
+      "rows": 3,
+      "sha256": "52aa64680c70479d46ec25a72229422a3d3c59acb0ec55c91d9d686d70b0e3b6"
+    },
+    "users": {
+      "rows": 6,
+      "sha256": "40287940365fcf5a80b48da3a0e20874ddf33744bc2dd8025db4e4e673393065"
+    },
+    "warehouses": {
+      "rows": 3,
+      "sha256": "ef1c3707563a585650e77a4fc28799d42cd3ac5e61f163db4f07bd0679ca25d6"
+    }
+  },
+  "restored": {
+    "audit_logs": {
+      "rows": 90,
+      "sha256": "baaeeeec1f3e6fa83afa51d8424bc61ce4976e0db578d977730400520fb9739e"
+    },
+    "categories": {
+      "rows": 4,
+      "sha256": "55480705de24b46a0ffd0a5b9a1b56d7165e46d7b605c8eabd970072e76b17f8"
+    },
+    "customers": {
+      "rows": 3,
+      "sha256": "1f7e3657a8067b8edbf0f5a21459470be5a44e363786dfc5b06a2c2323f2009d"
+    },
+    "login_attempts": {
+      "rows": 6,
+      "sha256": "76bcabe5e7a8b5c0d3cd88d8ffc46ffbd996202d1f2ebea666b880c6235aaa6a"
+    },
+    "operation_requests": {
+      "rows": 3,
+      "sha256": "90b37f6da0d143f0b9848c38192b3fd29beeb8442d4d501aa6290e8fa3dff9bc"
+    },
+    "product_stocks": {
+      "rows": 96,
+      "sha256": "6de8be5bfe75b17ae9852fe6730aadfa47774e5f99e63ec237afa69199b2d579"
+    },
+    "products": {
+      "rows": 32,
+      "sha256": "fb256a58397aecf8e9ecba5f416086de3886420c3a6cbc382dc095bada705e35"
+    },
+    "purchase_order_items": {
+      "rows": 15,
+      "sha256": "078a743b789e31c7aeca860572ebb7be448e2c12c2b60ddc93380707f92ea4dd"
+    },
+    "purchase_orders": {
+      "rows": 15,
+      "sha256": "82406ef2d491916e49d2ffc6b36901557f0da161968dd109986c5d16f0b31937"
+    },
+    "sales_order_items": {
+      "rows": 15,
+      "sha256": "abf3a941e491a51a363c4093b1c56604280fd15726f2189ed618327394516706"
+    },
+    "sales_orders": {
+      "rows": 15,
+      "sha256": "bc04f46d437a38ed8d25eff7dd25ac36312b5b046561e6d94184d61707dc3be4"
+    },
+    "schema_versions": {
+      "rows": 6,
+      "sha256": "2b5f5208cf9fc79f3c3fb79ed30bf73f13d0ca408b89ba5bccd45befd3cb0a0c"
+    },
+    "stock_ledger": {
+      "rows": 3,
+      "sha256": "f1d038826472ecd590e3819c29d0cbbea5e6ff967662499f450581243222f42c"
+    },
+    "suppliers": {
+      "rows": 3,
+      "sha256": "52aa64680c70479d46ec25a72229422a3d3c59acb0ec55c91d9d686d70b0e3b6"
+    },
+    "users": {
+      "rows": 6,
+      "sha256": "40287940365fcf5a80b48da3a0e20874ddf33744bc2dd8025db4e4e673393065"
+    },
+    "warehouses": {
+      "rows": 3,
+      "sha256": "ef1c3707563a585650e77a4fc28799d42cd3ac5e61f163db4f07bd0679ca25d6"
+    }
+  },
+  "restore_seconds": 1.01,
+  "backup_bytes": 6666
+}

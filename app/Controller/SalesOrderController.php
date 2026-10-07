@@ -33,6 +33,8 @@ final class SalesOrderController
         private readonly array $customers,
         private readonly array $warehouses,
         private readonly AuthGuard $guard,
+        private readonly ?\App\Service\OrderExceptionService $exceptions = null,
+        private readonly ?\App\Repository\Contract\StockLedgerRepositoryInterface $ledger = null,
     ) {
     }
 
@@ -88,11 +90,7 @@ final class SalesOrderController
                 InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
                 InputValidator::positiveInt('customer_id', $post['customer_id'] ?? ''),
                 InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
-                [[
-                    'product_id' => InputValidator::positiveInt('product_id', $post['product_id'] ?? ''),
-                    'quantity' => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
-                    'selling_price' => InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
-                ]],
+                \App\Validation\OrderItemsInput::sales($post),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('sales-orders/create.php', [
@@ -134,12 +132,20 @@ final class SalesOrderController
         $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
         $order = $this->findOrder($id);
         try {
-            $this->salesOrders->issue($actor, $id);
+            $this->salesOrders->issue($actor, $id, \App\Service\OperationIdempotency::validateKey($request->post()['operation_key'] ?? null));
         } catch (InvalidArgumentException $exception) {
             return $this->renderShow($order, $actor, $exception->getMessage(), 422);
         }
 
         return new Response('', 302, ['Location' => '/sales-orders/show?id=' . $id]);
+    }
+
+    public function reject(Request $request): Response
+    {
+        $actor=$this->guard->requireAuth();$id=InputValidator::positiveInt('id',$request->post()['id']??'');
+        if($this->exceptions===null) { throw new \LogicException('Order exceptions service is required.'); }
+        $this->exceptions->reject($actor,$id,\App\Service\BusinessOperationInput::reason($request->post()['reason']??null));
+        return new Response('',302,['Location'=>'/sales-orders/show?id='.$id]);
     }
 
     private function findOrder(int $id): SalesOrder
@@ -167,9 +173,27 @@ final class SalesOrderController
         return $this->products->active();
     }
 
+    /**
+     * Readable "SKU — name" per ordered product for detail pages; inactive products stay visible as history.
+     *
+     * @param list<\App\Entity\SalesOrderItem> $items
+     * @return array<int, string>
+     */
+    private function productLabels(array $items): array
+    {
+        $labels = [];
+        foreach ($items as $item) {
+            $product = $this->products->findById($item->productId());
+            $labels[$item->productId()] = $product === null ? 'Product #' . $item->productId() : $product->sku() . ' — ' . $product->name();
+        }
+
+        return $labels;
+    }
+
     /** @param array<string, mixed> $data */
     private function render(string $view, array $data = [], int $statusCode = 200): Response
     {
+        if(isset($data['order']) && $data['order'] instanceof SalesOrder){$data['rejection']=$this->exceptions?->rejection($data['order']->id());$data['movements']=$this->ledger?->forReference('SO',$data['order']->id())??[];$data['productLabels']=$this->productLabels($data['order']->items());}
         extract($data, EXTR_SKIP);
         ob_start();
         require dirname(__DIR__, 2) . '/views/' . $view;

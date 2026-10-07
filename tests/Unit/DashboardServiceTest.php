@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Exception\HttpException;
 use App\Http\Request;
 use App\Repository\InMemory\InMemoryOperationalQueryRepository;
+use App\Repository\Contract\OperationalQueryRepositoryInterface;
 use App\Security\AuthContext;
 use App\Security\AuthGuard;
 use App\Security\SessionManager;
@@ -41,6 +42,29 @@ final class DashboardServiceTest extends TestCase
         self::assertSame(User::ROLE_WAREHOUSE_STAFF, $dashboard['role']);
         self::assertArrayNotHasKey('inventory_value', $dashboard);
         self::assertArrayNotHasKey('sales_user_id', $dashboard);
+    }
+
+    public function testWarehouseLowStockCountsWarehousePairsIncludingZero(): void
+    {
+        foreach ([[], [['sku' => 'SAME', 'warehouse_name' => 'A'], ['sku' => 'SAME', 'warehouse_name' => 'B']]] as $rows) {
+            $queries = $this->createMock(OperationalQueryRepositoryInterface::class);
+            $queries->expects(self::once())->method('warehouseDashboard')->willReturn(['low_stock_rows' => $rows]);
+            $queries->expects(self::never())->method('adminDashboard');
+            $dashboard = (new DashboardService($queries))->forActor(new AuthContext(9, 'warehouse@example.test', User::ROLE_WAREHOUSE_STAFF));
+            self::assertSame(count($rows), $dashboard['low_stock_count']);
+        }
+    }
+
+    public function testWarehouseDashboardShowsLowStockWithoutInventoryValue(): void
+    {
+        $session = new SessionManager();
+        $session->login(new AuthContext(9, 'warehouse@example.test', User::ROLE_WAREHOUSE_STAFF));
+        $controller = new DashboardController(new DashboardService(new InMemoryOperationalQueryRepository()), new AuthGuard($session));
+        $response = $controller->index(new Request('GET', '/dashboard', [], [], []));
+        self::assertSame(200, $response->statusCode());
+        self::assertStringContainsString('Low Stock Rows', $response->body());
+        self::assertStringNotContainsString('Inventory Value', $response->body());
+        self::assertMatchesRegularExpression('/Low Stock Rows<\/span>\s*<strong>1<\/strong>/', $response->body());
     }
 
     public function testDashboardControllerRequiresLogin(): void

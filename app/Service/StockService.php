@@ -29,7 +29,7 @@ final class StockService
      */
     public function transaction(callable $operation): mixed
     {
-        if ($this->transactions !== null) return $this->transactions->run($operation);
+        if ($this->transactions !== null) { return $this->transactions->run($operation); }
         if ($this->transactionActive) {
             return $operation();
         }
@@ -55,7 +55,7 @@ final class StockService
     public function catalogTransaction(callable $operation): mixed
     {
         return $this->transaction(function () use ($operation): mixed {
-            if ($this->catalog === null) throw new \LogicException('Catalog repository is required.');
+            if ($this->catalog === null) { throw new \LogicException('Catalog repository is required.'); }
             $this->catalog->lockCreation();
             return $operation();
         });
@@ -70,22 +70,22 @@ final class StockService
     public function initializeProduct(int $productId): void
     {
         $this->catalogTransaction(function () use ($productId): void {
-            foreach ($this->catalogRepository()->warehouseIds() as $warehouseId) $this->stocks->lockByProductWarehouse($productId, $warehouseId);
+            foreach ($this->catalogRepository()->warehouseIds() as $warehouseId) { $this->stocks->lockByProductWarehouse($productId, $warehouseId); }
         });
     }
 
     public function initializeWarehouse(int $warehouseId): void
     {
         $this->catalogTransaction(function () use ($warehouseId): void {
-            foreach ($this->catalogRepository()->productIds() as $productId) $this->stocks->lockByProductWarehouse($productId, $warehouseId);
+            foreach ($this->catalogRepository()->productIds() as $productId) { $this->stocks->lockByProductWarehouse($productId, $warehouseId); }
         });
     }
 
     /** Idempotent repair for historical missing pairs, one product per transaction. */
     public function initializeCatalog(): void
     {
-        if ($this->catalog === null) throw new \LogicException('Catalog repository is required.');
-        foreach ($this->catalogRepository()->productIds() as $productId) $this->initializeProduct($productId);
+        if ($this->catalog === null) { throw new \LogicException('Catalog repository is required.'); }
+        foreach ($this->catalogRepository()->productIds() as $productId) { $this->initializeProduct($productId); }
     }
 
     /**
@@ -186,6 +186,35 @@ final class StockService
                 $afterMovements();
             }
             $this->audit?->append($performedBy, 'sales-orders.issue', $referenceType, $referenceId, 'success', '', '', ['movement_count' => count($movements)]);
+        });
+    }
+
+    /** @param list<StockDelta> $deltas */
+    public function adjust(array $deltas,int $actor,string $reference,int $id,callable $after): void
+    {
+        if($actor<1 || $id<1 || $reference==='' || $deltas===[]) { throw new InvalidArgumentException('Invalid adjustment.'); }
+        if(!$this->ledger instanceof \App\Repository\Contract\AdjustmentLedgerRepositoryInterface) { throw new \LogicException('Adjustment ledger repository is required.'); }
+        usort($deltas,static fn(StockDelta $a,StockDelta $b): int => [$a->product,$a->warehouse]<=>[$b->product,$b->warehouse]);
+        $seen=[];
+        foreach($deltas as $delta) {
+            $key=$delta->product.':'.$delta->warehouse;
+            if($delta->product<1 || $delta->warehouse<1 || $delta->delta===0 || abs($delta->delta)>4294967295 || isset($seen[$key])) { throw new InvalidArgumentException('Invalid or duplicate stock delta.'); }
+            $seen[$key]=true;
+        }
+        $this->transaction(function() use($deltas,$actor,$reference,$id,$after): void {
+            foreach($deltas as $delta) { $this->stocks->lockByProductWarehouse($delta->product,$delta->warehouse); }
+            foreach($deltas as $delta) {
+                $current=$this->stocks->quantity($delta->product,$delta->warehouse);
+                if($delta->baseline!==null && $current!==$delta->baseline) { throw new \App\Exception\HttpException(409,'Stock changed since the count. Cancel this proposal and recount.'); }
+                if($current+$delta->delta<0 || $current+$delta->delta>4294967295) { throw new InvalidArgumentException('Insufficient stock or quantity overflow.'); }
+            }
+            foreach($deltas as $delta) {
+                if($delta->delta>0) { $this->stocks->increment($delta->product,$delta->warehouse,$delta->delta); }
+                else { $this->stocks->decrement($delta->product,$delta->warehouse,-$delta->delta); }
+                $this->ledger->appendAdjustment($delta->product,$delta->warehouse,$delta->delta,$reference,$id,$actor);
+            }
+            $after();
+            $this->audit?->append($actor,'inventory-operations.post',$reference,$id,'success','','',['movement_count'=>count($deltas)]);
         });
     }
 

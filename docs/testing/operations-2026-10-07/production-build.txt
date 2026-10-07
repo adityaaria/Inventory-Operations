@@ -1,0 +1,468 @@
+ Image inventory-operations-production:local Building
+ Image inventory-operations-web:local Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.18kB done
+#1 DONE 0.0s
+
+#2 [app internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.52kB done
+#2 DONE 0.0s
+
+#3 [web internal] load metadata for docker.io/library/nginx:stable-alpine
+#3 DONE 0.0s
+
+#4 [app internal] load metadata for docker.io/library/php:8.3-fpm
+#4 DONE 0.0s
+
+#5 [web internal] load .dockerignore
+#5 transferring context: 225B done
+#5 DONE 0.0s
+
+#6 [web internal] load build context
+#6 transferring context: 16.93kB 0.0s done
+#6 DONE 0.0s
+
+#7 [web web 1/3] FROM docker.io/library/nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+#7 resolve docker.io/library/nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94 0.0s done
+#7 extracting sha256:a8783588284d97127365463f7fa1bf9afddf0ba38cfc8bb0a993643b09b7d493 0.1s done
+#7 extracting sha256:08c08ab5f9f755ce5a830d30a27f33a9dfdd795223e50b600fd8fe983cf759d8 done
+#7 DONE 0.1s
+
+#8 [app internal] load metadata for docker.io/library/composer:2
+#8 ...
+
+#7 [web web 1/3] FROM docker.io/library/nginx:stable-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+#7 extracting sha256:5e7de8c59e40521648a206e684d8f7a81bb88132ac05285a9c0ec0d430d40cbf done
+#7 extracting sha256:28a16c1011b2ed831d1f9d44e11c5b22e165d09e4719e1b609d875fdb3c91171 done
+#7 extracting sha256:5ba2889293520adc2c5eec4ddf3c93559a5a800b893407d1f2b7cd351baf70a5 done
+#7 extracting sha256:e5cd9cbe35d334211e0dbba7a16b55a0e0cd9575b5393fdcd5302176a0fec16d done
+#7 extracting sha256:de314aae67cdc0a41219ddace8b5a494f3112e8281a485494f265cf9e67f71b6 0.3s done
+#7 DONE 0.5s
+
+#9 [web web 2/3] COPY public /var/www/html/public
+#9 DONE 0.1s
+
+#8 [app internal] load metadata for docker.io/library/composer:2
+#8 ...
+
+#10 [web web 3/3] COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
+#10 DONE 0.0s
+
+#11 [web] exporting to image
+#11 exporting layers 0.0s done
+#11 exporting manifest sha256:52bd89b146999355963f0b1e152d04a514cf6d528a933a2f7a0b5627ea09af0a done
+#11 exporting config sha256:313c344947791e46d1bdb8d3c6fb06e404d2cbd6ffa6f19654e6e209c8916b1c done
+#11 exporting attestation manifest sha256:f640c1401f2c96b93d18bba35ad5db287bb19fc0b1f3b155a763388ef56263da done
+#11 exporting manifest list sha256:6c5fc4db89493e1a54fb427bbe130eeef453b866fd9a05887511a74ba5033261 done
+#11 naming to docker.io/library/inventory-operations-web:local done
+#11 unpacking to docker.io/library/inventory-operations-web:local 0.0s done
+#11 DONE 0.1s
+
+#12 [web] resolving provenance for metadata file
+#12 DONE 0.0s
+
+#8 [app internal] load metadata for docker.io/library/composer:2
+#8 ...
+
+#13 [auth] library/composer:pull token for registry-1.docker.io
+#13 DONE 0.0s
+
+#8 [app internal] load metadata for docker.io/library/composer:2
+#8 DONE 3.0s
+
+#5 [app internal] load .dockerignore
+#5 CACHED
+
+#14 [app] FROM docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#14 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac 0.0s done
+#14 CACHED
+
+#15 [app internal] load build context
+#15 transferring context: 567.99kB 0.0s done
+#15 DONE 0.1s
+
+#16 [app production  1/14] FROM docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e
+#16 resolve docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e 0.0s done
+#16 DONE 0.1s
+
+#16 [app production  1/14] FROM docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e
+#16 extracting sha256:befbec14be62b84d0b348a5fec1d353a2e65069b607c776221310ecf70c8282a done
+#16 extracting sha256:68c4e335a9573b0bd5ddb718f1b9bee1ea9fe6f1b07bff40b15e9cc4ff4875ec
+#16 extracting sha256:68c4e335a9573b0bd5ddb718f1b9bee1ea9fe6f1b07bff40b15e9cc4ff4875ec 2.0s done
+#16 DONE 2.1s
+
+#16 [app production  1/14] FROM docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e
+#16 extracting sha256:604f6ae078c095df31eccb59007c229e9e9761a4f13a8c0c3e2805efc3a75d00 0.0s done
+#16 extracting sha256:29d90510d40122921ce2a4a78f9d83a92dee34f7bb6fa7a0e963ecdbeee7991a 0.1s done
+#16 DONE 2.2s
+
+#16 [app production  1/14] FROM docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e
+#16 extracting sha256:7211af2af5e6c0d2b4fecb174094f210613282083df50ed1e28bb752c56e0978 done
+#16 extracting sha256:421c6642312b52d159f51a61ec65ebec6508ac0ceedcd0a9dc2f0a7bec59d97e
+#16 extracting sha256:421c6642312b52d159f51a61ec65ebec6508ac0ceedcd0a9dc2f0a7bec59d97e 0.3s done
+#16 DONE 2.5s
+
+#16 [app production  1/14] FROM docker.io/library/php:8.3-fpm@sha256:97e9367af2c37708155f4f9f23bbf13283c6b8e375a1ab175dde3dff2e24038e
+#16 extracting sha256:d4616fd2b5f57fc8de19d614d3091036f3eb2bd07889f605e4ebb4238df69c6c 0.0s done
+#16 extracting sha256:bb21e960af4e65d02dc9000d1f7095bb4712645869bd102c29a3522bf0823591 done
+#16 extracting sha256:d1526251b7113dc9c922e7a9f14949e39f9ff573b14602b5f8c9ef2109e31f59 0.0s done
+#16 extracting sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 done
+#16 extracting sha256:2e16ee56f02fa559560470635054d5ef64b2081c78e9d9cbd88d949727c9a2ca 0.0s done
+#16 DONE 2.5s
+
+#17 [app production  2/14] RUN docker-php-ext-install pdo_mysql opcache
+#17 2.021 Configuring for:
+#17 2.021 PHP Api Version:         20230831
+#17 2.021 Zend Module Api No:      20230831
+#17 2.021 Zend Extension Api No:   420230831
+#17 2.416 checking for grep that handles long lines and -e... /usr/bin/grep
+#17 2.418 checking for egrep... /usr/bin/grep -E
+#17 2.419 checking for a sed that does not truncate output... /usr/bin/sed
+#17 2.434 checking for pkg-config... /usr/bin/pkg-config
+#17 2.434 checking pkg-config is at least version 0.9.0... yes
+#17 2.436 checking for cc... cc
+#17 2.448 checking whether the C compiler works... yes
+#17 2.508 checking for C compiler default output file name... a.out
+#17 2.509 checking for suffix of executables...
+#17 2.532 checking whether we are cross compiling... no
+#17 2.558 checking for suffix of object files... o
+#17 2.570 checking whether the compiler supports GNU C... yes
+#17 2.581 checking whether cc accepts -g... yes
+#17 2.593 checking for cc option to enable C11 features... none needed
+#17 2.620 checking how to run the C preprocessor... cc -E
+#17 2.649 checking for egrep -e... (cached) /usr/bin/grep -E
+#17 2.649 checking for icc... no
+#17 2.655 checking for suncc... no
+#17 2.660 checking for system library directory... lib
+#17 2.661 checking if compiler supports -Wl,-rpath,... yes
+#17 2.690 checking build system type... aarch64-unknown-linux-gnu
+#17 2.693 checking host system type... aarch64-unknown-linux-gnu
+#17 2.693 checking target system type... aarch64-unknown-linux-gnu
+#17 2.710 checking for PHP prefix... /usr/local
+#17 2.710 checking for PHP includes... -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib
+#17 2.710 checking for PHP extension directory... /usr/local/lib/php/extensions/no-debug-non-zts-20230831
+#17 2.710 checking for PHP installed headers prefix... /usr/local/include/php
+#17 2.710 checking if debug is enabled... no
+#17 2.720 checking if zts is enabled... no
+#17 2.729 checking for gawk... no
+#17 2.730 checking for nawk... nawk
+#17 2.730 checking if nawk is broken... no
+#17 2.734 checking for MySQL support for PDO... yes, shared
+#17 2.735 checking for the location of libz... no
+#17 2.735 checking for MySQL UNIX socket location...
+#17 2.735 checking for PDO includes... /usr/local/include/php/ext
+#17 2.739 checking for a sed that does not truncate output... /usr/bin/sed
+#17 2.741 checking for ld used by cc... /usr/bin/ld
+#17 2.744 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#17 2.745 checking for /usr/bin/ld option to reload object files... -r
+#17 2.745 checking for BSD-compatible nm... /usr/bin/nm -B
+#17 2.747 checking whether ln -s works... yes
+#17 2.747 checking how to recognize dependent libraries... pass_all
+#17 2.748 checking for stdio.h... yes
+#17 2.760 checking for stdlib.h... yes
+#17 2.772 checking for string.h... yes
+#17 2.784 checking for inttypes.h... yes
+#17 2.797 checking for stdint.h... yes
+#17 2.809 checking for strings.h... yes
+#17 2.821 checking for sys/stat.h... yes
+#17 2.834 checking for sys/types.h... yes
+#17 2.848 checking for unistd.h... yes
+#17 2.862 checking for dlfcn.h... yes
+#17 2.876 checking the maximum length of command line arguments... 1572864
+#17 2.878 checking command to parse /usr/bin/nm -B output from cc object... ok
+#17 2.913 checking for objdir... .libs
+#17 2.915 checking for ar... ar
+#17 2.915 checking for ranlib... ranlib
+#17 2.915 checking for strip... strip
+#17 2.944 checking if cc supports -fno-rtti -fno-exceptions... no
+#17 2.956 checking for cc option to produce PIC... -fPIC
+#17 2.956 checking if cc PIC flag -fPIC works... yes
+#17 2.966 checking if cc static flag -static works... yes
+#17 3.059 checking if cc supports -c -o file.o... yes
+#17 3.074 checking whether the cc linker (/usr/bin/ld) supports shared libraries... yes
+#17 3.080 checking whether -lc should be explicitly linked in... no
+#17 3.093 checking dynamic linker characteristics... GNU/Linux ld.so
+#17 3.101 checking how to hardcode library paths into programs... immediate
+#17 3.101 checking whether stripping libraries is possible... yes
+#17 3.102 checking if libtool supports shared libraries... yes
+#17 3.102 checking whether to build shared libraries... yes
+#17 3.102 checking whether to build static libraries... no
+#17 3.162
+#17 3.162 creating libtool
+#17 3.170 appending configuration tag "CXX" to libtool
+#17 3.198 configure: patching config.h.in
+#17 3.199 configure: creating ./config.status
+#17 3.221 config.status: creating config.h
+#17 3.236 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/pdo_mysql.c -o pdo_mysql.lo  -MMD -MF pdo_mysql.dep -MT pdo_mysql.lo
+#17 3.279 mkdir .libs
+#17 3.280  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/pdo_mysql.c -MMD -MF pdo_mysql.dep -MT pdo_mysql.lo  -fPIC -DPIC -o .libs/pdo_mysql.o
+#17 3.528 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_driver.c -o mysql_driver.lo  -MMD -MF mysql_driver.dep -MT mysql_driver.lo
+#17 3.571  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_driver.c -MMD -MF mysql_driver.dep -MT mysql_driver.lo  -fPIC -DPIC -o .libs/mysql_driver.o
+#17 3.930 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_statement.c -o mysql_statement.lo  -MMD -MF mysql_statement.dep -MT mysql_statement.lo
+#17 3.973  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_statement.c -MMD -MF mysql_statement.dep -MT mysql_statement.lo  -fPIC -DPIC -o .libs/mysql_statement.o
+#17 4.275 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --tag=CC --mode=link cc -shared -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE  -Wl,-O1 -pie  -o pdo_mysql.la -export-dynamic -avoid-version -prefer-pic -module -rpath /usr/src/php/ext/pdo_mysql/modules  pdo_mysql.lo mysql_driver.lo mysql_statement.lo
+#17 4.320 cc -shared  .libs/pdo_mysql.o .libs/mysql_driver.o .libs/mysql_statement.o   -Wl,-O1 -Wl,-soname -Wl,pdo_mysql.so -o .libs/pdo_mysql.so
+#17 4.330 creating pdo_mysql.la
+#17 4.333 (cd .libs && rm -f pdo_mysql.la && ln -s ../pdo_mysql.la pdo_mysql.la)
+#17 4.334 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --tag=CC --mode=install cp ./pdo_mysql.la /usr/src/php/ext/pdo_mysql/modules
+#17 4.348 cp ./.libs/pdo_mysql.so /usr/src/php/ext/pdo_mysql/modules/pdo_mysql.so
+#17 4.349 cp ./.libs/pdo_mysql.lai /usr/src/php/ext/pdo_mysql/modules/pdo_mysql.la
+#17 4.359 PATH="$PATH:/sbin" ldconfig -n /usr/src/php/ext/pdo_mysql/modules
+#17 4.361 ----------------------------------------------------------------------
+#17 4.361 Libraries have been installed in:
+#17 4.361    /usr/src/php/ext/pdo_mysql/modules
+#17 4.361
+#17 4.361 If you ever happen to want to link against installed libraries
+#17 4.361 in a given directory, LIBDIR, you must either use libtool, and
+#17 4.361 specify the full pathname of the library, or use the `-LLIBDIR'
+#17 4.361 flag during linking and do at least one of the following:
+#17 4.361    - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+#17 4.361      during execution
+#17 4.361    - add LIBDIR to the `LD_RUN_PATH' environment variable
+#17 4.361      during linking
+#17 4.361    - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+#17 4.361    - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+#17 4.361
+#17 4.361 See any operating system documentation about shared libraries for
+#17 4.361 more information, such as the ld(1) and ld.so(8) manual pages.
+#17 4.362 ----------------------------------------------------------------------
+#17 4.363
+#17 4.363 Build complete.
+#17 4.364 Don't forget to run 'make test'.
+#17 4.364
+#17 4.450 + strip --strip-all modules/pdo_mysql.so
+#17 4.469 Installing shared extensions:     /usr/local/lib/php/extensions/no-debug-non-zts-20230831/
+#17 4.509 find . -name \*.gcno -o -name \*.gcda | xargs rm -f
+#17 4.511 find . -name \*.lo -o -name \*.o -o -name \*.dep | xargs rm -f
+#17 4.513 find . -name \*.la -o -name \*.a | xargs rm -f
+#17 4.515 find . -name \*.so | xargs rm -f
+#17 4.516 find . -name .libs -a -type d|xargs rm -rf
+#17 4.518 rm -f libphp.la      modules/* libs/*
+#17 4.519 rm -f ext/opcache/jit/zend_jit_x86.c
+#17 4.519 rm -f ext/opcache/jit/zend_jit_arm64.c
+#17 4.520 rm -f ext/opcache/minilua
+#17 4.532 Configuring for:
+#17 4.532 PHP Api Version:         20230831
+#17 4.532 Zend Module Api No:      20230831
+#17 4.532 Zend Extension Api No:   420230831
+#17 4.911 checking for grep that handles long lines and -e... /usr/bin/grep
+#17 4.912 checking for egrep... /usr/bin/grep -E
+#17 4.913 checking for a sed that does not truncate output... /usr/bin/sed
+#17 4.924 checking for pkg-config... /usr/bin/pkg-config
+#17 4.924 checking pkg-config is at least version 0.9.0... yes
+#17 4.925 checking for cc... cc
+#17 4.936 checking whether the C compiler works... yes
+#17 4.958 checking for C compiler default output file name... a.out
+#17 4.958 checking for suffix of executables...
+#17 4.977 checking whether we are cross compiling... no
+#17 5.001 checking for suffix of object files... o
+#17 5.013 checking whether the compiler supports GNU C... yes
+#17 5.024 checking whether cc accepts -g... yes
+#17 5.035 checking for cc option to enable C11 features... none needed
+#17 5.063 checking how to run the C preprocessor... cc -E
+#17 5.092 checking for egrep -e... (cached) /usr/bin/grep -E
+#17 5.092 checking for icc... no
+#17 5.098 checking for suncc... no
+#17 5.103 checking for system library directory... lib
+#17 5.103 checking if compiler supports -Wl,-rpath,... yes
+#17 5.125 checking build system type... aarch64-unknown-linux-gnu
+#17 5.127 checking host system type... aarch64-unknown-linux-gnu
+#17 5.127 checking target system type... aarch64-unknown-linux-gnu
+#17 5.142 checking for PHP prefix... /usr/local
+#17 5.142 checking for PHP includes... -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib
+#17 5.142 checking for PHP extension directory... /usr/local/lib/php/extensions/no-debug-non-zts-20230831
+#17 5.142 checking for PHP installed headers prefix... /usr/local/include/php
+#17 5.142 checking if debug is enabled... no
+#17 5.151 checking if zts is enabled... no
+#17 5.160 checking for gawk... no
+#17 5.160 checking for nawk... nawk
+#17 5.160 checking if nawk is broken... no
+#17 5.161 checking whether to enable Zend OPcache support... yes, shared
+#17 5.161 checking whether to enable copying PHP CODE pages into HUGE PAGES... yes
+#17 5.161 checking whether to enable JIT... yes
+#17 5.162 checking for mprotect... yes
+#17 5.183 checking for memfd_create... yes
+#17 5.204 checking for sysvipc shared memory support... yes
+#17 5.233 checking for mmap() using MAP_ANON shared memory support... yes
+#17 5.261 checking for shm_open in -lrt... yes
+#17 5.301 checking for mmap() using shm_open() shared memory support... checking for shm_unlink in -lrt... yes
+#17 5.357 yes
+#17 5.357 checking whether C compiler accepts -Wno-implicit-fallthrough... yes
+#17 5.389 checking for a sed that does not truncate output... /usr/bin/sed
+#17 5.390 checking for ld used by cc... /usr/bin/ld
+#17 5.393 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#17 5.394 checking for /usr/bin/ld option to reload object files... -r
+#17 5.394 checking for BSD-compatible nm... /usr/bin/nm -B
+#17 5.396 checking whether ln -s works... yes
+#17 5.396 checking how to recognize dependent libraries... pass_all
+#17 5.397 checking for stdio.h... yes
+#17 5.468 checking for stdlib.h... yes
+#17 5.482 checking for string.h... yes
+#17 5.494 checking for inttypes.h... yes
+#17 5.506 checking for stdint.h... yes
+#17 5.518 checking for strings.h... yes
+#17 5.531 checking for sys/stat.h... yes
+#17 5.543 checking for sys/types.h... yes
+#17 5.556 checking for unistd.h... yes
+#17 5.569 checking for dlfcn.h... yes
+#17 5.583 checking the maximum length of command line arguments... 1572864
+#17 5.585 checking command to parse /usr/bin/nm -B output from cc object... ok
+#17 5.618 checking for objdir... .libs
+#17 5.619 checking for ar... ar
+#17 5.619 checking for ranlib... ranlib
+#17 5.620 checking for strip... strip
+#17 5.653 checking if cc supports -fno-rtti -fno-exceptions... no
+#17 5.665 checking for cc option to produce PIC... -fPIC
+#17 5.665 checking if cc PIC flag -fPIC works... yes
+#17 5.675 checking if cc static flag -static works... yes
+#17 5.713 checking if cc supports -c -o file.o... yes
+#17 5.727 checking whether the cc linker (/usr/bin/ld) supports shared libraries... yes
+#17 5.733 checking whether -lc should be explicitly linked in... no
+#17 5.747 checking dynamic linker characteristics... GNU/Linux ld.so
+#17 5.753 checking how to hardcode library paths into programs... immediate
+#17 5.753 checking whether stripping libraries is possible... yes
+#17 5.755 checking if libtool supports shared libraries... yes
+#17 5.755 checking whether to build shared libraries... yes
+#17 5.755 checking whether to build static libraries... no
+#17 5.815
+#17 5.815 creating libtool
+#17 5.823 appending configuration tag "CXX" to libtool
+#17 5.851 configure: patching config.h.in
+#17 5.852 configure: creating ./config.status
+#17 5.872 config.status: creating config.h
+#17 5.890 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/ZendAccelerator.c -o ZendAccelerator.lo  -MMD -MF ZendAccelerator.dep -MT ZendAccelerator.lo
+#17 5.930 mkdir .libs
+#17 5.931  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/ZendAccelerator.c -MMD -MF ZendAccelerator.dep -MT ZendAccelerator.lo  -fPIC -DPIC -o .libs/ZendAccelerator.o
+#17 6.902 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_blacklist.c -o zend_accelerator_blacklist.lo  -MMD -MF zend_accelerator_blacklist.dep -MT zend_accelerator_blacklist.lo
+#17 6.944  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_blacklist.c -MMD -MF zend_accelerator_blacklist.dep -MT zend_accelerator_blacklist.lo  -fPIC -DPIC -o .libs/zend_accelerator_blacklist.o
+#17 7.180 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_debug.c -o zend_accelerator_debug.lo  -MMD -MF zend_accelerator_debug.dep -MT zend_accelerator_debug.lo
+#17 7.221  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_debug.c -MMD -MF zend_accelerator_debug.dep -MT zend_accelerator_debug.lo  -fPIC -DPIC -o .libs/zend_accelerator_debug.o
+#17 7.417 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_hash.c -o zend_accelerator_hash.lo  -MMD -MF zend_accelerator_hash.dep -MT zend_accelerator_hash.lo
+#17 7.458  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_hash.c -MMD -MF zend_accelerator_hash.dep -MT zend_accelerator_hash.lo  -fPIC -DPIC -o .libs/zend_accelerator_hash.o
+#17 7.667 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_module.c -o zend_accelerator_module.lo  -MMD -MF zend_accelerator_module.dep -MT zend_accelerator_module.lo
+#17 7.708  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_module.c -MMD -MF zend_accelerator_module.dep -MT zend_accelerator_module.lo  -fPIC -DPIC -o .libs/zend_accelerator_module.o
+#17 8.032 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_persist.c -o zend_persist.lo  -MMD -MF zend_persist.dep -MT zend_persist.lo
+#17 8.073  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_persist.c -MMD -MF zend_persist.dep -MT zend_persist.lo  -fPIC -DPIC -o .libs/zend_persist.o
+#17 8.629 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_persist_calc.c -o zend_persist_calc.lo  -MMD -MF zend_persist_calc.dep -MT zend_persist_calc.lo
+#17 8.681  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_persist_calc.c -MMD -MF zend_persist_calc.dep -MT zend_persist_calc.lo  -fPIC -DPIC -o .libs/zend_persist_calc.o
+#17 9.034 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_file_cache.c -o zend_file_cache.lo  -MMD -MF zend_file_cache.dep -MT zend_file_cache.lo
+#17 9.075  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_file_cache.c -MMD -MF zend_file_cache.dep -MT zend_file_cache.lo  -fPIC -DPIC -o .libs/zend_file_cache.o
+#17 9.714 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_shared_alloc.c -o zend_shared_alloc.lo  -MMD -MF zend_shared_alloc.dep -MT zend_shared_alloc.lo
+#17 9.756  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_shared_alloc.c -MMD -MF zend_shared_alloc.dep -MT zend_shared_alloc.lo  -fPIC -DPIC -o .libs/zend_shared_alloc.o
+#17 10.01 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_util_funcs.c -o zend_accelerator_util_funcs.lo  -MMD -MF zend_accelerator_util_funcs.dep -MT zend_accelerator_util_funcs.lo
+#17 10.05  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/zend_accelerator_util_funcs.c -MMD -MF zend_accelerator_util_funcs.dep -MT zend_accelerator_util_funcs.lo  -fPIC -DPIC -o .libs/zend_accelerator_util_funcs.o
+#17 10.33 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_shm.c -o shared_alloc_shm.lo  -MMD -MF shared_alloc_shm.dep -MT shared_alloc_shm.lo
+#17 10.37  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_shm.c -MMD -MF shared_alloc_shm.dep -MT shared_alloc_shm.lo  -fPIC -DPIC -o .libs/shared_alloc_shm.o
+#17 10.57 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_mmap.c -o shared_alloc_mmap.lo  -MMD -MF shared_alloc_mmap.dep -MT shared_alloc_mmap.lo
+#17 10.61  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_mmap.c -MMD -MF shared_alloc_mmap.dep -MT shared_alloc_mmap.lo  -fPIC -DPIC -o .libs/shared_alloc_mmap.o
+#17 10.81 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_posix.c -o shared_alloc_posix.lo  -MMD -MF shared_alloc_posix.dep -MT shared_alloc_posix.lo
+#17 10.85  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/shared_alloc_posix.c -MMD -MF shared_alloc_posix.dep -MT shared_alloc_posix.lo  -fPIC -DPIC -o .libs/shared_alloc_posix.o
+#17 11.05 cc /usr/src/php/ext/opcache/jit/dynasm/minilua.c -lm -o minilua
+#17 11.30 ./minilua /usr/src/php/ext/opcache/jit/dynasm/dynasm.lua  -D ARM64=1 -o jit/zend_jit_arm64.c /usr/src/php/ext/opcache/jit/zend_jit_arm64.dasc
+#17 13.46 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit.c -o jit/zend_jit.lo  -MMD -MF jit/zend_jit.dep -MT jit/zend_jit.lo
+#17 13.46 make: Circular jit/zend_jit.lo <- jit/zend_jit.lo dependency dropped.
+#17 13.50 mkdir jit/.libs
+#17 13.50  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit.c -MMD -MF jit/zend_jit.dep -MT jit/zend_jit.lo  -fPIC -DPIC -o jit/.libs/zend_jit.o
+#17 39.31 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit_gdb.c -o jit/zend_jit_gdb.lo  -MMD -MF jit/zend_jit_gdb.dep -MT jit/zend_jit_gdb.lo
+#17 39.36  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit_gdb.c -MMD -MF jit/zend_jit_gdb.dep -MT jit/zend_jit_gdb.lo  -fPIC -DPIC -o jit/.libs/zend_jit_gdb.o
+#17 39.59 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=compile cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE    -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit_vm_helpers.c -o jit/zend_jit_vm_helpers.lo  -MMD -MF jit/zend_jit_vm_helpers.dep -MT jit/zend_jit_vm_helpers.lo
+#17 39.65  cc -I. -I/usr/src/php/ext/opcache -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -Wno-implicit-fallthrough -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/opcache/jit/zend_jit_vm_helpers.c -MMD -MF jit/zend_jit_vm_helpers.dep -MT jit/zend_jit_vm_helpers.lo  -fPIC -DPIC -o jit/.libs/zend_jit_vm_helpers.o
+#17 40.03 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=link cc -shared -I/usr/src/php/ext/opcache/include -I/usr/src/php/ext/opcache/main -I/usr/src/php/ext/opcache -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE  -Wl,-O1 -pie  -o opcache.la -export-dynamic -avoid-version -prefer-pic -module -rpath /usr/src/php/ext/opcache/modules  ZendAccelerator.lo zend_accelerator_blacklist.lo zend_accelerator_debug.lo zend_accelerator_hash.lo zend_accelerator_module.lo zend_persist.lo zend_persist_calc.lo zend_file_cache.lo zend_shared_alloc.lo zend_accelerator_util_funcs.lo shared_alloc_shm.lo shared_alloc_mmap.lo shared_alloc_posix.lo jit/zend_jit.lo jit/zend_jit_gdb.lo jit/zend_jit_vm_helpers.lo -lrt
+#17 40.10 cc -shared  .libs/ZendAccelerator.o .libs/zend_accelerator_blacklist.o .libs/zend_accelerator_debug.o .libs/zend_accelerator_hash.o .libs/zend_accelerator_module.o .libs/zend_persist.o .libs/zend_persist_calc.o .libs/zend_file_cache.o .libs/zend_shared_alloc.o .libs/zend_accelerator_util_funcs.o .libs/shared_alloc_shm.o .libs/shared_alloc_mmap.o .libs/shared_alloc_posix.o jit/.libs/zend_jit.o jit/.libs/zend_jit_gdb.o jit/.libs/zend_jit_vm_helpers.o  -lrt  -Wl,-O1 -Wl,-soname -Wl,opcache.so -o .libs/opcache.so
+#17 40.12 creating opcache.la
+#17 40.12 (cd .libs && rm -f opcache.la && ln -s ../opcache.la opcache.la)
+#17 40.12 /bin/bash /usr/src/php/ext/opcache/libtool --tag=CC --mode=install cp ./opcache.la /usr/src/php/ext/opcache/modules
+#17 40.13 cp ./.libs/opcache.so /usr/src/php/ext/opcache/modules/opcache.so
+#17 40.14 cp ./.libs/opcache.lai /usr/src/php/ext/opcache/modules/opcache.la
+#17 40.14 PATH="$PATH:/sbin" ldconfig -n /usr/src/php/ext/opcache/modules
+#17 40.15 ----------------------------------------------------------------------
+#17 40.15 Libraries have been installed in:
+#17 40.15    /usr/src/php/ext/opcache/modules
+#17 40.15
+#17 40.15 If you ever happen to want to link against installed libraries
+#17 40.15 in a given directory, LIBDIR, you must either use libtool, and
+#17 40.15 specify the full pathname of the library, or use the `-LLIBDIR'
+#17 40.15 flag during linking and do at least one of the following:
+#17 40.15    - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+#17 40.15      during execution
+#17 40.15    - add LIBDIR to the `LD_RUN_PATH' environment variable
+#17 40.15      during linking
+#17 40.15    - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+#17 40.15    - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+#17 40.15
+#17 40.15 See any operating system documentation about shared libraries for
+#17 40.15 more information, such as the ld(1) and ld.so(8) manual pages.
+#17 40.15 ----------------------------------------------------------------------
+#17 40.15
+#17 40.15 Build complete.
+#17 40.15 Don't forget to run 'make test'.
+#17 40.15
+#17 40.17 + strip --strip-all modules/opcache.so
+#17 40.18 make: Circular jit/zend_jit.lo <- jit/zend_jit.lo dependency dropped.
+#17 40.19 Installing shared extensions:     /usr/local/lib/php/extensions/no-debug-non-zts-20230831/
+#17 40.23 find . -name \*.gcno -o -name \*.gcda | xargs rm -f
+#17 40.23 find . -name \*.lo -o -name \*.o -o -name \*.dep | xargs rm -f
+#17 40.24 find . -name \*.la -o -name \*.a | xargs rm -f
+#17 40.24 find . -name \*.so | xargs rm -f
+#17 40.24 find . -name .libs -a -type d|xargs rm -rf
+#17 40.24 rm -f libphp.la      modules/* libs/*
+#17 40.24 rm -f ext/opcache/jit/zend_jit_x86.c
+#17 40.24 rm -f ext/opcache/jit/zend_jit_arm64.c
+#17 40.25 rm -f ext/opcache/minilua
+#17 DONE 40.6s
+
+#18 [app production  3/14] COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#18 DONE 0.1s
+
+#19 [app production  4/14] WORKDIR /var/www/html
+#19 DONE 0.0s
+
+#20 [app production  5/14] COPY composer.json composer.lock ./
+#20 DONE 0.3s
+
+#21 [app production  6/14] RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+#21 0.207 Installing dependencies from lock file
+#21 0.207 Verifying lock file contents can be installed on current platform.
+#21 0.555 Nothing to install, update or remove
+#21 0.560 Generating optimized autoload files
+#21 DONE 0.6s
+
+#22 [app production  7/14] COPY app ./app
+#22 DONE 0.0s
+
+#23 [app production  8/14] COPY config ./config
+#23 DONE 0.0s
+
+#24 [app production  9/14] COPY public ./public
+#24 DONE 0.0s
+
+#25 [app production 10/14] COPY scripts ./scripts
+#25 DONE 0.0s
+
+#26 [app production 11/14] COPY views ./views
+#26 DONE 0.0s
+
+#27 [app production 12/14] COPY deploy/php/production.ini /usr/local/etc/php/conf.d/production.ini
+#27 DONE 0.0s
+
+#28 [app production 13/14] COPY deploy/php/pool.conf /usr/local/etc/php-fpm.d/zz-production.conf
+#28 DONE 0.0s
+
+#29 [app production 14/14] RUN mkdir -p var/log var/sessions && chown -R www-data:www-data var
+#29 DONE 0.1s
+
+#30 [app] exporting to image
+#30 exporting layers
+#30 exporting layers 0.2s done
+#30 exporting manifest sha256:d7e11c53059648bd34b7f1619e42b4d1bf152d89a7c6f715157474df0050631f done
+#30 exporting config sha256:0f2dfd90e5baf7e5ab087024ddff4616c978f773da22daca244d59c23f22829e done
+#30 exporting attestation manifest sha256:32cdf4820bc438a9f40dd6c5baccb48960b3a7dfa1f1020b92cee6d9cc64fc75 done
+#30 exporting manifest list sha256:30a09eb2cb24753ffa685a60165728c0a6ddbf52c0afa7ee6e33f6fe441af591 done
+#30 naming to docker.io/library/inventory-operations-production:local done
+#30 unpacking to docker.io/library/inventory-operations-production:local 0.1s done
+#30 DONE 0.3s
+
+#31 [app] resolving provenance for metadata file
+#31 DONE 0.0s
+ Image inventory-operations-production:local Built
+ Image inventory-operations-web:local Built

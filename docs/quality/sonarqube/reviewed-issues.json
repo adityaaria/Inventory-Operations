@@ -1,0 +1,247 @@
+[
+ {
+  "rule": "php:S2092",
+  "file": "app/Security/NativeSessionManager.php",
+  "line": 35,
+  "status": "ACCEPTED",
+  "justification": "Secure flag is configuration-driven: SESSION_COOKIE_SECURE=auto sets it in production, and public/index.php refuses to start in production without secure cookies. It stays off only for local HTTP (Docker on localhost:8080), where a secure cookie would never be sent and login would fail."
+ },
+ {
+  "rule": "php:S3699",
+  "file": "app/Security/NativeSessionManager.php",
+  "line": 148,
+  "status": "FALSE_POSITIVE",
+  "justification": "Since PHP 7.2 session_write_close() returns bool (true on success). The project targets PHP 8.2+, so checking the result is correct and reports a failed session write."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "public/index.php",
+  "line": 58,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/check-low-stock.php",
+  "line": 13,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/database-fingerprint.php",
+  "line": 5,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/health-check.php",
+  "line": 7,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/initialize-stock-balances.php",
+  "line": 6,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/migrate-business-operations.php",
+  "line": 4,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "php:S2003",
+  "file": "scripts/migrate-operation-requests.php",
+  "line": 4,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/audit-trail/index.php",
+  "line": 36,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/categories/index.php",
+  "line": 56,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/customers/index.php",
+  "line": 56,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/dashboard/index.php",
+  "line": 97,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/inventory-operations/index.php",
+  "line": 8,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/products/index.php",
+  "line": 56,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/products/show.php",
+  "line": 39,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/purchase-orders/index.php",
+  "line": 47,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/purchase-orders/show.php",
+  "line": 45,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/reports/index.php",
+  "line": 76,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/sales-orders/index.php",
+  "line": 47,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/sales-orders/show.php",
+  "line": 45,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/suppliers/index.php",
+  "line": 56,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/users/index.php",
+  "line": 57,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/warehouses/index.php",
+  "line": 56,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "Web:S6845",
+  "file": "views/work-queue/index.php",
+  "line": 6,
+  "status": "ACCEPTED",
+  "justification": "tabindex=0 is on the scrollable table container (role=region, aria-label). WCAG 2.1.1 and the axe rule scrollable-region-focusable require keyboard users to be able to focus and scroll this region; removing it would make wide tables unreachable by keyboard."
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "php:S2003",
+  "file": "config/bootstrap.php",
+  "line": 13,
+  "status": "ACCEPTED",
+  "justification": "This require loads a file that returns a value ($config = require config.php / bootstrap.php). require_once would return true instead of the Config object on a second load in the same process (for example in tests), so require is intentional here."
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7721",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7737",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "javascript:S7781",
+  "file": "public/assets/js/ui-helpers.js",
+  "line": null,
+  "status": "FIXED",
+  "justification": ""
+ },
+ {
+  "rule": "php:S2003",
+  "file": "public/router.php",
+  "line": 12,
+  "status": "ACCEPTED",
+  "justification": "Router script for the PHP built-in server: it includes the front controller once per request. Kept as-is deliberately; changing the request entry path is not justified by this rule."
+ }
+]

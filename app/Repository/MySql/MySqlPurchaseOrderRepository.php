@@ -14,7 +14,7 @@ use RuntimeException;
 
 final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInterface
 {
-    private const SORT_COLUMNS = ['order_number' => 'po.order_number', 'order_date' => 'po.order_date', 'status' => 'po.status'];
+    private const SORT_COLUMNS = ['order_number' => 'po.order_number', 'order_date' => 'po.order_date', 'status' => 'po.status', 'party' => 's.name', 'warehouse' => 'w.name'];
 
     public function __construct(private readonly PDO $pdo)
     {
@@ -41,6 +41,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
         $statement = $this->pdo->prepare(
             "SELECT po.id, po.order_number, po.supplier_id, po.destination_warehouse_id, po.status, po.order_date, po.created_by
              FROM purchase_orders po INNER JOIN suppliers s ON s.id = po.supplier_id
+             INNER JOIN warehouses w ON w.id = po.destination_warehouse_id
              {$where}
              ORDER BY {$sort} {$direction}, po.id DESC
              LIMIT :limit OFFSET :offset"
@@ -173,7 +174,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
     /** @param list<array<string, mixed>> $rows @return list<PurchaseOrder> */
     private function hydrateRows(array $rows): array
     {
-        if ($rows === []) return [];
+        if ($rows === []) { return []; }
         $ids = array_map(static fn (array $row): int => (int) $row['id'], $rows);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $statement = $this->pdo->prepare("SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price FROM purchase_order_items WHERE purchase_order_id IN ({$placeholders}) ORDER BY id ASC");

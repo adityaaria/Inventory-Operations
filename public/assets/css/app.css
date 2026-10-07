@@ -131,10 +131,23 @@ strong {
     font-weight: var(--fw-semibold);
 }
 
+/* Accessible name that is read by assistive technology but not shown. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Interactive text is identified by colour, weight and hover/focus states, never by underline. */
 a {
     color: var(--primary);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.18em;
+    text-decoration: none;
 }
 
 a:hover,
@@ -1071,6 +1084,45 @@ td.empty {
     color: var(--primary);
 }
 
+/* Record links inside tables (product name, document number): without underline they need their own cue. */
+.data-table td > a:not([class]) {
+    font-weight: var(--fw-semibold);
+    border-radius: 2px;
+    transition: color var(--motion-fast) ease, background var(--motion-fast) ease;
+}
+
+.data-table td > a:not([class]):hover,
+.data-table td > a:not([class]):focus-visible {
+    color: var(--primary-hover);
+    background: var(--surface-muted);
+}
+
+/* Server-sorted headings: the whole label is the control; the arrow mirrors aria-sort. */
+.sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: inherit;
+    font-weight: inherit;
+    white-space: nowrap;
+}
+
+.sort-link:hover,
+.sort-link:focus-visible {
+    color: var(--primary-dark);
+}
+
+.sort-indicator {
+    color: #98a2b3;
+    font-size: var(--fs-xs);
+    line-height: 1;
+}
+
+.sort-link.is-active .sort-indicator,
+.sort-link:hover .sort-indicator {
+    color: var(--primary);
+}
+
 .empty-state {
     display: grid;
     place-items: center;
@@ -1782,11 +1834,13 @@ tbody tr:hover td { background: var(--table-row-hover); }
 }
 
 /* Keep the previous document visible until the next page is ready. */
+@view-transition {
+    navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+    @view-transition { navigation: none; }
+}
 @media (prefers-reduced-motion: no-preference) {
-    @view-transition {
-        navigation: auto;
-    }
-
     ::view-transition-group(root),
     ::view-transition-old(root),
     ::view-transition-new(root) {
@@ -1961,3 +2015,12 @@ tbody tr:hover td { background: var(--table-row-hover); }
     .metric-card strong { font-size: 1rem; overflow-wrap: anywhere; }
     .chart-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2rem; }
 }
+
+[data-stock-items] { grid-column: 1 / -1; min-width: 0; display: grid; gap: 12px; }
+.stock-proposal-item { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; display: grid; gap: 12px; }
+.stock-proposal-item legend { padding: 0 6px; }
+.stock-proposal-item [role="status"] { margin: 0; overflow-wrap: anywhere; }
+
+.transaction-timeline { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 12px; }
+.transaction-timeline li, .transaction-timeline p, .transaction-timeline h2 { min-width: 0; overflow-wrap: anywhere; }
+.transaction-timeline h2 { font-size: 1rem; margin: 8px 0; }

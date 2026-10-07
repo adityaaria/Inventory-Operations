@@ -57,7 +57,7 @@ final class CategoryController
         $actor = $this->guard->requireUserManagement();
 
         try {
-            if ($this->imports === null) throw new \LogicException('CSV import service is not configured.');
+            if ($this->imports === null) { throw new \LogicException('CSV import service is not configured.'); }
             $this->imports->import(CsvImport::rowsFromRequest($request), function (array $row) use ($actor): void {
                 $this->categories->create($actor, $row['name'] ?? '', $row['description'] ?? '');
             });

@@ -1,0 +1,17 @@
+{
+  "checks": 11,
+  "passed": [
+    "packaged additive migration safely runs on initialized schema",
+    "packaged business migration safely repeats",
+    "business HTTP flows pass before backup",
+    "backup permissions restrict local access",
+    "backup does not mutate any application table",
+    "encrypted replica checksum matches source",
+    "authenticated decryption preserves original dump bytes",
+    "every table count and row digest survives restore",
+    "stock ledger and source-order digests survive restore",
+    "second restore refuses populated target",
+    "restore refuses main application project"
+  ],
+  "failed": 0
+}

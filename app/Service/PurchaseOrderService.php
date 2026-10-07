@@ -27,6 +27,8 @@ final class PurchaseOrderService
         private readonly array $suppliers,
         private readonly array $warehouses,
         private readonly StockService $stockService,
+        private readonly ?OperationIdempotency $idempotency = null,
+        private readonly ?\App\Repository\Contract\OrderExceptionRepositoryInterface $exceptions = null,
     ) {
     }
 
@@ -59,11 +61,16 @@ final class PurchaseOrderService
     /**
      * @param array<int, int> $receivedQuantitiesByItemId
      */
-    public function receive(AuthContext $actor, int $id, array $receivedQuantitiesByItemId): void
+    public function receive(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey = null): void
     {
-        $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId): void {
+        $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId, $requestKey): void {
             $this->assertCanReceive($actor);
             $order = $this->findOrder($id);
+            if ($requestKey !== null) {
+                if ($this->idempotency === null) { throw new \LogicException('Idempotency repository is required.'); }
+                if ($this->idempotency->replay($actor->userId(), $requestKey, 'receipt', $id, $receivedQuantitiesByItemId)) { return; }
+            }
+            if ($this->exceptions?->closure($id)!==null) { throw new ValidationException('This PO remainder is closed.'); }
             if (!in_array($order->status(), PurchaseOrder::RECEIVABLE_STATUSES, true)) {
                 throw new ValidationException('Purchase order is not receivable.');
             }
@@ -98,6 +105,7 @@ final class PurchaseOrderService
                 $order->id(),
                 fn (): null => $this->recordReceipt($order->id(), $acceptedReceipts, $status),
             );
+            if ($requestKey !== null) { $this->idempotency->complete($actor->userId(), $requestKey); }
 
         });
     }

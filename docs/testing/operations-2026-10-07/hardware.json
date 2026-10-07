@@ -1,0 +1,6 @@
+{
+  "docker_cpus": 8,
+  "docker_memory_bytes": 4106604544,
+  "architecture": "aarch64",
+  "scope": "local Docker Desktop; small seeded+E2E dataset; no production SLA"
+}

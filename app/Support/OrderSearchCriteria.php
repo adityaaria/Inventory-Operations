@@ -6,7 +6,7 @@ namespace App\Support;
 
 final class OrderSearchCriteria
 {
-    private const SORT_COLUMNS = ['order_number', 'order_date', 'status'];
+    private const SORT_COLUMNS = ['order_number', 'order_date', 'status', 'party', 'warehouse'];
     private const DIRECTIONS = ['asc', 'desc'];
     private const STATUSES = ['Draft', 'Ordered', 'PartiallyReceived', 'Received', 'PendingApproval', 'Approved', 'Fulfilled', 'Cancelled'];
 
@@ -24,7 +24,7 @@ final class OrderSearchCriteria
     public static function fromArray(array $input): self
     {
         foreach ($input as $key => $value) {
-            if (!is_string($value) && !is_int($value)) unset($input[$key]);
+            if (!is_string($value) && !is_int($value)) { unset($input[$key]); }
         }
         $status = isset($input['status']) && in_array($input['status'], self::STATUSES, true) ? (string) $input['status'] : null;
         $sortBy = isset($input['sort']) && in_array($input['sort'], self::SORT_COLUMNS, true) ? (string) $input['sort'] : 'order_date';

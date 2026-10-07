@@ -6,7 +6,7 @@ namespace App\Support;
 
 final class ProductSearchCriteria
 {
-    private const SORT_COLUMNS = ['name', 'sku', 'price', 'quantity'];
+    private const SORT_COLUMNS = ['name', 'sku', 'unit', 'purchase_price', 'price', 'reorder', 'quantity'];
     private const DIRECTIONS = ['asc', 'desc'];
     private const STOCK_STATUSES = ['low', 'normal'];
 
@@ -27,7 +27,7 @@ final class ProductSearchCriteria
     public static function fromArray(array $input): self
     {
         foreach ($input as $key => $value) {
-            if (!is_string($value) && !is_int($value)) unset($input[$key]);
+            if (!is_string($value) && !is_int($value)) { unset($input[$key]); }
         }
         $categoryId = isset($input['category_id']) && (int) $input['category_id'] > 0
             ? (int) $input['category_id']

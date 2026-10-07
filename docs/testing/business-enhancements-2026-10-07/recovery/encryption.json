@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "cipher": "CMS AES-256-GCM / RSA-OAEP SHA256",
+  "replica_checksum_matches": true,
+  "decrypted_dump_matches": true,
+  "off_host_verified": false,
+  "key_scope": "one-day disposable test recipient; not production"
+}

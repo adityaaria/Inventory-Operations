@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Repository\Contract\OperationalQueryRepositoryInterface;
+use App\Support\OutstandingCriteria;
 use PDO;
 
 final class MySqlOperationalQueryRepository implements OperationalQueryRepositoryInterface
 {
+    private const OUTSTANDING_COLUMNS = 'Type, OrderNumber, Party, Status, Created, AgeDays, AgeBucket, DaysSinceApproval, OutstandingQty';
+    private const OUTSTANDING_SORT = 'SortDate ASC, Type ASC, SortId ASC';
+
     public function __construct(private readonly PDO $pdo)
     {
     }
@@ -40,7 +44,7 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
     public function warehouseDashboard(): array
     {
         return [
-            'po_receipt_queue' => $this->scalarInt("SELECT COUNT(*) FROM purchase_orders WHERE status IN ('Ordered', 'PartiallyReceived')"),
+            'po_receipt_queue' => $this->scalarInt("SELECT COUNT(*) FROM purchase_orders po LEFT JOIN purchase_order_closures c ON c.purchase_order_id=po.id WHERE po.status IN ('Ordered', 'PartiallyReceived') AND c.purchase_order_id IS NULL"),
             'so_issue_queue' => $this->scalarInt("SELECT COUNT(*) FROM sales_orders WHERE status = 'Approved'"),
             'low_stock_rows' => $this->lowStockRows(),
         ];
@@ -79,17 +83,18 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
         $statement = $this->pdo->prepare("SELECT {$group} AS label, COUNT(*) AS total, {$quantity} AS quantity FROM ({$source}) report GROUP BY {$group} ORDER BY {$group}");
         $statement->execute($params);
         $counts = [];
-        $received = $issued = 0;
+        $received = $issued = $adjusted = 0;
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $counts[(string) $row['label']] = (int) $row['total'];
             $received += $row['label'] === 'Receipt' ? (int) $row['quantity'] : 0;
             $issued += $row['label'] === 'Issue' ? (int) $row['quantity'] : 0;
+            $adjusted += $row['label'] === 'Adjustment' ? (int) $row['quantity'] : 0;
         }
         $statement = $this->pdo->prepare("SELECT {$bucket} AS label, COUNT(*) AS total FROM ({$source}) report GROUP BY {$bucket} ORDER BY {$bucket}");
         $statement->execute($params);
         $distribution = [];
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) $distribution[(string) $row['label']] = (int) $row['total'];
-        return ['total' => array_sum($counts), 'counts' => $counts, 'distribution' => $distribution, 'received' => $received, 'issued' => $issued];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) { $distribution[(string) $row['label']] = (int) $row['total']; }
+        return ['total' => array_sum($counts), 'counts' => $counts, 'distribution' => $distribution, 'received' => $received, 'issued' => $issued, 'adjusted' => $adjusted];
     }
 
     public function reportPage(string $type, ?string $from, ?string $to, ?int $salesUserId, int $limit, int $offset): array
@@ -97,7 +102,7 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
         [$source, $params, $sort] = $this->reportSource($type, $from, $to, $salesUserId);
         $columns = $type === 'orders' ? 'Type, OrderNumber, Party, Status, Date' : 'Date, Movement, SKU, Warehouse, Quantity, ReferenceType, ReferenceId';
         $statement = $this->pdo->prepare("SELECT {$columns} FROM ({$source}) report ORDER BY {$sort} LIMIT :limit OFFSET :offset");
-        foreach ($params as $key => $value) $statement->bindValue($key, $value);
+        foreach ($params as $key => $value) { $statement->bindValue($key, $value); }
         $statement->bindValue('limit', $limit, PDO::PARAM_INT);
         $statement->bindValue('offset', $offset, PDO::PARAM_INT);
         $statement->execute();
@@ -108,13 +113,117 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
     {
         [$source, $params, $sort] = $this->reportSource($type, $from, $to, $salesUserId);
         $columns = $type === 'orders' ? 'Type, OrderNumber, Party, Status, Date' : 'Date, Movement, SKU, Warehouse, Quantity, ReferenceType, ReferenceId';
+        yield from $this->streamRows("SELECT {$columns} FROM ({$source}) report ORDER BY {$sort}", $params);
+    }
+
+    public function outstandingSummary(OutstandingCriteria $criteria): array
+    {
+        [$source, $params] = $this->outstandingSource($criteria);
+        $statement = $this->pdo->prepare("SELECT Type, Status, AgeBucket, COUNT(*) AS total, COALESCE(SUM(OutstandingQty), 0) AS units, MAX(AgeDays) AS oldest
+            FROM ({$source}) outstanding GROUP BY Type, Status, AgeBucket");
+        $statement->execute($params);
+        $buckets = array_fill_keys(self::AGE_BUCKETS, 0);
+        $statuses = [];
+        $inbound = $outbound = $oldest = 0;
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $total = (int) $row['total'];
+            $buckets[(string) $row['AgeBucket']] += $total;
+            $status = $row['Type'] . ' ' . $row['Status'];
+            $statuses[$status] = ($statuses[$status] ?? 0) + $total;
+            $inbound += $row['Type'] === 'PO' ? (int) $row['units'] : 0;
+            $outbound += $row['Type'] === 'SO' ? (int) $row['units'] : 0;
+            $oldest = max($oldest, (int) $row['oldest']);
+        }
+        ksort($statuses);
+        return ['total' => array_sum($buckets), 'buckets' => $buckets, 'statuses' => $statuses, 'inbound_units' => $inbound, 'outbound_units' => $outbound, 'oldest_days' => $oldest];
+    }
+
+    public function outstandingPage(OutstandingCriteria $criteria, int $limit, int $offset): array
+    {
+        [$source, $params] = $this->outstandingSource($criteria);
+        $statement = $this->pdo->prepare('SELECT ' . self::OUTSTANDING_COLUMNS . " FROM ({$source}) outstanding ORDER BY " . self::OUTSTANDING_SORT . ' LIMIT :limit OFFSET :offset');
+        foreach ($params as $key => $value) { $statement->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR); }
+        $statement->bindValue('limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue('offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function iterateOutstandingRows(OutstandingCriteria $criteria): iterable
+    {
+        [$source, $params] = $this->outstandingSource($criteria);
+        yield from $this->streamRows('SELECT ' . self::OUTSTANDING_COLUMNS . " FROM ({$source}) outstanding ORDER BY " . self::OUTSTANDING_SORT, $params);
+    }
+
+    /**
+     * Open documents per role scope. Age counts whole days since creation using the database clock;
+     * closed PO remainders and terminal statuses are excluded. DaysSinceApproval is filled only where an approval
+     * time is recorded and still current (Approved SO and stock proposals); POs record no ordered-at time. Stock proposals carry no unit total
+     * because adjustment counts, transfers and returns do not share one direction.
+     *
+     * @return array{0: string, 1: array<string, int|string>}
+     */
+    private function outstandingSource(OutstandingCriteria $criteria): array
+    {
+        $statuses = match ($criteria->scope) {
+            self::OUTSTANDING_SCOPE_ALL => ['PO' => ['Draft', 'Ordered', 'PartiallyReceived'], 'SO' => ['Draft', 'PendingApproval', 'Approved'], 'OP' => ['PendingApproval', 'Approved']],
+            self::OUTSTANDING_SCOPE_FULFILMENT => ['PO' => ['Ordered', 'PartiallyReceived'], 'SO' => ['Approved'], 'OP' => ['Approved']],
+            self::OUTSTANDING_SCOPE_SALES => ['SO' => ['Draft', 'PendingApproval', 'Approved']],
+            default => throw new \LogicException('Unknown outstanding scope.'),
+        };
+        if ($criteria->scope === self::OUTSTANDING_SCOPE_SALES && $criteria->owner === null) { throw new \LogicException('Sales outstanding scope requires an owner.'); }
+        if ($criteria->document !== '') { $statuses = array_intersect_key($statuses, [$criteria->document => true]); }
+        $list = static fn (array $values): string => "'" . implode("', '", $values) . "'";
+        $parts = [];
+        if (isset($statuses['PO'])) {
+            $parts[] = "SELECT 'PO' AS Type, po.id AS SortId, po.order_number AS OrderNumber, s.name AS Party, po.status AS Status, po.created_at, NULL AS ApprovedAt,
+                COALESCE((SELECT SUM(CAST(poi.quantity AS SIGNED) - CAST(poi.received_quantity AS SIGNED)) FROM purchase_order_items poi WHERE poi.purchase_order_id = po.id), 0) AS OutstandingQty
+                FROM purchase_orders po INNER JOIN suppliers s ON s.id = po.supplier_id
+                LEFT JOIN purchase_order_closures c ON c.purchase_order_id = po.id
+                WHERE po.status IN ({$list($statuses['PO'])}) AND c.purchase_order_id IS NULL";
+        }
+        if (isset($statuses['SO'])) {
+            $owner = $criteria->owner === null ? '' : ' AND so.created_by = :created_by';
+            $parts[] = "SELECT 'SO' AS Type, so.id AS SortId, so.order_number AS OrderNumber, cu.name AS Party, so.status AS Status, so.created_at, CASE WHEN so.status = 'Approved' THEN so.approved_at END AS ApprovedAt,
+                COALESCE((SELECT SUM(soi.quantity) FROM sales_order_items soi WHERE soi.sales_order_id = so.id), 0) AS OutstandingQty
+                FROM sales_orders so INNER JOIN customers cu ON cu.id = so.customer_id
+                WHERE so.status IN ({$list($statuses['SO'])}){$owner}";
+        }
+        if (isset($statuses['OP'])) {
+            $parts[] = "SELECT 'OP' AS Type, io.id AS SortId, CONCAT(io.kind, ' #', io.id) AS OrderNumber,
+                CASE WHEN d.id IS NULL THEN w.name ELSE CONCAT(w.name, ' → ', d.name) END AS Party, io.status AS Status, io.created_at, CASE WHEN io.status = 'Approved' THEN io.approved_at END AS ApprovedAt, NULL AS OutstandingQty
+                FROM inventory_operations io INNER JOIN warehouses w ON w.id = io.warehouse_id LEFT JOIN warehouses d ON d.id = io.destination_id
+                WHERE io.status IN ({$list($statuses['OP'])})";
+        }
+        [$where, $params] = $this->dateWhere('created_at', $criteria->from, $criteria->to);
+        if ($criteria->owner !== null && isset($statuses['SO'])) { $params['created_by'] = $criteria->owner; }
+        if ($parts === []) { throw new \LogicException('Document type is outside the outstanding scope.'); }
+        $bucket = '';
+        if ($criteria->bucket !== '') {
+            $bucket = ' WHERE AgeBucket = :age_bucket';
+            $params['age_bucket'] = $criteria->bucket;
+        }
+        $open = implode(' UNION ALL ', $parts);
+        return ["SELECT * FROM (SELECT Type, OrderNumber, Party, Status, DATE(created_at) AS Created, AgeDays,
+            CASE WHEN AgeDays <= 2 THEN '0-2 days' WHEN AgeDays <= 7 THEN '3-7 days' WHEN AgeDays <= 30 THEN '8-30 days' ELSE '31+ days' END AS AgeBucket,
+            CASE WHEN ApprovedAt IS NULL THEN NULL ELSE GREATEST(0, TIMESTAMPDIFF(DAY, ApprovedAt, NOW())) END AS DaysSinceApproval,
+            CAST(OutstandingQty AS SIGNED) AS OutstandingQty, created_at AS SortDate, SortId
+            FROM (SELECT open_orders.*, GREATEST(0, TIMESTAMPDIFF(DAY, open_orders.created_at, NOW())) AS AgeDays FROM ({$open}) open_orders {$where}) aged) bucketed{$bucket}", $params];
+    }
+
+    /**
+     * @param array<string, int|string> $params
+     * @return iterable<array<string, string|int|float|null>>
+     */
+    private function streamRows(string $sql, array $params): iterable
+    {
         $buffered = $this->pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
         $this->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         $statement = null;
         try {
-            $statement = $this->pdo->prepare("SELECT {$columns} FROM ({$source}) report ORDER BY {$sort}");
+            $statement = $this->pdo->prepare($sql);
             $statement->execute($params);
-            while ($row = $statement->fetch(PDO::FETCH_ASSOC)) yield $row;
+            while ($row = $statement->fetch(PDO::FETCH_ASSOC)) { yield $row; }
         } finally {
             $statement?->closeCursor();
             $this->pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $buffered);
@@ -127,14 +236,14 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
         if ($type === 'stock-ledger') {
             [$where, $params] = $this->dateWhere('sl.created_at', $from, $to);
             return ["SELECT DATE(sl.created_at) AS Date, sl.created_at AS SortDate, sl.id AS SortId,
-                sl.movement_type AS Movement, p.sku AS SKU, w.name AS Warehouse, sl.quantity AS Quantity,
+                sl.movement_type AS Movement, p.sku AS SKU, w.name AS Warehouse, CASE WHEN sl.movement_type='Adjustment' THEN sl.quantity_delta ELSE sl.quantity END AS Quantity,
                 sl.reference_type AS ReferenceType, sl.reference_id AS ReferenceId
                 FROM stock_ledger sl INNER JOIN products p ON p.id = sl.product_id
                 INNER JOIN warehouses w ON w.id = sl.warehouse_id {$where}", $params, 'SortDate DESC, SortId DESC'];
         }
         [$where, $params] = $this->dateWhere('Date', $from, $to);
         $owner = $salesUserId === null ? '' : ' WHERE so.created_by = :created_by';
-        if ($salesUserId !== null) $params['created_by'] = $salesUserId;
+        if ($salesUserId !== null) { $params['created_by'] = $salesUserId; }
         $sales = "SELECT 'SO' AS Type, so.order_number AS OrderNumber, c.name AS Party, so.status AS Status, so.order_date AS Date, so.id AS SortId
             FROM sales_orders so INNER JOIN customers c ON c.id = so.customer_id {$owner}";
         $orders = $salesUserId !== null ? $sales : "SELECT 'PO' AS Type, po.order_number AS OrderNumber, s.name AS Party, po.status AS Status, po.order_date AS Date, po.id AS SortId

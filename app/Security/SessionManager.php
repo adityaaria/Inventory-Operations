@@ -36,7 +36,7 @@ class SessionManager
 
     public function refreshAuth(AuthContext $authContext): void
     {
-        if ($this->authContext?->role() !== $authContext->role()) $this->csrfToken = '';
+        if ($this->authContext?->role() !== $authContext->role()) { $this->csrfToken = ''; }
         $this->authContext = $authContext;
     }
 

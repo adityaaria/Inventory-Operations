@@ -35,19 +35,21 @@
     function escapeCsvCell(value) {
         let text = String(value).replace(/\s+/g, ' ').trim();
         if (/^[\u0000-\u0020]*[=+\-@]/.test(text)) text = "'" + text;
-        return `"${text.replace(/"/g, '""')}"`;
+        return `"${text.replaceAll('"', '""')}"`;
     }
 
     function escapeHtml(value) {
         return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
     }
 
-    function debounce(callback, delay = 200, timerApi = {clearTimeout, setTimeout}) {
+    const defaultTimerApi = {clearTimeout, setTimeout};
+
+    function debounce(callback, delay = 200, timerApi = defaultTimerApi) {
         let timerId = null;
         const debounced = (...args) => {
             if (timerId !== null) timerApi.clearTimeout(timerId);

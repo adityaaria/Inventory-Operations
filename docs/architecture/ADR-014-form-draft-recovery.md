@@ -1,0 +1,15 @@
+# ADR-014: device-local form drafts with server revalidation
+
+Date: 7 October 2026. Optional scope: user target list item 6 ("Pemulihan draft form"). Requirement support: UI-01, AUTH-01/02, SEC, ARCH-01/02, TEST-01/02/03. No schema change.
+
+**Storage.** `form-drafts.js` saves opted-in long forms (PO create, SO create, stock proposal create via `data-draft`) to `localStorage`, so input survives a closed tab or browser crash. Keys are `ioms-draft:v1:<userId>:<role>:<form>`; the owner value is rendered by the server from the authenticated actor and is never used for authorization. A role change therefore hides older drafts. Drafts expire with the absolute session limit (D-08, user-approved 2026-10-07): the server renders `data-draft-ttl` from `SESSION_ABSOLUTE_SECONDS` (8 hours by default; out-of-range values fall back to 8 hours) and each draft stores its lifetime, so a draft never outlives the longest allowed session. Malformed or future timestamps are dropped; expired drafts are purged on every workspace page load, and every draft on the device is removed on logout. Drafts are deliberately not cleared on the login page, so input survives a session timeout.
+
+**Never stored.** CSRF tokens, operation/idempotency keys, passwords, hidden fields and count baselines (an old baseline would be a stale count; ADR-009 rejects stale counts, so it is re-read from current stock).
+
+**Lifecycle.** Saving is debounced on user input. A draft is deleted on the `formdata` event, i.e. only when a submission is really sent, after client validation and the confirmation dialog, so cancelling the confirmation or failing validation keeps it. If the server re-renders the form with an error (422, full page or modal), the shown values are saved again.
+
+**Restore requires consent and revalidates before submit.** A banner offers Restore or Discard. Restore rebuilds supplementary item rows and maps saved item indexes onto them, restores the stock-proposal type first, and reports saved values whose option no longer exists (for example an inactive customer). It then calls `GET /drafts/check` (DraftCheckController → DraftCheckService → existing product, warehouse and stock repository interfaces). The check returns 403 when the role may not submit that form (same role matrix as the create routes), marks inactive warehouses and products as blocking (field `setCustomValidity`), and returns current stock per line; the page warns when an outbound quantity (SO, transfer, supplier return) exceeds it. The check is read-only and opens no locking transaction.
+
+**Authority unchanged.** The check is advisory. On submit, services still enforce authorization, state transitions, stock locks, ledger and audit exactly as before.
+
+**Risk accepted (D-08).** Draft contents (order details and prices, reasons) sit unencrypted in the browser profile of that device until submit, discard, expiry or logout. On shared computers a user who closes the browser without logging out leaves a draft for up to the session limit (8 hours), readable by anyone with access to that browser profile, although the application only offers it to the same user and role.

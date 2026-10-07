@@ -20,9 +20,9 @@ final class InputValidator
 
     public static function optionalString(string $field, mixed $value, int $maxLength = 255): string
     {
-        if (!is_string($value)) throw new ValidationException(self::label($field) . ' must be text.');
+        if (!is_string($value)) { throw new ValidationException(self::label($field) . ' must be text.'); }
         $text = trim($value);
-        if (strlen($text) > $maxLength) throw new ValidationException(self::label($field) . ' is too long.');
+        if (strlen($text) > $maxLength) { throw new ValidationException(self::label($field) . ' is too long.'); }
         return $text;
     }
 
@@ -49,7 +49,7 @@ final class InputValidator
 
     public static function positiveInt(string $field, mixed $value): int
     {
-        if (!is_string($value) && !is_int($value)) throw new ValidationException(self::label($field) . ' must be an integer.');
+        if (!is_string($value) && !is_int($value)) { throw new ValidationException(self::label($field) . ' must be an integer.'); }
         $int = filter_var($value, FILTER_VALIDATE_INT);
         if (!is_int($int) || $int <= 0) {
             throw new ValidationException(self::label($field) . ' must be positive.');
@@ -60,7 +60,7 @@ final class InputValidator
 
     public static function nonNegativeInt(string $field, mixed $value): int
     {
-        if (!is_string($value) && !is_int($value)) throw new ValidationException(self::label($field) . ' must be an integer.');
+        if (!is_string($value) && !is_int($value)) { throw new ValidationException(self::label($field) . ' must be an integer.'); }
         $int = filter_var($value, FILTER_VALIDATE_INT);
         if (!is_int($int) || $int < 0) {
             throw new ValidationException(self::label($field) . ' cannot be negative.');
@@ -71,7 +71,7 @@ final class InputValidator
 
     public static function nonNegativeMoney(string $field, mixed $value): float
     {
-        if (!is_string($value) && !is_int($value) && !is_float($value)) throw new ValidationException(self::label($field) . ' must be a number.');
+        if (!is_string($value) && !is_int($value) && !is_float($value)) { throw new ValidationException(self::label($field) . ' must be a number.'); }
         $float = filter_var($value, FILTER_VALIDATE_FLOAT);
         if ($float === false || !is_finite((float) $float) || $float < 0 || $float > 999999999999.99) {
             throw new ValidationException(self::label($field) . ' cannot be negative.');

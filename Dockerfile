@@ -30,6 +30,7 @@ COPY config ./config
 COPY public ./public
 COPY scripts ./scripts
 COPY views ./views
+COPY database/migrations ./database/migrations
 
 RUN mkdir -p /var/www/html/var/log /var/www/html/var/sessions \
     && chown -R www-data:www-data /var/www/html
@@ -51,3 +52,27 @@ COPY phpunit.xml phpstan.neon ./
 RUN chown -R www-data:www-data /var/www/html
 USER www-data
 CMD ["php", "scripts/quality-check.php"]
+
+# Production has no debugger, coverage driver or development dependencies.
+FROM php:8.3-fpm AS production
+RUN docker-php-ext-install pdo_mysql opcache
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /var/www/html
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+COPY app ./app
+COPY config ./config
+COPY public ./public
+COPY scripts ./scripts
+COPY views ./views
+COPY deploy/php/production.ini /usr/local/etc/php/conf.d/production.ini
+COPY database/migrations ./database/migrations
+COPY deploy/php/pool.conf /usr/local/etc/php-fpm.d/zz-production.conf
+RUN mkdir -p var/log var/sessions && chown -R www-data:www-data var
+USER www-data
+EXPOSE 9000
+CMD ["php-fpm", "-F"]
+
+FROM nginx:stable-alpine AS web
+COPY public /var/www/html/public
+COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf

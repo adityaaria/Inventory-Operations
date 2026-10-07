@@ -30,6 +30,13 @@ final class RequestAuditRecorderTest extends TestCase
         self::assertSame(5, $repository->entries()[0]['actor_id']);
     }
 
+    public function testAtomicBusinessSuccessIsNotDuplicatedButFailuresAreRecorded(): void
+    {
+        $repository=new InMemoryAuditLogRepository();$recorder=new RequestAuditRecorder(new AuditLogger($repository));$actor=new AuthContext(1,'admin@example.test','Admin');
+        foreach(['/purchase-orders/close-remainder','/sales-orders/reject','/inventory-operations','/inventory-operations/decide','/inventory-operations/post'] as $path){$recorder->record(new Request('POST',$path,[],['id'=>'1'],[]),new Response('',302),$actor);}
+        self::assertCount(0,$repository->entries());$recorder->record(new Request('POST','/inventory-operations/post',[],['id'=>'1'],[]),new Response('',422),$actor);self::assertCount(1,$repository->entries());self::assertSame('failure',$repository->entries()[0]['status']);
+    }
+
     public function testSkipsNonPostRequests(): void
     {
         $repository = new InMemoryAuditLogRepository();

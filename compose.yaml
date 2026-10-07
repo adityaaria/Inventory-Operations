@@ -35,7 +35,7 @@ services:
       MYSQL_PASSWORD: "${DB_PASSWORD:-change_me_for_local_only}"
       MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-change_me_root_for_local_only}"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [CMD-SHELL, 'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP --host=127.0.0.1 --user="$${MYSQL_USER}" --database="$${MYSQL_DATABASE}" --execute="SELECT 1" --silent']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -70,7 +70,7 @@ services:
     tmpfs:
       - /var/lib/mysql
     healthcheck:
-      test: [CMD, mysqladmin, ping, -h, localhost]
+      test: [CMD-SHELL, 'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP --host=127.0.0.1 --user="$${MYSQL_USER}" --database="$${MYSQL_DATABASE}" --execute="SELECT 1" --silent']
       interval: 2s
       timeout: 5s
       retries: 60

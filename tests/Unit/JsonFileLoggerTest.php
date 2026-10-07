@@ -14,6 +14,7 @@ final class JsonFileLoggerTest extends TestCase
     {
         $path = sys_get_temp_dir() . '/inventory-json-logger-test/app.log';
         @unlink($path);
+        @unlink($path . '.lock');
         @rmdir(dirname($path));
 
         $logger = new JsonFileLogger($path);
@@ -28,6 +29,7 @@ final class JsonFileLoggerTest extends TestCase
         self::assertArrayHasKey('timestamp', $payload);
 
         @unlink($path);
+        @unlink($path . '.lock');
         @rmdir(dirname($path));
     }
 
@@ -35,6 +37,7 @@ final class JsonFileLoggerTest extends TestCase
     {
         $path = sys_get_temp_dir() . '/inventory-json-logger-error-test/app.log';
         @unlink($path);
+        @unlink($path . '.lock');
         @rmdir(dirname($path));
 
         $logger = new JsonFileLogger($path);
@@ -44,11 +47,13 @@ final class JsonFileLoggerTest extends TestCase
         $payload = json_decode($line, true, 512, JSON_THROW_ON_ERROR);
 
         self::assertSame('error', $payload['level']);
-        self::assertSame('Broken flow', $payload['message']);
+        self::assertSame('Unhandled exception.', $payload['message']);
+        self::assertStringNotContainsString('Broken flow', $line);
         self::assertSame('global_exception', $payload['context']['handler']);
         self::assertSame(RuntimeException::class, $payload['context']['exception']);
 
         @unlink($path);
+        @unlink($path . '.lock');
         @rmdir(dirname($path));
     }
 }

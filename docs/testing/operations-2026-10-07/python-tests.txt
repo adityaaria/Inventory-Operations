@@ -1,0 +1,24 @@
+test_checksum_mismatch_rejected (test_safety.OperationalSafetyTest.test_checksum_mismatch_rejected) ... ok
+test_corrupt_backup_alert (test_safety.OperationalSafetyTest.test_corrupt_backup_alert) ... ok
+test_disposable_empty_target_allowed (test_safety.OperationalSafetyTest.test_disposable_empty_target_allowed) ... ok
+test_dump_failure_preserves_previous_backup_and_removes_partial (test_safety.OperationalSafetyTest.test_dump_failure_preserves_previous_backup_and_removes_partial) ... ok
+test_filename_collision_preserves_existing_backup (test_safety.OperationalSafetyTest.test_filename_collision_preserves_existing_backup) ... ok
+test_gzip_integrity_checked_even_with_matching_digest (test_safety.OperationalSafetyTest.test_gzip_integrity_checked_even_with_matching_digest) ... ok
+test_load_refuses_external_target (test_safety.OperationalSafetyTest.test_load_refuses_external_target) ... ok
+test_load_refuses_main_application (test_safety.OperationalSafetyTest.test_load_refuses_main_application) ... ok
+test_load_refuses_non_http_scheme (test_safety.OperationalSafetyTest.test_load_refuses_non_http_scheme) ... ok
+test_load_refuses_unbounded_users (test_safety.OperationalSafetyTest.test_load_refuses_unbounded_users) ... ok
+test_missing_backup_alert (test_safety.OperationalSafetyTest.test_missing_backup_alert) ... ok
+test_prune_dry_run_preserves_backups (test_safety.OperationalSafetyTest.test_prune_dry_run_preserves_backups) ... ok
+test_prune_never_removes_good_backup_when_newest_corrupt (test_safety.OperationalSafetyTest.test_prune_never_removes_good_backup_when_newest_corrupt) ... ok
+test_recent_backup_healthy (test_safety.OperationalSafetyTest.test_recent_backup_healthy) ... ok
+test_restore_refuses_application_database (test_safety.OperationalSafetyTest.test_restore_refuses_application_database) ... ok
+test_restore_refuses_application_project (test_safety.OperationalSafetyTest.test_restore_refuses_application_project) ... ok
+test_restore_refuses_nonempty_database (test_safety.OperationalSafetyTest.test_restore_refuses_nonempty_database) ... ok
+test_stale_backup_alert (test_safety.OperationalSafetyTest.test_stale_backup_alert) ... ok
+test_valid_archive_verified (test_safety.OperationalSafetyTest.test_valid_archive_verified) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.367s
+
+OK

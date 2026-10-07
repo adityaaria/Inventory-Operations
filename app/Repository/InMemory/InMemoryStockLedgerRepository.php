@@ -8,7 +8,7 @@ use App\Entity\StockLedgerEntry;
 use App\Repository\Contract\StockLedgerRepositoryInterface;
 use RuntimeException;
 
-final class InMemoryStockLedgerRepository implements StockLedgerRepositoryInterface
+final class InMemoryStockLedgerRepository implements StockLedgerRepositoryInterface, \App\Repository\Contract\AdjustmentLedgerRepositoryInterface
 {
     /** @var list<StockLedgerEntry> */
     private array $entries = [];
@@ -27,13 +27,18 @@ final class InMemoryStockLedgerRepository implements StockLedgerRepositoryInterf
         $this->append($productId, $warehouseId, 'Issue', $quantity, $referenceType, $referenceId, $performedBy);
     }
 
-    private function append(int $productId, int $warehouseId, string $movementType, int $quantity, string $referenceType, int $referenceId, int $performedBy): void
+    public function appendAdjustment(int $product,int $warehouse,int $delta,string $reference,int $id,int $actor): void
+    {
+        if($delta===0) { throw new \InvalidArgumentException('Adjustment delta cannot be zero.'); }
+        $this->append($product,$warehouse,'Adjustment',abs($delta),$reference,$id,$actor,$delta);
+    }
+    private function append(int $productId, int $warehouseId, string $movementType, int $quantity, string $referenceType, int $referenceId, int $performedBy, ?int $delta = null): void
     {
         if ($this->failOnAppend) {
             throw new RuntimeException('Forced ledger failure.');
         }
 
-        $this->entries[] = new StockLedgerEntry(count($this->entries) + 1, $productId, $warehouseId, $movementType, $quantity, $referenceType, $referenceId, $performedBy);
+        $this->entries[] = new StockLedgerEntry(count($this->entries) + 1, $productId, $warehouseId, $movementType, $quantity, $referenceType, $referenceId, $performedBy, $delta);
     }
 
     public function forReference(string $referenceType, int $referenceId): array

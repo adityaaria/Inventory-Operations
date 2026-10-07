@@ -21,7 +21,10 @@ final class DashboardService
             return ['role' => User::ROLE_SALES] + $this->queries->salesDashboard($actor->userId());
         }
         if ($actor->role() === User::ROLE_WAREHOUSE_STAFF) {
-            return ['role' => User::ROLE_WAREHOUSE_STAFF] + $this->queries->warehouseDashboard();
+            $dashboard = $this->queries->warehouseDashboard();
+            $dashboard['low_stock_count'] = count($dashboard['low_stock_rows']);
+
+            return ['role' => User::ROLE_WAREHOUSE_STAFF] + $dashboard;
         }
 
         return ['role' => User::ROLE_ADMIN] + $this->queries->adminDashboard();

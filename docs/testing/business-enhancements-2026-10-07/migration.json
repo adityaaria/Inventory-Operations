@@ -1,0 +1,92 @@
+{
+  "status": "passed",
+  "existing_tables_preserved": 16,
+  "total_tables": 21,
+  "new_tables_empty": [
+    "inventory_operation_items",
+    "inventory_operations",
+    "inventory_return_totals",
+    "purchase_order_closures",
+    "sales_order_rejections"
+  ],
+  "historical_fingerprints": {
+    "audit_logs": {
+      "rows": 126,
+      "digest": "66a452df4712daca6a88cea64fc4eaf26eaf06651ab2cd8dc5fc765913347167"
+    },
+    "categories": {
+      "rows": 2,
+      "digest": "477d2cffa17a876661ea409a3d928c696f1ca1fcdbb41036f866c410341a827e"
+    },
+    "customers": {
+      "rows": 2,
+      "digest": "5bb5cfc97ea9d4bc7592190c60d4f30e0c57f6195c1842911083ed72a8712775"
+    },
+    "login_attempts": {
+      "rows": 93,
+      "digest": "553b3ae7e33ebd0badfb58cf2ac346c3a3e8ba106c4381fe140156c21d3f2fca"
+    },
+    "operation_requests": {
+      "rows": 0,
+      "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "product_stocks": {
+      "rows": 60,
+      "digest": "5765bfc64520125732675f10a6021faf21f993f45189310570197a8917756187"
+    },
+    "products": {
+      "rows": 30,
+      "digest": "bca5faa3b2162e7784e49444fbc64f2a1adcd35b8868d1a5e447b3fa5b8f8d68"
+    },
+    "purchase_order_items": {
+      "rows": 31,
+      "digest": "ef783101a5d21ab944a8ef198cc540721f0c6b62b66ec49c99f2d2b731266bb1"
+    },
+    "purchase_orders": {
+      "rows": 31,
+      "digest": "66a4e9ec464e6f7960a6b683e4fd7968e830c5d3af31b326207770d3c057b5c7"
+    },
+    "sales_order_items": {
+      "rows": 24,
+      "digest": "e0cb41850dead78475dfb7dd2a011f6e95b66d0ffb0eff1bde9904050c134824"
+    },
+    "sales_orders": {
+      "rows": 24,
+      "digest": "5cb73134a1388d552d8c6eca5ee2c54b84d91734f06505995225af4455f2cc30"
+    },
+    "schema_versions": {
+      "rows": 6,
+      "digest": "a1c21cac63a1ff80e441e3630ce0cab8c3554f4910d6c00b141cc7925b909ec9"
+    },
+    "stock_ledger": {
+      "rows": 18,
+      "digest": "3085d037660c238704f21a229bf15956b315c80a644bc16e8b1ee37d5a700e3c"
+    },
+    "suppliers": {
+      "rows": 2,
+      "digest": "024a16c9d4686c3d7a5dec15a7f241d3c2c55bbb1f33f45b1f3d0094da108d6e"
+    },
+    "users": {
+      "rows": 5,
+      "digest": "b05a84da6b53f73e655a74ec525c31818765bd2076e50a8915b2fa24c6a5c46a"
+    },
+    "warehouses": {
+      "rows": 2,
+      "digest": "b8d7937cb5afb9367b7e7f9918c75e922f7a618e8431b21289402d9f513abff2"
+    }
+  },
+  "migration_runs": [
+    {
+      "status": "ready",
+      "migration": "20261007-business-operations",
+      "seed_replayed": false
+    },
+    {
+      "status": "ready",
+      "migration": "20261007-business-operations",
+      "seed_replayed": false
+    }
+  ],
+  "backup_completed_before_migration": true,
+  "stock_mutations_performed": false
+}

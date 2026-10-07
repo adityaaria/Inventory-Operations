@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "main_project_removed": false,
+  "projects": [
+    "inventory-e2e-business-1791375403746680000",
+    "inventory-quality-queue"
+  ]
+}

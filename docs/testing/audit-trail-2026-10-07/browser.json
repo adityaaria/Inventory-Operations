@@ -1,0 +1,41 @@
+{
+  "scope": "Chrome emulation; physical devices pending",
+  "results": [
+    {
+      "width": 360,
+      "title": "Audit Trail",
+      "overflow": false,
+      "rows": 10,
+      "filters": true,
+      "pagination": true,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "title": "Audit Trail",
+      "overflow": false,
+      "rows": 10,
+      "filters": true,
+      "pagination": true,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "title": "Audit Trail",
+      "overflow": false,
+      "rows": 10,
+      "filters": true,
+      "pagination": true,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "title": "Audit Trail",
+      "overflow": false,
+      "rows": 10,
+      "filters": true,
+      "pagination": true,
+      "passed": true
+    }
+  ]
+}

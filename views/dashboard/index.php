@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <script src="/assets/js/page-transitions.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard - Inventory & Order Management</title>
@@ -16,6 +17,7 @@
     <script defer src="/assets/js/forms.js"></script>
     <script defer src="/assets/js/tables.js"></script>
     <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/inventory-operations.js"></script>
 </head>
 <body>
     <?php $workspaceTitle = 'Dashboard'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
@@ -59,12 +61,12 @@
                 <span>Inventory Value</span>
                 <strong><?= number_format((float) $dashboard['inventory_value'], 2) ?></strong>
             </article>
-            <?php if (isset($dashboard['low_stock_count'])): ?>
-                <article class="metric-card">
-                    <span>Low Stock Rows</span>
-                    <strong><?= (int) $dashboard['low_stock_count'] ?></strong>
-                </article>
-            <?php endif; ?>
+        <?php endif; ?>
+        <?php if (isset($dashboard['low_stock_count'])): ?>
+            <article class="metric-card">
+                <span>Low Stock Rows</span>
+                <strong><?= (int) $dashboard['low_stock_count'] ?></strong>
+            </article>
         <?php endif; ?>
         <?php if (isset($dashboard['po_receipt_queue'])): ?>
             <article class="metric-card">

@@ -1,0 +1,17 @@
+{
+  "products_created": 10000,
+  "purchase_orders_created": 10000,
+  "sales_orders_created": 10000,
+  "elapsed_seconds": 132.09,
+  "ledger_movements_expected": 40000,
+  "quantity_expected": 120000,
+  "products_rows": 10030,
+  "product_stocks_rows": 20060,
+  "purchase_orders_rows": 10013,
+  "sales_orders_rows": 10012,
+  "stock_ledger_rows": 40000,
+  "audit_logs_rows": 20000,
+  "capacity_quantity": 120000,
+  "ledger_balance_mismatches": 0,
+  "passed": true
+}

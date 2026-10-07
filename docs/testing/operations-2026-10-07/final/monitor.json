@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "status": "healthy",
+    "project": "inventory-load-ops-1791363224677583000",
+    "alerts": []
+  },
+  "error_injection": {
+    "status": "alert",
+    "project": "inventory-load-ops-1791363224677583000",
+    "alerts": [
+      "application_error_threshold"
+    ]
+  },
+  "database_stopped": {
+    "status": "alert",
+    "project": "inventory-load-ops-1791363224677583000",
+    "alerts": [
+      "db_not_running",
+      "application_not_ready"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "status": "backed_up",
+  "location": "ignored var/backups",
+  "bytes": 7404,
+  "sha256": "c19555bb2403e70b342310d019a893f65398935f55e8d168c456dd061a6cae11",
+  "archive_mode": "0o600",
+  "directory_mode": "0o700",
+  "integrity_verified": true
+}

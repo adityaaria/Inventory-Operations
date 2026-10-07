@@ -13,7 +13,7 @@ final class MySqlTransactionManager implements TransactionManagerInterface
     public function run(callable $operation): mixed
     {
         // Join the same connection-owned transaction; exceptions must propagate to its owner.
-        if ($this->pdo->inTransaction()) return $operation();
+        if ($this->pdo->inTransaction()) { return $operation(); }
         $this->pdo->beginTransaction();
         try {
             $result = $operation();

@@ -20,6 +20,9 @@
         const label = labelFor(field);
         const value = String(field.value ?? '').trim();
 
+        if (field.required && field.type === 'checkbox' && !field.checked) {
+            return `${label} must be confirmed.`;
+        }
         if (field.required && value === '') {
             return `${label} is required.`;
         }

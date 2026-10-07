@@ -154,9 +154,10 @@ Table stock_ledger {
   id bigint [pk, increment]
   product_id int [not null]
   warehouse_id int [not null]
-  movement_type varchar(10) [not null, note: 'ENUM(Receipt, Issue)']
-  quantity int [not null, note: 'CHECK > 0']
-  reference_type varchar(20) [not null, note: 'e.g. purchase_order, sales_order']
+  movement_type varchar(10) [not null, note: 'ENUM(Receipt, Issue, Adjustment)']
+  quantity int [not null, note: 'CHECK > 0; absolute size of the movement']
+  quantity_delta bigint [note: 'Signed change, required for Adjustment and NULL otherwise; CHECK ABS(quantity_delta) = quantity']
+  reference_type varchar(20) [not null, note: 'PO, SO or stock operation reference']
   reference_id int [not null]
   performed_by int [not null]
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
@@ -264,3 +265,87 @@ Ref: sales_orders.approved_by > users.id
 
 Ref: sales_order_items.sales_order_id > sales_orders.id [delete: cascade]
 Ref: sales_order_items.product_id > products.id
+
+// Optional business operations (ADR-008, ADR-009), added 2026-10-07 from database/schema-and-seed.sql.
+
+Table purchase_order_closures {
+  purchase_order_id int [pk, note: 'One closure per PO; closes the unreceived remainder, keeps received goods (D-01)']
+  closed_by int [not null]
+  reason varchar(500) [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table sales_order_rejections {
+  sales_order_id int [pk, note: 'Rejection reason kept separately; the SO status becomes Cancelled (D-02)']
+  rejected_by int [not null]
+  reason varchar(500) [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table inventory_operations {
+  id int [pk, increment]
+  kind varchar(20) [not null, note: 'ENUM(Adjustment, Transfer, SupplierReturn, CustomerReturn)']
+  status varchar(20) [not null, default: 'PendingApproval', note: 'ENUM(PendingApproval, Approved, Rejected, Posted, Cancelled)']
+  warehouse_id int [not null]
+  destination_id int [note: 'Required and different from warehouse_id only for Transfer']
+  reason varchar(500) [not null]
+  decision_reason varchar(500)
+  condition_confirmed boolean [not null, default: false, note: 'CHECK true for CustomerReturn']
+  created_by int [not null]
+  approved_by int [note: 'CHECK approved_by <> created_by (independent approval)']
+  posted_by int
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  approved_at timestamp
+  posted_at timestamp
+
+  indexes {
+    (status, created_at) [name: 'idx_inventory_operations_status_time']
+  }
+}
+
+Table inventory_operation_items {
+  id bigint [pk, increment]
+  operation_id int [not null]
+  product_id int [not null]
+  quantity int [not null, note: 'Counted quantity for Adjustment, moved quantity otherwise']
+  baseline int [note: 'Stock observed at count time; posting rejects a stale baseline']
+  source_ledger_id bigint [note: 'Original receipt/issue for returns']
+
+  indexes {
+    (operation_id, product_id) [unique, name: 'uq_operation_product']
+    source_ledger_id [name: 'idx_operation_source']
+  }
+}
+
+Table inventory_return_totals {
+  source_ledger_id bigint [pk, note: 'Locked per original movement to serialise concurrent returns']
+  returned_quantity int [not null, default: 0]
+}
+
+Table operation_requests {
+  id bigint [pk, increment]
+  actor_id int [not null]
+  request_key char(32) [not null, note: 'Idempotency key from the form']
+  payload_hash char(64) [not null]
+  completed boolean [not null, default: false]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (actor_id, request_key) [unique, name: 'uq_operation_request_actor_key']
+  }
+}
+
+Ref: purchase_order_closures.purchase_order_id - purchase_orders.id
+Ref: purchase_order_closures.closed_by > users.id
+Ref: sales_order_rejections.sales_order_id - sales_orders.id
+Ref: sales_order_rejections.rejected_by > users.id
+Ref: inventory_operations.warehouse_id > warehouses.id
+Ref: inventory_operations.destination_id > warehouses.id
+Ref: inventory_operations.created_by > users.id
+Ref: inventory_operations.approved_by > users.id
+Ref: inventory_operations.posted_by > users.id
+Ref: inventory_operation_items.operation_id > inventory_operations.id
+Ref: inventory_operation_items.product_id > products.id
+Ref: inventory_operation_items.source_ledger_id > stock_ledger.id
+Ref: inventory_return_totals.source_ledger_id - stock_ledger.id
+Ref: operation_requests.actor_id > users.id

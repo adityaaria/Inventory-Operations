@@ -1,0 +1,19 @@
+{
+  "project": "inventory-load-capacity-1791364580873605000",
+  "url": "https://localhost:18445",
+  "users": 8,
+  "profile": "capacity",
+  "role": "admin",
+  "paced_duration_seconds": 60.0,
+  "expected_requests": 3200,
+  "completed_requests": 3200,
+  "elapsed_seconds": 60.884,
+  "requests_per_second": 52.56,
+  "p50_ms": 30.59,
+  "p95_ms": 60.87,
+  "max_ms": 655.51,
+  "p95_budget_ms": 2000,
+  "failures": [],
+  "passed": true,
+  "scope": "authenticated reads; independent sessions; login time excluded from latency but included in elapsed; no stock mutations"
+}

@@ -27,6 +27,7 @@ final class SalesOrderService
         private readonly array $customers,
         private readonly array $warehouses,
         private readonly StockService $stockService,
+        private readonly ?OperationIdempotency $idempotency = null,
     ) {
     }
 
@@ -84,11 +85,15 @@ final class SalesOrderService
         });
     }
 
-    public function issue(AuthContext $actor, int $id): void
+    public function issue(AuthContext $actor, int $id, ?string $requestKey = null): void
     {
-        $this->stockService->transaction(function () use ($actor, $id): void {
+        $this->stockService->transaction(function () use ($actor, $id, $requestKey): void {
             $this->assertCanIssue($actor);
             $order = $this->findOrder($id);
+            if ($requestKey !== null) {
+                if ($this->idempotency === null) { throw new \LogicException('Idempotency repository is required.'); }
+                if ($this->idempotency->replay($actor->userId(), $requestKey, 'issue', $id)) { return; }
+            }
             if ($order->status() !== SalesOrder::STATUS_APPROVED) {
                 throw new ValidationException('Only Approved sales orders can be issued.');
             }
@@ -106,6 +111,7 @@ final class SalesOrderService
                 $order->id(),
                 fn (): null => $this->markFulfilled($order->id()),
             );
+            if ($requestKey !== null) { $this->idempotency->complete($actor->userId(), $requestKey); }
 
         });
     }

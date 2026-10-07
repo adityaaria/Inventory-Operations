@@ -21,8 +21,8 @@ final class RequestAuditRecorder
             return;
         }
 
-        if ($response->statusCode() < 400 && in_array($request->path(), ['/purchase-orders/receive', '/sales-orders/issue'], true)) {
-            return; // Success is recorded atomically with the stock movement.
+        if ($response->statusCode() < 400 && in_array($request->path(), ['/purchase-orders/receive', '/sales-orders/issue', '/purchase-orders/close-remainder', '/sales-orders/reject', '/inventory-operations', '/inventory-operations/decide', '/inventory-operations/post'], true)) {
+            return; // Success is recorded atomically by the business service.
         }
         $parts = array_values(array_filter(explode('/', trim($request->path(), '/'))));
         if ($parts === []) {

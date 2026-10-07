@@ -113,7 +113,7 @@ Dashboard/report:
 | ARCH-02 | ADR-002, ADR-003, stock integration tests. |
 | DESIGN-01 | Initial and as-built diagrams. |
 | DESIGN-02 | ADR-001, ADR-002, ADR-003. |
-| DESIGN-03 | Refactor log, SRP audit, tech debt; Git evidence blocked by no Git repo. |
+| DESIGN-03 | Refactor log, SRP audit and debt register; local refactor commit 5cef0dd now exists. Remote publication/tag is separate. |
 | DESIGN-04 | Critique document. |
 | TEST-01 | Unit test result evidence. |
 | TEST-02 | Integration test result evidence against MySQL. |
@@ -151,8 +151,12 @@ Passed:
 
 Blocked:
 
-- Git status, `refactor:` commit evidence, and final tag are unavailable because this workspace is not a Git repository.
+- Historical no-Git blocker is resolved: local refactor commit 5cef0dd exists. Final release tag, remote publication and human review remain separate gates.
 
 ## Current verification — 7 October 2026
 
 The workspace is a Git repository; the older statement above about unavailable Git status is historical and no longer applies. Release commit/tag and human review are not claimed. Functional verification passes: 329 PHP tests, 50 JS tests, 199 HTTP checks, 303 browser page checks and 110 dialog checks. A fresh dependency build failed on DNS; matching-lock offline verification passed. Production operations/trainer decisions remain separate gates. See [current evidence](../testing/end-to-end-verification-2026-10-07.md).
+
+## Operational priorities 1–6 — current status
+
+Standard Docker quality build passes: 334 PHP tests/1418 assertions, PHPStan and 50 JavaScript tests. Production images build successfully; isolated HTTPS/FPM checks, complete 15-table restore, guard/alert tests, 320-request burst and 3200-read/60-second benchmark pass. Main app remains on localhost:8080, private backup exists, readiness/session/monitor checks pass. CI workflow is prepared, not claimed executed on GitHub. Android Chrome/iPhone Safari checklist is NOT RUN; trainer defaults unchanged. Public certificates/renewal, off-host encrypted backups and scheduler/alert ownership require the actual deployment environment. See [current operations evidence](../testing/operational-enhancements-2026-10-07.md).

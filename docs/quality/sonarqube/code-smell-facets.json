@@ -1,0 +1,204 @@
+{
+ "severities": [
+  {
+   "val": "MAJOR",
+   "count": 209
+  },
+  {
+   "val": "CRITICAL",
+   "count": 50
+  },
+  {
+   "val": "MINOR",
+   "count": 45
+  },
+  {
+   "val": "INFO",
+   "count": 0
+  },
+  {
+   "val": "BLOCKER",
+   "count": 0
+  }
+ ],
+ "languages": [
+  {
+   "val": "php",
+   "count": 135
+  },
+  {
+   "val": "js",
+   "count": 55
+  },
+  {
+   "val": "css",
+   "count": 48
+  },
+  {
+   "val": "web",
+   "count": 43
+  },
+  {
+   "val": "py",
+   "count": 23
+  }
+ ],
+ "rules": [
+  {
+   "val": "php:S112",
+   "count": 49
+  },
+  {
+   "val": "css:S4666",
+   "count": 47
+  },
+  {
+   "val": "javascript:S7721",
+   "count": 27
+  },
+  {
+   "val": "php:S1192",
+   "count": 24
+  },
+  {
+   "val": "Web:S6819",
+   "count": 24
+  },
+  {
+   "val": "php:S1481",
+   "count": 18
+  },
+  {
+   "val": "Web:S6845",
+   "count": 16
+  },
+  {
+   "val": "php:S3358",
+   "count": 12
+  },
+  {
+   "val": "php:S1172",
+   "count": 12
+  },
+  {
+   "val": "python:S1192",
+   "count": 9
+  },
+  {
+   "val": "php:S3776",
+   "count": 9
+  },
+  {
+   "val": "javascript:S7781",
+   "count": 6
+  },
+  {
+   "val": "javascript:S6582",
+   "count": 5
+  },
+  {
+   "val": "python:S3776",
+   "count": 4
+  },
+  {
+   "val": "php:S107",
+   "count": 4
+  },
+  {
+   "val": "python:S5778",
+   "count": 4
+  },
+  {
+   "val": "php:S6353",
+   "count": 3
+  },
+  {
+   "val": "javascript:S6353",
+   "count": 3
+  },
+  {
+   "val": "Web:S5255",
+   "count": 3
+  },
+  {
+   "val": "python:S6353",
+   "count": 2
+  },
+  {
+   "val": "javascript:S7755",
+   "count": 2
+  },
+  {
+   "val": "javascript:S7768",
+   "count": 2
+  },
+  {
+   "val": "javascript:S2486",
+   "count": 2
+  },
+  {
+   "val": "javascript:S3776",
+   "count": 2
+  },
+  {
+   "val": "javascript:S2004",
+   "count": 1
+  },
+  {
+   "val": "javascript:S7754",
+   "count": 1
+  },
+  {
+   "val": "php:S1186",
+   "count": 1
+  },
+  {
+   "val": "python:S6035",
+   "count": 1
+  },
+  {
+   "val": "javascript:S2681",
+   "count": 1
+  },
+  {
+   "val": "python:S1481",
+   "count": 1
+  },
+  {
+   "val": "css:S7924",
+   "count": 1
+  },
+  {
+   "val": "php:S1448",
+   "count": 1
+  },
+  {
+   "val": "javascript:S7737",
+   "count": 1
+  },
+  {
+   "val": "javascript:S3358",
+   "count": 1
+  },
+  {
+   "val": "python:S108",
+   "count": 1
+  },
+  {
+   "val": "php:S1185",
+   "count": 1
+  },
+  {
+   "val": "php:S1142",
+   "count": 1
+  },
+  {
+   "val": "javascript:S7761",
+   "count": 1
+  },
+  {
+   "val": "python:S3358",
+   "count": 1
+  }
+ ]
+}

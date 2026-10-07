@@ -1,0 +1,19 @@
+ok - PO draft saved per user/role without CSRF token
+ok - restore rebuilds three PO lines and server check passes
+ok - cancelled confirmation keeps the draft
+ok - confirmed submit sends the restored draft once and clears it
+ok - modal create form gets multi-item controls and draft saving
+ok - discard removes the draft
+ok - stock proposal kind, reason and items restored
+ok - logout clears drafts
+ok - another user's draft is never offered
+ok - restored SO warns that current stock is below the requested quantity
+ok - multi-item SO restored with a stock warning per line
+ok - empty replenishment selection is blocked without a stuck loader
+ok - selection across pages prefills one PO and is then cleared
+ok - no page-level horizontal overflow at 360px
+ok - no page-level horizontal overflow at 390px
+ok - no page-level horizontal overflow at 768px
+ok - no page-level horizontal overflow at 1440px
+ok - no uncaught page exceptions
+{"passed":true,"checks":18,"results":["PO draft saved per user/role without CSRF token","restore rebuilds three PO lines and server check passes","cancelled confirmation keeps the draft","confirmed submit sends the restored draft once and clears it","modal create form gets multi-item controls and draft saving","discard removes the draft","stock proposal kind, reason and items restored","logout clears drafts","another user's draft is never offered","restored SO warns that current stock is below the requested quantity","multi-item SO restored with a stock warning per line","empty replenishment selection is blocked without a stuck loader","selection across pages prefills one PO and is then cleared","no page-level horizontal overflow at 360px","no page-level horizontal overflow at 390px","no page-level horizontal overflow at 768px","no page-level horizontal overflow at 1440px","no uncaught page exceptions"]}
