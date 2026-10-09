@@ -6,11 +6,12 @@ namespace App\Repository\MySql;
 
 use App\Entity\PurchaseOrder;
 use App\Entity\PurchaseOrderItem;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\PurchaseOrderRepositoryInterface;
 use App\Support\OrderSearchCriteria;
 use App\Support\PaginatedResult;
 use PDO;
-use RuntimeException;
 
 final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInterface
 {
@@ -27,7 +28,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
              FROM purchase_orders ORDER BY order_date DESC, id DESC'
         );
         if ($statement === false) {
-            throw new RuntimeException('Unable to query purchase orders.');
+            throw new PersistenceException('Unable to query purchase orders.');
         }
 
         return $this->hydrateRows($statement->fetchAll(PDO::FETCH_ASSOC));
@@ -72,7 +73,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
     public function lockById(int $id): ?PurchaseOrder
     {
         if (!$this->pdo->inTransaction()) {
-            throw new RuntimeException('Source order locks require a transaction.');
+            throw new PersistenceException('Source order locks require a transaction.');
         }
         $statement = $this->pdo->prepare(
             'SELECT id, order_number, supplier_id, destination_warehouse_id, status, order_date, created_by
@@ -207,7 +208,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
 
     private function findRequired(int $id): PurchaseOrder
     {
-        return $this->findById($id) ?? throw new RuntimeException("Purchase order not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Purchase order not found after write: {$id}");
     }
 
     /** @return array{0: string, 1: array<string, string>} */

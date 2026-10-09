@@ -62,3 +62,30 @@ test('client sorting skips action, blank and opted-out headers so no meaningless
     const skip = text => /^(actions?|)$/i.test(text.trim());
     assert.deepEqual(['Action', 'Actions', ' ', 'Status', 'Action Date'].map(skip), [true, true, true, false, false]);
 });
+
+test('table regions get a keyboard tab stop only while they actually scroll', () => {
+    const context = {document: {querySelectorAll() { return []; }}};
+    vm.runInNewContext(source, context);
+    const region = {
+        scrollWidth: 900, clientWidth: 400, scrollHeight: 300, clientHeight: 300, attributes: {},
+        setAttribute(name, value) { this.attributes[name] = value; },
+        removeAttribute(name) { delete this.attributes[name]; },
+    };
+    let observed = null;
+    const view = {ResizeObserver: class { constructor(callback) { observed = callback; } observe(target) { assert.equal(target, region); } }};
+
+    context.InventoryTables.watchScrollRegions({querySelectorAll: (selector) => (selector === '.table-scroll[aria-label]' ? [region] : [])}, view);
+    assert.equal(region.attributes.tabindex, '0');
+
+    region.clientWidth = 900; // widened viewport: the table now fits
+    observed();
+    assert.equal('tabindex' in region.attributes, false);
+
+    const listeners = {};
+    const fallback = {...region, clientWidth: 100, attributes: {}};
+    context.InventoryTables.watchScrollRegions({querySelectorAll: () => [fallback]}, {addEventListener: (name, callback) => { listeners[name] = callback; }});
+    assert.equal(fallback.attributes.tabindex, '0');
+    fallback.clientWidth = 900;
+    listeners.resize();
+    assert.equal('tabindex' in fallback.attributes, false);
+});

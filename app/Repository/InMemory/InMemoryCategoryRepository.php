@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Repository\InMemory;
 
 use App\Entity\Category;
+use App\Exception\EntityNotFoundException;
 use App\Repository\Contract\CategoryRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
-use RuntimeException;
 
 final class InMemoryCategoryRepository implements CategoryRepositoryInterface
 {
@@ -79,6 +79,6 @@ final class InMemoryCategoryRepository implements CategoryRepositoryInterface
 
     private function findRequired(int $id): Category
     {
-        return $this->findById($id) ?? throw new RuntimeException("Category not found: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Category not found: {$id}");
     }
 }

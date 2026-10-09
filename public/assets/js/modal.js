@@ -1,6 +1,114 @@
 'use strict';
 
 (function exposeModal(root) {
+    function createPageLoader() {
+        const loader = document.createElement('div');
+        loader.className = 'page-loading';
+        loader.setAttribute('role', 'status');
+        loader.setAttribute('aria-live', 'polite');
+        loader.setAttribute('aria-hidden', 'true');
+        loader.innerHTML = '<span aria-hidden="true"></span><strong class="page-loading-label">Loading page…</strong>';
+        return loader;
+    }
+
+    function openWithTransition(backdrop) {
+        if (backdrop._pendingCloseCancel) {
+            backdrop._pendingCloseCancel();
+            delete backdrop._pendingCloseCancel;
+        }
+        backdrop.hidden = false;
+        requestAnimationFrame(() => backdrop.classList.add('is-open'));
+    }
+
+    function closeWithTransition(backdrop, cleanup) {
+        if (!backdrop.classList.contains('is-open')) {
+            cleanup();
+            return;
+        }
+        backdrop.classList.remove('is-open');
+        const finish = () => {
+            clearTimeout(timeoutId);
+            backdrop.removeEventListener('transitionend', onEnd);
+            delete backdrop._pendingCloseCancel;
+            cleanup();
+        };
+        // 220ms = the 180ms CSS transition above plus a small safety margin,
+        // in case transitionend never fires (e.g. the element was removed).
+        const timeoutId = setTimeout(finish, 220);
+        function onEnd(event) {
+            if (event.target !== backdrop) {
+                return;
+            }
+            finish();
+        }
+        backdrop.addEventListener('transitionend', onEnd);
+        backdrop._pendingCloseCancel = () => {
+            clearTimeout(timeoutId);
+            backdrop.removeEventListener('transitionend', onEnd);
+        };
+    }
+
+    function trapFocus(container, event) {
+        const focusable = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+            .filter((element) => !element.disabled && !element.hidden);
+        if (focusable.length === 0) {
+            event.preventDefault();
+            return;
+        }
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    function createConfirmDialog() {
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-backdrop';
+        dialog.hidden = true;
+        dialog.innerHTML = `
+            <section class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+                <header class="modal-header"><h2 id="confirm-title">Confirm action</h2></header>
+                <div class="modal-body"><p class="confirm-message">Continue this action?</p></div>
+                <div class="confirm-actions modal-footer">
+                    <button type="button" class="button confirm-cancel">Cancel</button>
+                    <button type="button" class="button-primary confirm-submit">Continue</button>
+                </div>
+            </section>
+        `;
+        return dialog;
+    }
+
+    function askConfirmation(message) {
+        const dialog = document.querySelector('.confirm-backdrop');
+        if (!dialog) {
+            return Promise.resolve(window.confirm(message));
+        }
+        dialog.querySelector('.confirm-message').textContent = message;
+        openWithTransition(dialog);
+        const hide = () => { dialog.hidden = true; };
+
+        return new Promise((resolve) => {
+            const cancel = dialog.querySelector('.confirm-cancel');
+            const submit = dialog.querySelector('.confirm-submit');
+            const finish = (answer) => {
+                closeWithTransition(dialog, hide);
+                cancel.removeEventListener('click', onCancel);
+                submit.removeEventListener('click', onSubmit);
+                resolve(answer);
+            };
+            const onCancel = () => finish(false);
+            const onSubmit = () => finish(true);
+            cancel.addEventListener('click', onCancel);
+            submit.addEventListener('click', onSubmit);
+            submit.focus();
+        });
+    }
+
     root.InventoryModal = {
         create({state}) {
             let enhanceForms = () => {};
@@ -25,16 +133,6 @@
                 }
             }
 
-            function createPageLoader() {
-                const loader = document.createElement('div');
-                loader.className = 'page-loading';
-                loader.setAttribute('role', 'status');
-                loader.setAttribute('aria-live', 'polite');
-                loader.setAttribute('aria-hidden', 'true');
-                loader.innerHTML = '<span aria-hidden="true"></span><strong class="page-loading-label">Loading page…</strong>';
-                return loader;
-            }
-
             function setPageLoading(active) {
                 if (active && pageLoadingActive) return;
                 pageLoadingActive = active;
@@ -52,43 +150,6 @@
                     loader?.setAttribute('aria-hidden', 'false');
                     pageLoadingTimer = null;
                 }, 180);
-            }
-
-            function openWithTransition(backdrop) {
-                if (backdrop._pendingCloseCancel) {
-                    backdrop._pendingCloseCancel();
-                    delete backdrop._pendingCloseCancel;
-                }
-                backdrop.hidden = false;
-                requestAnimationFrame(() => backdrop.classList.add('is-open'));
-            }
-
-            function closeWithTransition(backdrop, cleanup) {
-                if (!backdrop.classList.contains('is-open')) {
-                    cleanup();
-                    return;
-                }
-                backdrop.classList.remove('is-open');
-                const finish = () => {
-                    clearTimeout(timeoutId);
-                    backdrop.removeEventListener('transitionend', onEnd);
-                    delete backdrop._pendingCloseCancel;
-                    cleanup();
-                };
-                // 220ms = the 180ms CSS transition above plus a small safety margin,
-                // in case transitionend never fires (e.g. the element was removed).
-                const timeoutId = setTimeout(finish, 220);
-                function onEnd(event) {
-                    if (event.target !== backdrop) {
-                        return;
-                    }
-                    finish();
-                }
-                backdrop.addEventListener('transitionend', onEnd);
-                backdrop._pendingCloseCancel = () => {
-                    clearTimeout(timeoutId);
-                    backdrop.removeEventListener('transitionend', onEnd);
-                };
             }
 
             function createModal() {
@@ -122,41 +183,6 @@
                     }
                 });
                 return modal;
-            }
-
-            function trapFocus(container, event) {
-                const focusable = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
-                    .filter((element) => !element.disabled && !element.hidden);
-                if (focusable.length === 0) {
-                    event.preventDefault();
-                    return;
-                }
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (event.shiftKey && document.activeElement === first) {
-                    event.preventDefault();
-                    last.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault();
-                    first.focus();
-                }
-            }
-
-            function createConfirmDialog() {
-                const dialog = document.createElement('div');
-                dialog.className = 'confirm-backdrop';
-                dialog.hidden = true;
-                dialog.innerHTML = `
-                    <section class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-                        <header class="modal-header"><h2 id="confirm-title">Confirm action</h2></header>
-                        <div class="modal-body"><p class="confirm-message">Continue this action?</p></div>
-                        <div class="confirm-actions modal-footer">
-                            <button type="button" class="button confirm-cancel">Cancel</button>
-                            <button type="button" class="button-primary confirm-submit">Continue</button>
-                        </div>
-                    </section>
-                `;
-                return dialog;
             }
 
             async function openFormModal(href) {
@@ -250,33 +276,6 @@
                         state.modalTrigger.focus();
                     }
                     state.modalTrigger = null;
-                });
-            }
-
-            function askConfirmation(message) {
-                const dialog = document.querySelector('.confirm-backdrop');
-                if (!dialog) {
-                    return Promise.resolve(window.confirm(message));
-                }
-                dialog.querySelector('.confirm-message').textContent = message;
-                openWithTransition(dialog);
-
-                return new Promise((resolve) => {
-                    const cancel = dialog.querySelector('.confirm-cancel');
-                    const submit = dialog.querySelector('.confirm-submit');
-                    const finish = (answer) => {
-                        closeWithTransition(dialog, () => {
-                            dialog.hidden = true;
-                        });
-                        cancel.removeEventListener('click', onCancel);
-                        submit.removeEventListener('click', onSubmit);
-                        resolve(answer);
-                    };
-                    const onCancel = () => finish(false);
-                    const onSubmit = () => finish(true);
-                    cancel.addEventListener('click', onCancel);
-                    submit.addEventListener('click', onSubmit);
-                    submit.focus();
                 });
             }
 

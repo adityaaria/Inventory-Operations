@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Entity\Supplier;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\SupplierRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
 use PDO;
-use RuntimeException;
 
 final class MySqlSupplierRepository implements SupplierRepositoryInterface
 {
@@ -40,7 +41,7 @@ final class MySqlSupplierRepository implements SupplierRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, email, phone, address, is_active FROM suppliers ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query suppliers.');
+            throw new PersistenceException('Unable to query suppliers.');
         }
         return array_map(fn (array $row): Supplier => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -87,6 +88,6 @@ final class MySqlSupplierRepository implements SupplierRepositoryInterface
 
     private function findRequired(int $id): Supplier
     {
-        return $this->findById($id) ?? throw new RuntimeException("Supplier not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Supplier not found after write: {$id}");
     }
 }

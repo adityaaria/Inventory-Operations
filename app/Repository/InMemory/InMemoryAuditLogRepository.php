@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository\InMemory;
 
 use App\Repository\Contract\AuditLogRepositoryInterface;
+use App\Support\RequestOrigin;
 
 final class InMemoryAuditLogRepository implements AuditLogRepositoryInterface
 {
@@ -14,7 +15,7 @@ final class InMemoryAuditLogRepository implements AuditLogRepositoryInterface
     /**
      * @param array<string, mixed> $metadata
      */
-    public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void
+    public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, RequestOrigin $origin, array $metadata = []): void
     {
         $this->entries[] = [
             'actor_id' => $actorId,
@@ -22,8 +23,8 @@ final class InMemoryAuditLogRepository implements AuditLogRepositoryInterface
             'entity_type' => $entityType,
             'entity_id' => $entityId,
             'status' => $status,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
+            'ip_address' => $origin->ipAddress,
+            'user_agent' => $origin->userAgent,
             'metadata' => $metadata,
         ];
     }

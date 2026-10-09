@@ -33,15 +33,17 @@ final class PurchaseOrderService
     }
 
     /**
-     * @param list<array{product_id: int, quantity: int, purchase_price: float}> $items
+     * Line prices always come from the product master (purchase_price); any price sent by the client is ignored.
+     *
+     * @param list<array{product_id: int, quantity: int}> $items
      */
     public function createDraft(AuthContext $actor, string $orderNumber, int $supplierId, int $warehouseId, array $items): PurchaseOrder
     {
         $this->assertCanCreate($actor);
         $this->assertHeader($orderNumber, $supplierId, $warehouseId);
-        $this->assertItems($items);
+        $lines = $this->pricedItems($items);
 
-        return $this->orders->createDraft(trim($orderNumber), $supplierId, $warehouseId, $actor->userId(), $items);
+        return $this->orders->createDraft(trim($orderNumber), $supplierId, $warehouseId, $actor->userId(), $lines);
     }
 
     public function markOrdered(AuthContext $actor, int $id): void
@@ -66,36 +68,13 @@ final class PurchaseOrderService
         $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId, $requestKey): void {
             $this->assertCanReceive($actor);
             $order = $this->findOrder($id);
-            if ($requestKey !== null) {
-                if ($this->idempotency === null) { throw new \LogicException('Idempotency repository is required.'); }
-                if ($this->idempotency->replay($actor->userId(), $requestKey, 'receipt', $id, $receivedQuantitiesByItemId)) { return; }
-            }
+            if ($this->isReplayedReceipt($actor, $id, $receivedQuantitiesByItemId, $requestKey)) { return; }
             if ($this->exceptions?->closure($id)!==null) { throw new ValidationException('This PO remainder is closed.'); }
             if (!in_array($order->status(), PurchaseOrder::RECEIVABLE_STATUSES, true)) {
                 throw new ValidationException('Purchase order is not receivable.');
             }
 
-            $acceptedReceipts = [];
-            $movements = [];
-            foreach ($order->items() as $item) {
-                $quantity = $receivedQuantitiesByItemId[$item->id()] ?? 0;
-                if ($quantity === 0) {
-                    continue;
-                }
-                if ($quantity < 0) {
-                    throw new ValidationException('Receipt quantity must be positive.');
-                }
-                if ($quantity > $item->remainingQuantity()) {
-                    throw new ValidationException('Receipt quantity cannot exceed remaining quantity.');
-                }
-                $acceptedReceipts[$item->id()] = $quantity;
-                $movements[] = new StockMovement($item->productId(), $quantity);
-            }
-
-            if ($acceptedReceipts === []) {
-                throw new ValidationException('At least one receipt quantity is required.');
-            }
-
+            [$acceptedReceipts, $movements] = $this->acceptedReceipts($order, $receivedQuantitiesByItemId);
             $status = $this->statusAfterReceipt($order, $acceptedReceipts);
             $this->stockService->receive(
                 $order->destinationWarehouseId(),
@@ -105,9 +84,54 @@ final class PurchaseOrderService
                 $order->id(),
                 fn (): null => $this->recordReceipt($order->id(), $acceptedReceipts, $status),
             );
-            if ($requestKey !== null) { $this->idempotency->complete($actor->userId(), $requestKey); }
+            if ($requestKey !== null) { $this->idempotency?->complete($actor->userId(), $requestKey); }
 
         });
+    }
+
+    /**
+     * A repeated request key with the same payload is a completed replay; a different payload is rejected by the repository.
+     *
+     * @param array<int, int> $receivedQuantitiesByItemId
+     */
+    private function isReplayedReceipt(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey): bool
+    {
+        if ($requestKey === null) {
+            return false;
+        }
+        if ($this->idempotency === null) { throw new \LogicException('Idempotency repository is required.'); }
+
+        return $this->idempotency->replay($actor->userId(), $requestKey, 'receipt', $id, $receivedQuantitiesByItemId);
+    }
+
+    /**
+     * @param array<int, int> $receivedQuantitiesByItemId
+     * @return array{0: array<int, int>, 1: list<StockMovement>} accepted quantity per item id and the matching stock movements
+     */
+    private function acceptedReceipts(PurchaseOrder $order, array $receivedQuantitiesByItemId): array
+    {
+        $acceptedReceipts = [];
+        $movements = [];
+        foreach ($order->items() as $item) {
+            $quantity = $receivedQuantitiesByItemId[$item->id()] ?? 0;
+            if ($quantity === 0) {
+                continue;
+            }
+            if ($quantity < 0) {
+                throw new ValidationException('Receipt quantity must be positive.');
+            }
+            if ($quantity > $item->remainingQuantity()) {
+                throw new ValidationException('Receipt quantity cannot exceed remaining quantity.');
+            }
+            $acceptedReceipts[$item->id()] = $quantity;
+            $movements[] = new StockMovement($item->productId(), $quantity);
+        }
+
+        if ($acceptedReceipts === []) {
+            throw new ValidationException('At least one receipt quantity is required.');
+        }
+
+        return [$acceptedReceipts, $movements];
     }
 
     public function cancel(AuthContext $actor, int $id): void
@@ -162,15 +186,19 @@ final class PurchaseOrderService
     }
 
     /**
-     * @param list<array{product_id: int, quantity: int, purchase_price: float}> $items
+     * Validates the lines and prices each one from the active product's master purchase_price.
+     *
+     * @param list<array{product_id: int, quantity: int}> $items
+     * @return list<array{product_id: int, quantity: int, purchase_price: float}>
      */
-    private function assertItems(array $items): void
+    private function pricedItems(array $items): array
     {
         if ($items === []) {
             throw new ValidationException('At least one item is required.');
         }
 
         $seenProducts = [];
+        $lines = [];
         foreach ($items as $item) {
             $product = $this->products->findById($item['product_id']);
             if (!$product instanceof Product || !$product->isActive()) {
@@ -182,12 +210,11 @@ final class PurchaseOrderService
             if ($item['quantity'] <= 0) {
                 throw new ValidationException('Quantity must be positive.');
             }
-            \App\Validation\InputValidator::nonNegativeMoney('purchase_price', $item['purchase_price']);
-            if ($item['purchase_price'] < 0) {
-                throw new ValidationException('Purchase price cannot be negative.');
-            }
             $seenProducts[$item['product_id']] = true;
+            $lines[] = ['product_id' => $item['product_id'], 'quantity' => $item['quantity'], 'purchase_price' => $product->purchasePrice()];
         }
+
+        return $lines;
     }
 
     private function findOrder(int $id): PurchaseOrder

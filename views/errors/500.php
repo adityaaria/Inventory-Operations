@@ -16,7 +16,7 @@
                 <h1>Server Error</h1>
                 <p class="page-subtitle">The request could not be completed right now.</p>
             </div>
-            <nav class="toolbar"><a class="button-primary" href="/">Back to dashboard</a></nav>
+            <nav class="toolbar" aria-label="Page actions"><a class="button-primary" href="/">Back to dashboard</a></nav>
         </header>
         <p class="alert alert-danger" role="alert">Unexpected server error.</p>
     </main>

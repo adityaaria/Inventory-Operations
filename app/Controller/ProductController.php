@@ -20,6 +20,8 @@ use App\Validation\InputValidator;
 
 final class ProductController
 {
+    private const INDEX_PATH = '/products';
+
     public function __construct(
         private readonly ProductService $products,
         private readonly ProductRepositoryInterface $repository,
@@ -46,7 +48,7 @@ final class ProductController
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->guard->requireUserManagement();
 
@@ -91,7 +93,7 @@ final class ProductController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/products']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function import(Request $request): Response
@@ -125,7 +127,7 @@ final class ProductController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/products']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function edit(Request $request): Response
@@ -168,21 +170,21 @@ final class ProductController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/products']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function activate(Request $request): Response
     {
         $this->products->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), true);
 
-        return new Response('', 302, ['Location' => '/products']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function deactivate(Request $request): Response
     {
         $this->products->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), false);
 
-        return new Response('', 302, ['Location' => '/products']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     /**

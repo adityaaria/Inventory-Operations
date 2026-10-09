@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Entity\Category;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\CategoryRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
 use PDO;
-use RuntimeException;
 
 final class MySqlCategoryRepository implements CategoryRepositoryInterface
 {
@@ -42,7 +43,7 @@ final class MySqlCategoryRepository implements CategoryRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, description, is_active FROM categories ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query categories.');
+            throw new PersistenceException('Unable to query categories.');
         }
 
         return array_map(fn (array $row): Category => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
@@ -52,7 +53,7 @@ final class MySqlCategoryRepository implements CategoryRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, description, is_active FROM categories WHERE is_active = 1 ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query active categories.');
+            throw new PersistenceException('Unable to query active categories.');
         }
 
         return array_map(fn (array $row): Category => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
@@ -103,6 +104,6 @@ final class MySqlCategoryRepository implements CategoryRepositoryInterface
 
     private function findRequired(int $id): Category
     {
-        return $this->findById($id) ?? throw new RuntimeException("Category not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Category not found after write: {$id}");
     }
 }

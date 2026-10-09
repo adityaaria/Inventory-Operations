@@ -6,12 +6,12 @@ namespace App\Repository\InMemory;
 
 use App\Entity\Product;
 use App\Entity\ProductStock;
+use App\Exception\EntityNotFoundException;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use InvalidArgumentException;
-use RuntimeException;
 
 final class InMemoryProductRepository implements ProductRepositoryInterface
 {
@@ -133,7 +133,7 @@ final class InMemoryProductRepository implements ProductRepositoryInterface
 
     private function findRequired(int $id): Product
     {
-        return $this->findById($id) ?? throw new RuntimeException("Product not found: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Product not found: {$id}");
     }
 
     private function assertSkuAvailable(string $sku, ?int $exceptId): void

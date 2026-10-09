@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Entity\User;
+use App\Exception\InfrastructureException;
 
 /** Native PHP adapter. Services never access cookies, session storage or superglobals. */
 final class NativeSessionManager extends SessionManager
@@ -28,12 +29,12 @@ final class NativeSessionManager extends SessionManager
             ini_set('session.gc_maxlifetime', (string) $this->policy->absoluteSeconds);
             if ($savePath !== '') {
                 if (!is_dir($savePath) || !is_writable($savePath)) {
-                    throw new \RuntimeException('Session storage is unavailable.');
+                    throw new InfrastructureException('Session storage is unavailable.');
                 }
                 session_save_path($savePath);
             }
             session_set_cookie_params(['lifetime' => 0, 'path' => '/', ...self::cookieOptions($this->secure)]);
-            if (!session_start()) { throw new \RuntimeException('Unable to start session.'); }
+            if (!session_start()) { throw new InfrastructureException('Unable to start session.'); }
         }
     }
 
@@ -116,7 +117,7 @@ final class NativeSessionManager extends SessionManager
         // Do not copy credentials to the previous ID or accept it as a grace-period alias.
         $data = $_SESSION;
         $_SESSION = [];
-        if (!session_regenerate_id(false)) { throw new \RuntimeException('Unable to rotate session.'); }
+        if (!session_regenerate_id(false)) { throw new InfrastructureException('Unable to rotate session.'); }
         $_SESSION = $data;
     }
 
@@ -146,7 +147,7 @@ final class NativeSessionManager extends SessionManager
     public function close(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE && !session_write_close()) {
-            throw new \RuntimeException('Unable to persist session.');
+            throw new InfrastructureException('Unable to persist session.');
         }
     }
 }

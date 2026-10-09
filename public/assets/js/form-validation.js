@@ -1,15 +1,6 @@
 'use strict';
 
-(function exposeValidation(root, factory) {
-    const api = factory();
-
-    if (typeof module === 'object' && module.exports) {
-        module.exports = api;
-        return;
-    }
-
-    root.InventoryValidation = api;
-})(typeof globalThis === 'object' ? globalThis : this, () => {
+(function exposeValidation(root) {
     function labelFor(field) {
         return String(field.name || 'Field')
             .replace(/[_-]+/g, ' ')
@@ -57,5 +48,12 @@
         }, {});
     }
 
-    return {validateField, validateFields};
-});
+    const api = {validateField, validateFields};
+
+    if (typeof module === 'object' && module.exports) {
+        module.exports = api;
+        return;
+    }
+
+    root.InventoryValidation = api;
+})(typeof globalThis === 'object' ? globalThis : this);

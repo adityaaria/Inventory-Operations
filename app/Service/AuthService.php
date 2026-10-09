@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Security\AuthContext;
 use App\Security\SessionManager;
+use App\Support\RequestOrigin;
 
 final class AuthService
 {
@@ -22,29 +23,24 @@ final class AuthService
     {
         $email = trim($email);
         if ($this->rateLimiter !== null && $this->rateLimiter->isBlocked($email, $ipAddress)) {
-            $this->auditLogger?->record(null, 'auth.login_blocked', 'auth', null, 'blocked', $ipAddress, $userAgent, ['email' => $email]);
+            $this->auditLogger?->record(null, 'auth.login_blocked', 'auth', null, 'blocked', new RequestOrigin($ipAddress, $userAgent), ['email' => $email]);
 
             return false;
         }
 
         $user = $this->users->findByEmail($email);
-        if ($user === null || !$user->isActive()) {
+        // Unknown and inactive accounts are audited without an actor; a wrong password on an active account names it.
+        $activeUser = $user !== null && $user->isActive() ? $user : null;
+        if ($activeUser === null || !password_verify($password, $activeUser->passwordHash())) {
             $this->rateLimiter?->recordFailure($email, $ipAddress);
-            $this->auditLogger?->record(null, 'auth.login_failed', 'auth', null, 'failure', $ipAddress, $userAgent, ['email' => $email]);
+            $this->auditLogger?->record($activeUser?->id(), 'auth.login_failed', 'auth', $activeUser?->id(), 'failure', new RequestOrigin($ipAddress, $userAgent), ['email' => $email]);
 
             return false;
         }
 
-        if (!password_verify($password, $user->passwordHash())) {
-            $this->rateLimiter?->recordFailure($email, $ipAddress);
-            $this->auditLogger?->record($user->id(), 'auth.login_failed', 'auth', $user->id(), 'failure', $ipAddress, $userAgent, ['email' => $email]);
-
-            return false;
-        }
-
-        $this->session->login(new AuthContext($user->id(), $user->email(), $user->role()), $user->passwordHash());
+        $this->session->login(new AuthContext($activeUser->id(), $activeUser->email(), $activeUser->role()), $activeUser->passwordHash());
         $this->rateLimiter?->recordSuccess($email, $ipAddress);
-        $this->auditLogger?->record($user->id(), 'auth.login_success', 'auth', $user->id(), 'success', $ipAddress, $userAgent, ['email' => $email]);
+        $this->auditLogger?->record($activeUser->id(), 'auth.login_success', 'auth', $activeUser->id(), 'success', new RequestOrigin($ipAddress, $userAgent), ['email' => $email]);
 
         return true;
     }
@@ -53,6 +49,6 @@ final class AuthService
     {
         $auth = $this->session->auth();
         $this->session->logout();
-        $this->auditLogger?->record($auth?->userId(), 'auth.logout', 'auth', $auth?->userId(), 'success', $ipAddress, $userAgent);
+        $this->auditLogger?->record($auth?->userId(), 'auth.logout', 'auth', $auth?->userId(), 'success', new RequestOrigin($ipAddress, $userAgent));
     }
 }

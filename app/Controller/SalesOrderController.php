@@ -22,6 +22,8 @@ use App\Validation\InputValidator;
 
 final class SalesOrderController
 {
+    private const INDEX_PATH = '/sales-orders';
+
     /**
      * @param array<int, Customer> $customers
      * @param array<int, Warehouse> $warehouses
@@ -64,7 +66,7 @@ final class SalesOrderController
         return $this->renderShow($order, $actor);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $actor = $this->guard->requireAuth();
         if (!in_array($actor->role(), [User::ROLE_ADMIN, User::ROLE_SALES], true)) {
@@ -102,28 +104,28 @@ final class SalesOrderController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/sales-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function submit(Request $request): Response
     {
         $this->salesOrders->submit($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
-        return new Response('', 302, ['Location' => '/sales-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function approve(Request $request): Response
     {
         $this->salesOrders->approve($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
-        return new Response('', 302, ['Location' => '/sales-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function cancel(Request $request): Response
     {
         $this->salesOrders->rejectOrCancel($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
-        return new Response('', 302, ['Location' => '/sales-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function issue(Request $request): Response
@@ -144,7 +146,17 @@ final class SalesOrderController
     {
         $actor=$this->guard->requireAuth();$id=InputValidator::positiveInt('id',$request->post()['id']??'');
         if($this->exceptions===null) { throw new \LogicException('Order exceptions service is required.'); }
-        $this->exceptions->reject($actor,$id,\App\Service\BusinessOperationInput::reason($request->post()['reason']??null));
+        $reason=$request->post()['reason']??null;
+        try {
+            $this->exceptions->reject($actor,$id,\App\Service\BusinessOperationInput::reason($reason));
+        } catch (InvalidArgumentException $exception) {
+            // Reopen the reason dialog with the typed text; if the order is no longer pending, show the message on the page.
+            $order = $this->findOrder($id);
+            if ($order->status() !== SalesOrder::STATUS_PENDING_APPROVAL) {
+                return $this->renderShow($order, $actor, $exception->getMessage(), 422);
+            }
+            return $this->renderShow($order, $actor, '', 422, ['open' => true, 'reason' => is_string($reason) ? $reason : '', 'error' => $exception->getMessage()]);
+        }
         return new Response('',302,['Location'=>'/sales-orders/show?id='.$id]);
     }
 
@@ -153,10 +165,13 @@ final class SalesOrderController
         return $this->repository->findById($id) ?? throw new HttpException(404, 'Sales order not found.');
     }
 
-    private function renderShow(SalesOrder $order, \App\Security\AuthContext $actor, string $error = '', int $status = 200): Response
+    /** @param array{open?: bool, reason?: string, error?: string} $rejectDialog */
+    private function renderShow(SalesOrder $order, \App\Security\AuthContext $actor, string $error = '', int $status = 200, array $rejectDialog = []): Response
     {
         return $this->render('sales-orders/show.php', [
+            'rejectDialog' => $rejectDialog,
             'order' => $order,
+            'availability' => $this->salesOrders->sourceAvailability($actor, $order),
             'customers' => $this->customers,
             'warehouses' => $this->warehouses,
             'canSubmit' => $order->status() === SalesOrder::STATUS_DRAFT

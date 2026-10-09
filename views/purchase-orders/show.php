@@ -42,7 +42,7 @@
             <div><dt>Destination</dt><dd><?= htmlspecialchars(($warehouses[$order->destinationWarehouseId()] ?? null)?->name() ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></dd></div>
         </dl>
 
-        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+        <section class="table-scroll" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>">
 <table class="detail-table">
             <thead><tr><th scope="col">Product</th><th scope="col">Quantity</th><th scope="col">Received</th><th scope="col">Remaining</th><th scope="col">Purchase Price</th><th scope="col">Receive</th></tr></thead>
             <tbody>
@@ -52,7 +52,7 @@
                         <td><?= $item->quantity() ?></td>
                         <td><?= $item->receivedQuantity() ?></td>
                         <td><?= $item->remainingQuantity() ?></td>
-                        <td><?= number_format($item->purchasePrice(), 2) ?></td>
+                        <td><?= \App\Support\Money::rupiah($item->purchasePrice()) ?></td>
                         <td>
                             <?php if ($canReceive && in_array($order->status(), \App\Entity\PurchaseOrder::RECEIVABLE_STATUSES, true) && $item->remainingQuantity() > 0 && ($closure ?? null) === null): ?>
                                 <form method="post" action="/purchase-orders/receive">
@@ -70,7 +70,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-</div>
+</section>
 
         <?php if(($closure??null)!==null): ?><p class="alert">Remaining supply closed: <?= htmlspecialchars($closure['reason'],ENT_QUOTES,'UTF-8') ?>. Received quantities remain recorded.</p><?php endif; ?>
         <?php if($canOrderOrCancel && $order->status()==='PartiallyReceived' && ($closure??null)===null): ?>

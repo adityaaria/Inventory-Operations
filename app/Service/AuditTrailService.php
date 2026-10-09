@@ -22,13 +22,15 @@ final class AuditTrailService
         }
         if ($filters['status']!=='' && !in_array($filters['status'],['success','failure','blocked'],true)) { throw new InvalidArgumentException('Invalid status.'); }
         if ($filters['actor_id']!=='' && (!ctype_digit($filters['actor_id']) || (int)$filters['actor_id']<1 || (int)$filters['actor_id']>4294967295)) { throw new InvalidArgumentException('Invalid actor ID.'); }
-        foreach (['from','to'] as $key) {
-            if ($filters[$key]==='') { continue; }
-            $date=\DateTimeImmutable::createFromFormat('!Y-m-d',$filters[$key]);
-            if (!$date || $date->format('Y-m-d')!==$filters[$key]) { throw new InvalidArgumentException('Invalid date.'); }
-        }
+        foreach (['from','to'] as $key) { $this->assertOptionalDate($filters[$key]); }
         if ($filters['from']!=='' && $filters['to']!=='' && $filters['from']>$filters['to']) { throw new InvalidArgumentException('Invalid date range.'); }
         return $filters;
+    }
+    private function assertOptionalDate(string $value): void
+    {
+        if ($value==='') { return; }
+        $date=\DateTimeImmutable::createFromFormat('!Y-m-d',$value);
+        if (!$date || $date->format('Y-m-d')!==$value) { throw new InvalidArgumentException('Invalid date.'); }
     }
     /** @param array<string,mixed> $input @return PaginatedResult<array<string,mixed>> */
     public function preview(AuthContext $actor,array $input): PaginatedResult

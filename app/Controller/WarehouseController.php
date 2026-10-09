@@ -18,6 +18,8 @@ use App\Validation\InputValidator;
 
 final class WarehouseController
 {
+    private const INDEX_PATH = '/warehouses';
+
     public function __construct(
         private readonly WarehouseService $warehouses,
         private readonly WarehouseRepositoryInterface $repository,
@@ -31,7 +33,7 @@ final class WarehouseController
         return $this->renderIndex($this->guard->requireAuth(), $request);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->guard->requireUserManagement();
 
@@ -49,7 +51,7 @@ final class WarehouseController
             return $this->render('warehouses/create.php', ['old' => $post, 'error' => $exception->getMessage()], 422);
         }
 
-        return new Response('', 302, ['Location' => '/warehouses']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function import(Request $request): Response
@@ -65,7 +67,7 @@ final class WarehouseController
             return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
-        return new Response('', 302, ['Location' => '/warehouses']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function edit(Request $request): Response
@@ -95,21 +97,21 @@ final class WarehouseController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/warehouses']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function activate(Request $request): Response
     {
         $this->warehouses->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), true);
 
-        return new Response('', 302, ['Location' => '/warehouses']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function deactivate(Request $request): Response
     {
         $this->warehouses->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), false);
 
-        return new Response('', 302, ['Location' => '/warehouses']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
@@ -120,7 +122,7 @@ final class WarehouseController
             'warehouses' => $result->items(),
             'result' => $result,
             'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
-            'paginationPath' => '/warehouses',
+            'paginationPath' => self::INDEX_PATH,
             'paginationLabel' => 'Warehouses',
             'paginationQuery' => $request->query(),
             'error' => $error,

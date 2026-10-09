@@ -17,7 +17,7 @@ final class AuditLoggerTest extends TestCase
         $repository = new InMemoryAuditLogRepository();
         $logger = new AuditLogger($repository);
 
-        $logger->record(7, 'user.updated', 'users', 12, 'success', '127.0.0.1', 'Unit Test', ['field' => 'role']);
+        $logger->record(7, 'user.updated', 'users', 12, 'success', new \App\Support\RequestOrigin('127.0.0.1', 'Unit Test'), ['field' => 'role']);
 
         self::assertCount(1, $repository->entries());
         self::assertSame('user.updated', $repository->entries()[0]['action']);
@@ -28,14 +28,14 @@ final class AuditLoggerTest extends TestCase
     public function testSwallowsRepositoryFailureWithoutPropagating(): void
     {
         $repository = new class implements AuditLogRepositoryInterface {
-            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void
+            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, \App\Support\RequestOrigin $origin, array $metadata = []): void
             {
                 throw new RuntimeException('Audit storage unavailable.');
             }
         };
         $logger = new AuditLogger($repository);
 
-        $logger->record(1, 'user.updated', 'users', 1, 'success', '127.0.0.1', 'Unit Test');
+        $logger->record(1, 'user.updated', 'users', 1, 'success', new \App\Support\RequestOrigin('127.0.0.1', 'Unit Test'));
 
         self::assertTrue(true);
     }

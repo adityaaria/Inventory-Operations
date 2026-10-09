@@ -28,7 +28,7 @@
                 <h1>Products</h1>
                 <p class="page-subtitle">Search, filter, and review product stock levels.</p>
             </div>
-            <nav class="toolbar">
+            <nav class="toolbar" aria-label="Page actions">
 
                 <?php if ($canWrite): ?><a href="/products/create">Create Product</a><?php endif; ?>
                 <?php if ($canWrite): ?><button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button><?php endif; ?>
@@ -53,18 +53,19 @@
             <?php require dirname(__DIR__) . '/partials/sort-state.php'; ?>
             <button type="submit">Filter</button>
         </form>
-        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+        <section class="table-scroll" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>">
 <table class="data-table" data-selectable="products">
             <thead>
                 <tr>
                     <th class="selection-column" scope="col"><input class="table-select-all" type="checkbox" aria-label="Select all products on this page"></th>
-                    <?php $sortPath = '/products'; $sortKey = 'sku'; $sortLabel = 'SKU'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'name'; $sortLabel = 'Name'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'unit'; $sortLabel = 'Unit'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'purchase_price'; $sortLabel = 'Purchase Price'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'price'; $sortLabel = 'Selling Price'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'reorder'; $sortLabel = 'Reorder'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
-                    <?php $sortPath = '/products'; $sortKey = 'quantity'; $sortLabel = 'Warehouse Stock'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?>
+                    <?php $sortPath = '/products'; $sortHeading = dirname(__DIR__) . '/partials/sort-heading.php'; ?>
+                    <?php $sortKey = 'sku'; $sortLabel = 'SKU'; require $sortHeading; ?>
+                    <?php $sortKey = 'name'; $sortLabel = 'Name'; require $sortHeading; ?>
+                    <?php $sortKey = 'unit'; $sortLabel = 'Unit'; require $sortHeading; ?>
+                    <?php $sortKey = 'purchase_price'; $sortLabel = 'Purchase Price'; require $sortHeading; ?>
+                    <?php $sortKey = 'price'; $sortLabel = 'Selling Price'; require $sortHeading; ?>
+                    <?php $sortKey = 'reorder'; $sortLabel = 'Reorder'; require $sortHeading; ?>
+                    <?php $sortKey = 'quantity'; $sortLabel = 'Warehouse Stock'; require $sortHeading; ?>
                     <?php if ($canWrite): ?><th>Action</th><?php endif; ?>
                 </tr>
             </thead>
@@ -80,8 +81,8 @@
                         <td><?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?></td>
                         <td><a href="/products/show?id=<?= $product->id() ?>"><?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?></a></td>
                         <td><?= htmlspecialchars($product->unit(), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= number_format($product->purchasePrice(), 2) ?></td>
-                        <td><?= number_format($product->sellingPrice(), 2) ?></td>
+                        <td><?= \App\Support\Money::rupiah($product->purchasePrice()) ?></td>
+                        <td><?= \App\Support\Money::rupiah($product->sellingPrice()) ?></td>
                         <td><?= $product->reorderPoint() ?></td>
                         <td>
                             <?php foreach (($stocksByProduct[$product->id()] ?? []) as $stock): ?>
@@ -100,7 +101,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-</div>
+</section>
         <?php
         $baseQuery = [
             'q' => $criteria->term(),
@@ -123,7 +124,7 @@
         </nav>
         <?php if ($canWrite): ?>
             <div class="import-dialog" id="import-dialog" <?= $error !== '' ? '' : 'hidden' ?>>
-                <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
+                <dialog open class="modal-panel" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
                     <header class="modal-header">
                         <h2 id="import-dialog-title">Import CSV</h2>
                         <button class="modal-close" type="button" aria-label="Close dialog">Close</button>
@@ -139,7 +140,7 @@
                             </div>
                         </form>
                     </div>
-                </section>
+                </dialog>
             </div>
         <?php endif; ?>
     </main>

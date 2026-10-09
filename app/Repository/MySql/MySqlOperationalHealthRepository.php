@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 namespace App\Repository\MySql;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\OperationalHealthRepositoryInterface;
 use PDO;
-use RuntimeException;
 final class MySqlOperationalHealthRepository implements OperationalHealthRepositoryInterface
 {
     public function __construct(private readonly PDO $pdo) {}
@@ -11,7 +11,7 @@ final class MySqlOperationalHealthRepository implements OperationalHealthReposit
     {
         $statement = $this->pdo->prepare('SELECT version FROM schema_versions WHERE version = :version');
         $statement->execute(['version' => 'phase-0']);
-        if ($statement->fetchColumn() === false) { throw new RuntimeException('Schema not initialized.'); }
+        if ($statement->fetchColumn() === false) { throw new PersistenceException('Schema not initialized.'); }
         // Resolve critical table/column names without scanning business rows.
         $this->pdo->query('SELECT id FROM users LIMIT 0');
         $this->pdo->query('SELECT product_id, warehouse_id, quantity FROM product_stocks LIMIT 0');

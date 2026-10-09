@@ -49,7 +49,7 @@ final class OperationIdempotencyIntegrationTest extends TestCase
     public function testFailedAuditRollsBackKeyStockLedgerAndOrderThenKeyCanRetry(): void
     {
         $badAudit=new class implements \App\Repository\Contract\AuditLogRepositoryInterface {
-            public function append(?int $actorId,string $action,string $entityType,?int $entityId,string $status,string $ipAddress,string $userAgent,array $metadata=[]): void { throw new \RuntimeException('Forced audit failure'); }
+            public function append(?int $actorId,string $action,string $entityType,?int $entityId,string $status, \App\Support\RequestOrigin $origin, array $metadata = []): void { throw new \RuntimeException('Forced audit failure'); }
         };
         $stock=new StockService(new MySqlStockRepository($this->pdo),new MySqlStockLedgerRepository($this->pdo),$badAudit,null,new MySqlTransactionManager($this->pdo));
         $service=$this->purchase($stock);$order=$service->createDraft($this->actor,'PO-IDEMPOTENCY-ROLLBACK',1,1,[['product_id'=>1,'quantity'=>5,'purchase_price'=>10.0]]);$service->markOrdered($this->actor,$order->id());

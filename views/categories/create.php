@@ -25,7 +25,7 @@
     <main class="page" id="main-content">
         <header class="page-header">
             <div><p class="app-title">Inventory Operations</p><h1>Create Category</h1><p class="page-subtitle">Add a category for organizing products.</p></div>
-            <nav class="toolbar"><a href="/categories">Categories</a></nav>
+            <nav class="toolbar" aria-label="Page actions"><a href="/categories">Categories</a></nav>
         </header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/categories" class="form">

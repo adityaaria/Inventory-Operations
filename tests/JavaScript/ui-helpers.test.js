@@ -61,3 +61,33 @@ test('resolveCancelTarget closes the modal when the cancel button is inside one'
 test('resolveCancelTarget navigates to the cancel href when not inside a modal', () => {
     assert.deepEqual(UiHelpers.resolveCancelTarget('/products', false), {action: 'navigate', href: '/products'});
 });
+
+test('HTML escaping neutralizes every markup-significant character', () => {
+    assert.equal(
+        UiHelpers.escapeHtml(`<a href="x" title='y'>Tom & Jerry</a>`),
+        '&lt;a href=&quot;x&quot; title=&#039;y&#039;&gt;Tom &amp; Jerry&lt;/a&gt;',
+    );
+    assert.equal(UiHelpers.escapeHtml('&lt;'), '&amp;lt;');
+    assert.equal(UiHelpers.escapeHtml(42), '42');
+});
+
+test('debounce uses the real timers when no timer API is injected', async () => {
+    const calls = [];
+    const debounced = UiHelpers.debounce((value) => calls.push(value), 5);
+
+    debounced('first');
+    debounced('second');
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.deepEqual(calls, ['second']);
+
+    debounced('cancelled');
+    debounced.cancel();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.deepEqual(calls, ['second']);
+});
+
+test('table sorting reads Rupiah amounts with dot thousands and comma decimals', () => {
+    assert.equal(UiHelpers.compareTableValues('Rp 9.100,00', 'Rp 20.000,00') < 0, true);
+    assert.equal(UiHelpers.compareTableValues('Rp 250,50', 'Rp 250,05') > 0, true);
+    assert.equal(UiHelpers.compareTableValues('Rp 1.000.000,00', 'Rp 999.999,99', 'desc') < 0, true);
+});

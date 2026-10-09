@@ -43,8 +43,7 @@ final class RequestAuditRecorder
             $entityType,
             $entityId,
             $status,
-            $this->serverValue($request, 'REMOTE_ADDR', 45),
-            $this->serverValue($request, 'HTTP_USER_AGENT', 255),
+            new RequestOrigin($this->serverValue($request, 'REMOTE_ADDR', 45), $this->serverValue($request, 'HTTP_USER_AGENT', 255)),
             ['path' => $request->path(), 'status_code' => $response->statusCode()],
         );
     }

@@ -16,7 +16,7 @@
                 <h1>Not Found</h1>
                 <p class="page-subtitle">The requested resource could not be found.</p>
             </div>
-            <nav class="toolbar"><a class="button-primary" href="/">Back to dashboard</a></nav>
+            <nav class="toolbar" aria-label="Page actions"><a class="button-primary" href="/">Back to dashboard</a></nav>
         </header>
         <p class="alert alert-danger" role="alert">The requested resource was not found.</p>
     </main>

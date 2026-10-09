@@ -6,7 +6,7 @@
             document.querySelectorAll('[data-chart]').forEach((chart) => {
                 let data = {};
                 try {
-                    data = JSON.parse(chart.getAttribute('data-chart') || '{}');
+                    data = JSON.parse(chart.dataset.chart || '{}');
                 } catch (_error) {
                     data = {};
                 }

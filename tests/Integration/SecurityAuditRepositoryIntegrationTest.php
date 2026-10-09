@@ -23,7 +23,7 @@ final class SecurityAuditRepositoryIntegrationTest extends TestCase
     {
         $repository = new MySqlAuditLogRepository($this->pdo);
 
-        $repository->append(null, 'auth.login_failed', 'auth', null, 'failure', '127.0.0.1', 'PHPUnit', ['email' => 'missing@example.test']);
+        $repository->append(null, 'auth.login_failed', 'auth', null, 'failure', new \App\Support\RequestOrigin('127.0.0.1', 'PHPUnit'), ['email' => 'missing@example.test']);
 
         $statement = $this->pdo->prepare('SELECT action, status, metadata_json FROM audit_logs WHERE action = :action ORDER BY id DESC LIMIT 1');
         $statement->execute(['action' => 'auth.login_failed']);

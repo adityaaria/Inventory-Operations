@@ -54,10 +54,13 @@ final class PurchaseOrderControllerTest extends TestCase
         $response = $this->controller($this->admin(), $orders)->create(new Request('GET', '/purchase-orders/create', ['warehouse_id' => '1', 'pick' => ['10:5', '11:3']], [], []));
 
         self::assertSame(200, $response->statusCode());
-        self::assertMatchesRegularExpression('/name="product_id"[^>]*>\s*<option value="10" selected/', $response->body());
-        self::assertMatchesRegularExpression('/name="items\[1\]\[product_id\]".*?<option value="11" selected/s', $response->body());
+        self::assertMatchesRegularExpression('/name="product_id"[^>]*>\s*<option value="10" data-price="1000.00" selected/', $response->body());
+        self::assertMatchesRegularExpression('/name="items\[1\]\[product_id\]".*?<option value="11" data-price="250.00" selected/s', $response->body());
         self::assertStringContainsString('name="items[1][quantity]" type="number" min="1" required value="3"', $response->body());
-        self::assertStringContainsString('name="items[1][purchase_price]" type="number" min="0" step="0.01" required value=""', $response->body());
+        // Prices are display-only and come from the product master (250.00 for product 11), never from the form.
+        self::assertStringNotContainsString('purchase_price"', $response->body());
+        self::assertMatchesRegularExpression('/name="items\[1\]\[quantity\]".*?data-order-price type="text" readonly value="Rp 250,00"/s', $response->body());
+        self::assertStringContainsString('<option value="11" data-price="250.00"', $response->body());
         self::assertCount(0, $orders->all(), 'Selection only prefills; it never creates a draft.');
         self::assertSame(1, substr_count($response->body(), 'name="product_id"'), 'The clone template must not add a second product field.');
     }
@@ -96,7 +99,20 @@ final class PurchaseOrderControllerTest extends TestCase
         self::assertSame(302, $response->statusCode());
         $created = array_values($orders->all())[0];
         self::assertSame('PO-MULTI', $created->orderNumber());
-        self::assertSame([[10, 5, 1000.0], [11, 3, 250.5]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->purchasePrice()], $created->items()));
+        // Posted prices (1000, 250.50) are ignored: each line uses the product master purchase price.
+        self::assertSame([[10, 5, 1000.0], [11, 3, 250.0]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->purchasePrice()], $created->items()));
+    }
+
+    public function testStoreWithoutAnyPriceFieldUsesMasterPrices(): void
+    {
+        $orders = new InMemoryPurchaseOrderRepository();
+        $response = $this->controller($this->admin(), $orders)->store(new Request('POST', '/purchase-orders', [], [
+            'order_number' => 'PO-MASTER', 'supplier_id' => '1', 'warehouse_id' => '1',
+            'product_id' => '11', 'quantity' => '2',
+        ], []));
+
+        self::assertSame(302, $response->statusCode());
+        self::assertSame(250.0, array_values($orders->all())[0]->items()[0]->purchasePrice());
     }
 
     /** @return array<string, array{0: mixed}> */
@@ -104,7 +120,6 @@ final class PurchaseOrderControllerTest extends TestCase
     {
         return [
             'duplicate product' => [[1 => ['product_id' => '10', 'quantity' => '1', 'purchase_price' => '1']]],
-            'missing price' => [[1 => ['product_id' => '11', 'quantity' => '1']]],
             'scalar line' => [[1 => '11']],
             'not a list' => ['11'],
             'over limit' => [array_fill(1, 100, ['product_id' => '11', 'quantity' => '1', 'purchase_price' => '1'])],

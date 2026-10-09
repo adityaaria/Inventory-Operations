@@ -6,11 +6,11 @@ namespace App\Repository\InMemory;
 
 use App\Entity\PurchaseOrder;
 use App\Entity\PurchaseOrderItem;
+use App\Exception\EntityNotFoundException;
 use App\Repository\Contract\PurchaseOrderRepositoryInterface;
 use App\Support\OrderSearchCriteria;
 use App\Support\PaginatedResult;
 use InvalidArgumentException;
-use RuntimeException;
 
 final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepositoryInterface
 {
@@ -102,7 +102,7 @@ final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepositoryIn
 
     private function findRequired(int $id): PurchaseOrder
     {
-        return $this->findById($id) ?? throw new RuntimeException("Purchase order not found: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Purchase order not found: {$id}");
     }
 
     /**

@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Repository\Contract\OperationalQueryRepositoryInterface;
-use InvalidArgumentException;
 use App\Entity\User;
 use App\Exception\HttpException;
+use App\Exception\InfrastructureException;
+use App\Repository\Contract\OperationalQueryRepositoryInterface;
 use App\Security\AuthContext;
 use App\Support\OutstandingCriteria;
-use App\Support\Pagination;
 use App\Support\PaginatedResult;
+use App\Support\Pagination;
+use InvalidArgumentException;
 
 final class ReportService
 {
@@ -72,7 +73,7 @@ final class ReportService
         $criteria = $type === 'outstanding' ? $this->outstandingCriteria($actor, $from, $to, $filters) : null;
         return function () use ($type, $from, $to, $owner, $criteria): void {
             $handle = fopen('php://output', 'w');
-            if ($handle === false) { throw new \RuntimeException('Unable to open CSV output.'); }
+            if ($handle === false) { throw new InfrastructureException('Unable to open CSV output.'); }
             try {
                 $columns = match ($type) {
                     'orders' => ['Type', 'OrderNumber', 'Party', 'Status', 'Date'],
@@ -115,7 +116,7 @@ final class ReportService
         // Unreachable in practice: opening an in-memory php://temp stream does not fail under
         // normal PHP operation. Kept as a defensive guard against a hypothetical stream failure.
         if ($handle === false) {
-            throw new \RuntimeException('Unable to create CSV buffer.');
+            throw new InfrastructureException('Unable to create CSV buffer.');
         }
 
         fputcsv($handle, array_keys($rows[0]), ',', '"', '\\');

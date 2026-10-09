@@ -37,7 +37,7 @@ final class OutstandingReportIntegrationTest extends TestCase
         self::assertSame($expected, array_sum($preview['charts']['Outstanding by Age']));
         self::assertCount($expected, $this->csvRows($admin));
 
-        $partial = $this->pdo->query("SELECT id, order_number FROM purchase_orders WHERE status = 'PartiallyReceived' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        $partial = $this->pdo->query("SELECT id, order_number FROM purchase_orders WHERE status = 'PartiallyReceived' AND id NOT IN (SELECT purchase_order_id FROM purchase_order_closures) LIMIT 1")->fetch(PDO::FETCH_ASSOC);
         self::assertIsArray($partial);
         $statement = $this->pdo->prepare('INSERT INTO purchase_order_closures (purchase_order_id, closed_by, reason) VALUES (:id, 1, :reason)');
         $statement->execute(['id' => $partial['id'], 'reason' => 'Supplier cannot deliver remainder']);

@@ -11,13 +11,17 @@ use App\Entity\User;
 use App\Entity\Warehouse;
 use App\Exception\HttpException;
 use App\Http\Request;
+use App\Repository\InMemory\InMemoryAuditLogRepository;
+use App\Repository\InMemory\InMemoryOrderExceptionRepository;
 use App\Repository\InMemory\InMemoryProductRepository;
+use App\Repository\InMemory\InMemoryPurchaseOrderRepository;
 use App\Repository\InMemory\InMemorySalesOrderRepository;
 use App\Repository\InMemory\InMemoryStockLedgerRepository;
 use App\Repository\InMemory\InMemoryStockRepository;
 use App\Security\AuthContext;
 use App\Security\AuthGuard;
 use App\Security\SessionManager;
+use App\Service\OrderExceptionService;
 use App\Service\SalesOrderService;
 use App\Service\StockService;
 use PHPUnit\Framework\TestCase;
@@ -68,7 +72,8 @@ final class SalesOrderControllerTest extends TestCase
         self::assertSame(302, $response->statusCode());
         $created = array_values($orders->all())[0];
         self::assertSame(7, $created->createdBy());
-        self::assertSame([[10, 2, 1500.0], [11, 4, 90.25]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->sellingPrice()], $created->items()));
+        // The posted 90.25 is ignored: each line uses the product master selling price.
+        self::assertSame([[10, 2, 1500.0], [11, 4, 90.0]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->sellingPrice()], $created->items()));
     }
 
     public function testDuplicateSalesLinesAreRejectedAndRetainedForCorrection(): void
@@ -100,6 +105,55 @@ final class SalesOrderControllerTest extends TestCase
         self::assertStringNotContainsString('Product ID', $body);
     }
 
+    public function testPendingOrderOffersRejectButtonWithClosedReasonDialog(): void
+    {
+        [$controller, $order] = $this->pendingOrder();
+        $body = $controller->show(new Request('GET', '/sales-orders/show', ['id' => (string) $order->id()], [], []))->body();
+
+        self::assertStringContainsString('data-dialog-open="reject-dialog"', $body);
+        self::assertMatchesRegularExpression('/id="reject-dialog" hidden>/', $body);
+        self::assertMatchesRegularExpression('/<form method="post" action="\/sales-orders\/reject"[^>]*>.*<textarea name="reason" maxlength="500" rows="4" required data-dialog-focus><\/textarea>/s', $body);
+    }
+
+    public function testInvalidRejectReasonReopensDialogWithMessageAndTypedText(): void
+    {
+        [$controller, $order, $orders] = $this->pendingOrder();
+        $tooLong = str_repeat('x', 501);
+        $response = $controller->reject(new Request('POST', '/sales-orders/reject', [], ['id' => (string) $order->id(), 'reason' => $tooLong], []));
+
+        self::assertSame(422, $response->statusCode());
+        self::assertMatchesRegularExpression('/id="reject-dialog" >/', $response->body());
+        self::assertStringContainsString('A reason of at most 500 characters is required.', $response->body());
+        self::assertStringContainsString('>' . $tooLong . '</textarea>', $response->body());
+        self::assertSame('PendingApproval', $orders->findById($order->id())?->status());
+    }
+
+    public function testRejectWithReasonCancelsOrderAndKeepsReason(): void
+    {
+        [$controller, $order, $orders] = $this->pendingOrder();
+        $response = $controller->reject(new Request('POST', '/sales-orders/reject', [], ['id' => (string) $order->id(), 'reason' => 'Limit kredit terlampaui'], []));
+
+        self::assertSame(302, $response->statusCode());
+        self::assertSame('Cancelled', $orders->findById($order->id())?->status());
+        $body = $controller->show(new Request('GET', '/sales-orders/show', ['id' => (string) $order->id()], [], []))->body();
+        self::assertStringContainsString('Rejected: Limit kredit terlampaui', $body);
+        self::assertStringNotContainsString('data-dialog-open="reject-dialog"', $body);
+    }
+
+    /** @return array{0: SalesOrderController, 1: \App\Entity\SalesOrder, 2: InMemorySalesOrderRepository} */
+    private function pendingOrder(): array
+    {
+        $session = new SessionManager();
+        $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
+        $session->login($admin);
+        $orders = new InMemorySalesOrderRepository();
+        $controller = $this->build($session, $orders);
+        $order = $orders->createDraft('SO-REJECT', 1, 1, 1, [['product_id' => 10, 'quantity' => 1, 'selling_price' => 1500.0]]);
+        $controller->submit(new Request('POST', '/sales-orders/submit', [], ['id' => (string) $order->id()], []));
+
+        return [$controller, $order, $orders];
+    }
+
     private function controller(SessionManager $session, ?InMemorySalesOrderRepository $repository = null): SalesOrderController
     {
         $orders = $repository ?? new InMemorySalesOrderRepository();
@@ -125,19 +179,16 @@ final class SalesOrderControllerTest extends TestCase
         $customers = [1 => new Customer(1, 'Demo Customer', '', '', '', true)];
         $warehouses = [1 => new Warehouse(1, 'Main Warehouse', 'Jakarta', true)];
 
+        $stock = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
+
         return new SalesOrderController(
-            new SalesOrderService(
-                $orders,
-                $products,
-                $customers,
-                $warehouses,
-                new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository()),
-            ),
+            new SalesOrderService($orders, $products, $customers, $warehouses, $stock),
             $orders,
             $products,
             $customers,
             $warehouses,
             new AuthGuard($session),
+            new OrderExceptionService(new InMemoryOrderExceptionRepository(), new InMemoryPurchaseOrderRepository(), $orders, $stock, new InMemoryAuditLogRepository()),
         );
     }
 }

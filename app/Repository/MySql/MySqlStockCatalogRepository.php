@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\MySql;
 
+use App\Exception\PersistenceException;
 use App\Repository\Contract\StockCatalogRepositoryInterface;
 use PDO;
 
@@ -17,7 +18,7 @@ final class MySqlStockCatalogRepository implements StockCatalogRepositoryInterfa
         // Existing immutable bootstrap row supplies a database mutex without a new schema/table.
         $statement = $this->pdo->prepare("SELECT id FROM schema_versions WHERE version = :version FOR UPDATE");
         $statement->execute(['version' => 'phase-0']);
-        if ($statement->fetchColumn() === false) { throw new \RuntimeException('Catalog bootstrap lock is unavailable.'); }
+        if ($statement->fetchColumn() === false) { throw new PersistenceException('Catalog bootstrap lock is unavailable.'); }
     }
 
     public function productIds(): array

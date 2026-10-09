@@ -9,6 +9,7 @@ use App\Validation\InputValidator;
 use InvalidArgumentException;
 final class BusinessOperationController
 {
+    private const SHOW_PATH='/inventory-operations/show?id=';
     public function __construct(private readonly BusinessOperationService $service,private readonly AuthGuard $guard,private readonly ProductRepositoryInterface $products,private readonly WarehouseRepositoryInterface $warehouses) {}
     public function index(Request $request): Response
     {
@@ -44,7 +45,7 @@ final class BusinessOperationController
             }
             $id=$this->service->propose($actor,$kind,$warehouse,$destination,BusinessOperationInput::reason($post['reason']??null),$items);
         }catch(InvalidArgumentException $exception){return $this->form($post,$exception->getMessage(),422);}
-        return new Response('',302,['Location'=>'/inventory-operations/show?id='.$id]);
+        return new Response('',302,['Location'=>self::SHOW_PATH.$id]);
     }
     public function show(Request $request): Response
     {
@@ -53,15 +54,21 @@ final class BusinessOperationController
     public function decide(Request $request): Response
     {
         $actor=$this->guard->requireAuth();$id=InputValidator::positiveInt('id',$request->post()['id']??'');
-        try{$this->service->decide($actor,$id,InputValidator::requiredString('decision',$request->post()['decision']??'',30),BusinessOperationInput::reason($request->post()['reason']??null));}
-        catch(InvalidArgumentException $exception){return $this->render('show',['operation'=>$this->service->show($actor,$id),'actor'=>$actor,'error'=>$exception->getMessage()],422);}
-        return new Response('',302,['Location'=>'/inventory-operations/show?id='.$id]);
+        $decision=$request->post()['decision']??'';$reason=$request->post()['reason']??null;
+        try{$this->service->decide($actor,$id,InputValidator::requiredString('decision',$decision,30),BusinessOperationInput::reason($reason));}
+        catch(InvalidArgumentException $exception){
+            $operation=$this->service->show($actor,$id);
+            // A failed rejection of a still-pending proposal reopens its reason dialog; other failures show on the page.
+            if($decision==='Rejected' && $operation['status']==='PendingApproval'){return $this->render('show',['operation'=>$operation,'actor'=>$actor,'error'=>'','rejectDialog'=>['open'=>true,'reason'=>is_string($reason)?$reason:'','error'=>$exception->getMessage()]],422);}
+            return $this->render('show',['operation'=>$operation,'actor'=>$actor,'error'=>$exception->getMessage()],422);
+        }
+        return new Response('',302,['Location'=>self::SHOW_PATH.$id]);
     }
     public function post(Request $request): Response
     {
         $actor=$this->guard->requireAuth();$id=InputValidator::positiveInt('id',$request->post()['id']??'');
         try{$this->service->post($actor,$id);}catch(InvalidArgumentException $exception){return $this->render('show',['operation'=>$this->service->show($actor,$id),'actor'=>$actor,'error'=>$exception->getMessage()],422);}
-        return new Response('',302,['Location'=>'/inventory-operations/show?id='.$id]);
+        return new Response('',302,['Location'=>self::SHOW_PATH.$id]);
     }
     public function balance(Request $request): Response {$actor=$this->guard->requireAuth();return new Response(json_encode($this->service->balance($actor,InputValidator::positiveInt('product_id',$request->query()['product_id']??''),InputValidator::positiveInt('warehouse_id',$request->query()['warehouse_id']??'')),JSON_THROW_ON_ERROR),200,['Content-Type'=>'application/json; charset=UTF-8','Cache-Control'=>'no-store']);}
     public function source(Request $request): Response {$actor=$this->guard->requireAuth();return new Response(json_encode($this->service->source($actor,InputValidator::positiveInt('id',$request->query()['id']??'')),JSON_THROW_ON_ERROR),200,['Content-Type'=>'application/json; charset=UTF-8','Cache-Control'=>'no-store']);}

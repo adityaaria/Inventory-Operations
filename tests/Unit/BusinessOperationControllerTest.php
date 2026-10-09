@@ -29,6 +29,21 @@ final class BusinessOperationControllerTest extends TestCase
         $post=$this->payload();unset($post['items']);self::assertSame(302,$this->controller->store(new Request('POST','/inventory-operations',[],$post,[]))->statusCode());
         self::assertCount(1,$this->service->show($this->actor,2)['items']);
     }
+    public function testRejectionReasonIsAskedInADialogAndReopensWhenMissing(): void
+    {
+        self::assertSame(302,$this->controller->store(new Request('POST','/inventory-operations',[],$this->payload(),[]))->statusCode());
+        $session=new SessionManager();$session->login(new AuthContext(2,'reviewer@test','Admin'));
+        $warehouses=$this->createMock(WarehouseRepositoryInterface::class);$warehouses->method('all')->willReturn([]);
+        $reviewer=new BusinessOperationController($this->service,new AuthGuard($session),new InMemoryProductRepository(),$warehouses);
+        $body=$reviewer->show(new Request('GET','/inventory-operations/show',['id'=>'1'],[],[]))->body();
+        self::assertStringContainsString('data-dialog-open="reject-dialog"',$body);self::assertMatchesRegularExpression('/id="reject-dialog" hidden>/',$body);
+        self::assertStringContainsString('name="decision" value="Rejected"',$body);self::assertStringNotContainsString('value="Rejected" class="button button-quiet"',$body);
+        $response=$reviewer->decide(new Request('POST','/inventory-operations/decide',[],['id'=>'1','decision'=>'Rejected','reason'=>'   '],[]));
+        self::assertSame(422,$response->statusCode());self::assertMatchesRegularExpression('/id="reject-dialog" >/',$response->body());
+        self::assertStringContainsString('A reason of at most 500 characters is required.',$response->body());self::assertSame('PendingApproval',$this->service->show($this->actor,1)['status']);
+        self::assertSame(302,$reviewer->decide(new Request('POST','/inventory-operations/decide',[],['id'=>'1','decision'=>'Rejected','reason'=>'Stok fisik belum dihitung ulang'],[]))->statusCode());
+        self::assertSame('Rejected',$this->service->show($this->actor,1)['status']);
+    }
     public function testDuplicateAndMalformedItemsReturn422WithRetainedInput(): void
     {
         $post=$this->payload();$post['items'][1]['product_id']='1';$post['items'][1]['quantity']='42';

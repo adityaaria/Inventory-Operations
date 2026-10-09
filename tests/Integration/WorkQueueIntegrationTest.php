@@ -18,7 +18,7 @@ final class WorkQueueIntegrationTest extends TestCase
     }
     public function testClosedRemainderIsAbsentAndWarehouseHasNoApprovalTasks(): void
     {
-        $id=(int)$this->pdo->query("SELECT id FROM purchase_orders WHERE status='PartiallyReceived' LIMIT 1")->fetchColumn();self::assertGreaterThan(0,$id);
+        $id=(int)$this->pdo->query("SELECT id FROM purchase_orders WHERE status='PartiallyReceived' AND id NOT IN (SELECT purchase_order_id FROM purchase_order_closures) LIMIT 1")->fetchColumn();self::assertGreaterThan(0,$id);
         $before=$this->service->search(new AuthContext(4,'warehouse@test','WarehouseStaff'),['type'=>'Receipt']);
         $statement=$this->pdo->prepare('INSERT INTO purchase_order_closures(purchase_order_id,closed_by,reason) VALUES(:id,1,:reason)');$statement->execute(['id'=>$id,'reason'=>'Supply closed']);
         $after=$this->service->search(new AuthContext(4,'warehouse@test','WarehouseStaff'),['type'=>'Receipt']);self::assertSame($before['result']->total()-1,$after['result']->total());

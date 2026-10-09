@@ -30,9 +30,9 @@ final class SalesOrderIssueIntegrationTest extends TestCase
     public function testSalesOrderIssuePreventsOversellAndKeepsLedgerCleanOnFailure(): void
     {
         $admin = new AuthContext($this->id('users', 'email', 'admin@example.test'), 'admin@example.test', User::ROLE_ADMIN);
-        $customerId = $this->id('customers', 'name', 'Demo Customer One');
-        $warehouseId = $this->id('warehouses', 'name', 'Main Warehouse');
-        $productId = $this->id('products', 'sku', 'SKU-DEMO-001');
+        $customerId = $this->id('customers', 'name', 'Minimarket Lancar Jaya Bekasi');
+        $warehouseId = $this->id('warehouses', 'name', 'Gudang Pusat Cikarang');
+        $productId = $this->id('products', 'sku', 'BIS-0001');
         $stock = new MySqlStockRepository($this->pdo);
         $this->setStock($productId, $warehouseId, 2);
         $service = $this->service($customerId, $warehouseId);
@@ -68,8 +68,8 @@ final class SalesOrderIssueIntegrationTest extends TestCase
         return new SalesOrderService(
             new MySqlSalesOrderRepository($this->pdo),
             new MySqlProductRepository($this->pdo),
-            [$customerId => new Customer($customerId, 'Demo Customer One', 'customer1@example.test', '022-0001', 'Jl. Customer Raya 1, Jakarta', true)],
-            [$warehouseId => new Warehouse($warehouseId, 'Main Warehouse', 'Jakarta', true)],
+            [$customerId => new Customer($customerId, 'Minimarket Lancar Jaya Bekasi', 'customer1@example.test', '022-0001', 'Jl. Customer Raya 1, Jakarta', true)],
+            [$warehouseId => new Warehouse($warehouseId, 'Gudang Pusat Cikarang', 'Cikarang', true)],
             new StockService(new MySqlStockRepository($this->pdo), new MySqlStockLedgerRepository($this->pdo)),
         );
     }

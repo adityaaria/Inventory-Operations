@@ -23,7 +23,7 @@
     <?php $formState = new \App\Support\FormState($old ?? []); ?>
     <?php $workspaceTitle = 'Edit Product'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
     <main class="page" id="main-content">
-        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit Product</h1><p class="page-subtitle">Update product pricing and stock policy.</p></div><nav class="toolbar"><a href="/products">Products</a></nav></header>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit Product</h1><p class="page-subtitle">Update product pricing and stock policy.</p></div><nav class="toolbar" aria-label="Page actions"><a href="/products">Products</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($product !== null): ?>
             <form method="post" action="/products/update" class="form">

@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 namespace App\Repository\MySql;
-use App\Repository\Contract\OperationRequestRepositoryInterface;
 use App\Exception\HttpException;
+use App\Exception\PersistenceException;
+use App\Repository\Contract\OperationRequestRepositoryInterface;
 use PDO;
 final class MySqlOperationRequestRepository implements OperationRequestRepositoryInterface
 {
@@ -14,7 +15,7 @@ final class MySqlOperationRequestRepository implements OperationRequestRepositor
         $insert->execute(['actor'=>$actorId,'key'=>$key,'hash'=>$hash]);
         $select=$this->pdo->prepare('SELECT payload_hash,completed FROM operation_requests WHERE actor_id=:actor AND request_key=:key FOR UPDATE');
         $select->execute(['actor'=>$actorId,'key'=>$key]); $row=$select->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)) { throw new \RuntimeException('Operation request unavailable.'); }
+        if (!is_array($row)) { throw new PersistenceException('Operation request unavailable.'); }
         if (!hash_equals((string)$row['payload_hash'],$hash)) { throw new HttpException(409,'Idempotency key was already used for a different request.'); }
         return (bool)$row['completed'];
     }

@@ -18,6 +18,53 @@ import urllib.parse
 import urllib.request
 
 ROOT=Path(__file__).resolve().parents[1]
+BASE_URL='https://localhost:18445'
+CA_FILE='fullchain.pem'
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,*unused): return None
+
+
+class TlsClient:
+    """Cookie-keeping HTTPS client for the disposable stack; never follows redirects."""
+    def __init__(self,ca_file):
+        context=ssl.create_default_context(cafile=str(ca_file)); context.minimum_version=ssl.TLSVersion.TLSv1_2
+        self.opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),NoRedirect(),urllib.request.HTTPSHandler(context=context))
+
+    def get(self,path,data=None):
+        start=time.perf_counter()
+        req=urllib.request.Request(BASE_URL+path,data=urllib.parse.urlencode(data).encode() if data else None)
+        try: response=self.opener.open(req,timeout=30)
+        except urllib.error.HTTPError as error: response=error
+        body=response.read().decode(); return response.code,body,round((time.perf_counter()-start)*1000,3)
+
+
+def run_command(cmd,env,stdout=subprocess.PIPE):
+    result=subprocess.run(cmd,env=env,stdout=stdout,stderr=subprocess.PIPE,timeout=3600)
+    if result.returncode: raise RuntimeError('Capacity command failed: '+ ' '.join(cmd[:6])+' '+result.stderr.decode()[-1500:])
+    return result.stdout
+
+
+def page_checks(client):
+    checks=[]
+    for path in ['/products?q=Capacity&page=1000','/purchase-orders?q=CAPACITY&page=1000','/sales-orders?q=CAPACITY&page=1000','/reports?type=orders&page=2000']:
+        status,body,elapsed=client.get(path); assert status==200,path
+        # Server page body must contain at most 10 data rows, independent of dataset size.
+        tbody=re.search(r'<tbody>(.*?)</tbody>',body,re.S)
+        count=len(re.findall(r'<tr[\s>]',tbody.group(1))) if tbody else 0
+        assert 1<=count<=10,(path,count)
+        checks.append({'path':path,'status':status,'rows':count,'bytes':len(body.encode()),'elapsed_ms':elapsed})
+    return checks
+
+
+def csv_checks(client,metrics):
+    checks=[]
+    for path,expected in [('/reports/orders.csv',metrics['purchase_orders_rows']+metrics['sales_orders_rows']),('/reports/stock-ledger.csv',metrics['stock_ledger_rows'])]:
+        status,body,elapsed=client.get(path); count=sum(1 for _ in csv.reader(io.StringIO(body)))-1
+        assert status==200 and count==expected,(path,count,expected)
+        checks.append({'path':path,'status':status,'rows':count,'bytes':len(body.encode()),'elapsed_ms':elapsed})
+    return checks
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -35,45 +82,21 @@ def main():
     db_root_password=secrets.token_urlsafe(18)  # per-run credential for the disposable stack
     env=os.environ.copy(); env.update({'DB_DATABASE':'inventory_capacity_benchmark','DB_USERNAME':'inventory_capacity','DB_PASSWORD':db_password,'DB_ROOT_PASSWORD':db_root_password,'DB_VOLUME_NAME':volume,'TLS_DIRECTORY':str(tls),'HTTP_PORT':'18090','HTTPS_PORT':'18445','CAPACITY_PROJECT':project})
     command=[args.docker,'compose','-p',project,'-f','compose.production.yaml','-f','compose.capacity.yaml']
-    def run(cmd,stdout=subprocess.PIPE):
-        result=subprocess.run(cmd,env=env,stdout=stdout,stderr=subprocess.PIPE,timeout=3600)
-        if result.returncode: raise RuntimeError('Capacity command failed: '+ ' '.join(cmd[:6])+' '+result.stderr.decode()[-1500:])
-        return result.stdout
+    def run(cmd,stdout=subprocess.PIPE): return run_command(cmd,env,stdout)
     created=False
     try:
         run([args.docker,'volume','create',volume]); created=True
-        run(['openssl','req','-x509','-nodes','-newkey','rsa:2048','-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost,IP:127.0.0.1','-keyout',str(tls/'privkey.pem'),'-out',str(tls/'fullchain.pem')])
+        run(['openssl','req','-x509','-nodes','-newkey','rsa:2048','-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost,IP:127.0.0.1','-keyout',str(tls/'privkey.pem'),'-out',str(tls/CA_FILE)])
         run(command+['up','-d','--no-build','--wait','--wait-timeout','180'])
         result=run(command+['exec','-T','app','php','tests/Support/large-dataset.php',str(args.products),str(args.order_pairs)])
         metrics=json.loads(result); (evidence/'dataset.json').write_text(json.dumps(metrics,indent=2)+'\n')
         assert metrics['passed']
-        class NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self,*unused): return None
-        jar=http.cookiejar.CookieJar(); context=ssl.create_default_context(cafile=str(tls/'fullchain.pem')); context.minimum_version=ssl.TLSVersion.TLSv1_2
-        opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),NoRedirect(),urllib.request.HTTPSHandler(context=context))
-        url='https://localhost:18445'
-        def get(path,data=None):
-            start=time.perf_counter()
-            req=urllib.request.Request(url+path,data=urllib.parse.urlencode(data).encode() if data else None)
-            try: response=opener.open(req,timeout=30)
-            except urllib.error.HTTPError as error: response=error
-            body=response.read().decode(); return response.code,body,round((time.perf_counter()-start)*1000,3)
-        _,body,_=get('/login'); token=re.search(r'name="csrf_token" value="([a-f0-9]+)"',body).group(1)
-        assert get('/login',{'email':'admin@example.test','password':'password','csrf_token':token})[0]==302
-        checks=[]
-        for path in ['/products?q=Capacity&page=1000','/purchase-orders?q=CAPACITY&page=1000','/sales-orders?q=CAPACITY&page=1000','/reports?type=orders&page=2000']:
-            status,body,elapsed=get(path); assert status==200,path
-            # Server page body must contain at most 10 data rows, independent of dataset size.
-            tbody=re.search(r'<tbody>(.*?)</tbody>',body,re.S)
-            count=len(re.findall(r'<tr(?:\s|>)',tbody.group(1))) if tbody else 0
-            assert 1<=count<=10,(path,count)
-            checks.append({'path':path,'status':status,'rows':count,'bytes':len(body.encode()),'elapsed_ms':elapsed})
-        for path,expected in [('/reports/orders.csv',metrics['purchase_orders_rows']+metrics['sales_orders_rows']),('/reports/stock-ledger.csv',metrics['stock_ledger_rows'])]:
-            status,body,elapsed=get(path); count=sum(1 for _ in csv.reader(io.StringIO(body)))-1
-            assert status==200 and count==expected,(path,count,expected)
-            checks.append({'path':path,'status':status,'rows':count,'bytes':len(body.encode()),'elapsed_ms':elapsed})
+        client=TlsClient(tls/CA_FILE)
+        _,body,_=client.get('/login'); token=re.search(r'name="csrf_token" value="([a-f0-9]+)"',body).group(1)
+        assert client.get('/login',{'email':'admin@example.test','password':'password','csrf_token':token})[0]==302
+        checks=page_checks(client)+csv_checks(client,metrics)
         (evidence/'functional.json').write_text(json.dumps({'passed':True,'checks':checks},indent=2)+'\n')
-        loadbase=[sys.executable,'tests/HTTP/load.py','--docker',args.docker,'--project',project,'--url',url,'--ca-file',str(tls/'fullchain.pem'),'--profile','capacity']
+        loadbase=[sys.executable,'tests/HTTP/load.py','--docker',args.docker,'--project',project,'--url',BASE_URL,'--ca-file',str(tls/CA_FILE),'--profile','capacity']
         run(loadbase+['--users','8','--requests-per-user','400','--duration-seconds','60','--output',str(evidence/'load-admin.json')])
         run(loadbase+['--role','warehouse','--users','4','--requests-per-user','40','--output',str(evidence/'load-warehouse.json')])
         # PHP peak memory and timings use the same repository queries as report/dashboard HTTP.

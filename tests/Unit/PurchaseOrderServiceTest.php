@@ -292,15 +292,16 @@ final class PurchaseOrderServiceTest extends TestCase
         ]);
     }
 
-    public function testRejectsNegativeItemPrice(): void
+    public function testLinePriceComesFromProductMasterNotFromInput(): void
     {
         [$service] = $this->service();
 
-        $this->expectException(InvalidArgumentException::class);
-
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'PO-010', 1, 1, [
+        // A tampered (even negative) price from the client is ignored; the master price is stored.
+        $order = $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'PO-010', 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'purchase_price' => -1.0],
         ]);
+
+        self::assertSame(1000.0, $order->items()[0]->purchasePrice());
     }
 
     /**

@@ -11,7 +11,7 @@ final class AuditTrailQueryIntegrationTest extends TestCase
         $pdo=\Tests\Support\TestDatabase::connect(); $pdo->beginTransaction();
         try {
             $action='audit.test.'.bin2hex(random_bytes(4)); $writer=new MySqlAuditLogRepository($pdo);
-            for ($i=0;$i<12;$i++) $writer->append(null,$action,'test',null,'success','127.0.0.1','test',['secret'=>'must not be selected']);
+            for ($i=0;$i<12;$i++) $writer->append(null,$action,'test',null,'success',new \App\Support\RequestOrigin('127.0.0.1', 'test'),['secret'=>'must not be selected']);
             $queries=new MySqlAuditQueryRepository($pdo); $filters=['action'=>$action,'status'=>'success'];
             self::assertSame(12,$queries->count($filters));
             $first=$queries->page($filters,10,0); $last=$queries->page($filters,10,10);

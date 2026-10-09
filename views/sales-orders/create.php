@@ -23,7 +23,7 @@
     <?php $formState = new \App\Support\FormState($old ?? []); ?>
     <?php $workspaceTitle = 'Create Sales Order'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
     <main class="page" id="main-content">
-        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Sales Order</h1><p class="page-subtitle">Create a draft sales order for fulfillment. Add one line per product.</p></div><nav class="toolbar"><a href="/sales-orders">Sales Orders</a></nav></header>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Sales Order</h1><p class="page-subtitle">Create a draft sales order for fulfillment. Add one line per product.</p></div><nav class="toolbar" aria-label="Page actions"><a href="/sales-orders">Sales Orders</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/sales-orders" class="form" data-order-form <?= \App\Support\Html::draftAttributes('sales-order') ?>>
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -48,11 +48,11 @@
             </label>
             <?php $priceField = 'selling_price'; $priceLabel = 'Selling Price'; ?>
             <div data-order-items>
-                <?php $itemState = $formState; $prefix = ''; require dirname(__DIR__) . '/partials/order-item.php'; ?>
-                <?php $next = 1; foreach (is_array($old['items'] ?? null) ? array_slice($old['items'], 0, 99, true) : [] as $line): if (!is_array($line)) { continue; } $itemState = new \App\Support\FormState($line); $prefix = 'items[' . $next++ . ']['; require dirname(__DIR__) . '/partials/order-item.php'; endforeach; ?>
+                <?php $orderItem = dirname(__DIR__) . '/partials/order-item.php'; $itemState = $formState; $prefix = ''; require $orderItem; ?>
+                <?php $next = 1; foreach (is_array($old['items'] ?? null) ? array_slice($old['items'], 0, 99, true) : [] as $line): if (!is_array($line)) { continue; } $itemState = new \App\Support\FormState($line); $prefix = 'items[' . $next++ . ']['; require $orderItem; endforeach; ?>
             </div>
             <button type="button" class="button button-quiet" data-order-add>Add product item</button>
-            <template data-order-template><?php $itemState = new \App\Support\FormState(); $prefix = null; require dirname(__DIR__) . '/partials/order-item.php'; ?></template>
+            <template data-order-template><?php $itemState = new \App\Support\FormState(); $prefix = null; require $orderItem; ?></template>
             <div class="form-actions"><button type="submit">Create Draft</button><button type="button" class="button button-quiet" data-cancel-href="/sales-orders">Cancel</button></div>
         </form>
     </main>

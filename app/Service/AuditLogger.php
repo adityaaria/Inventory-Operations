@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\Contract\AuditLogRepositoryInterface;
+use App\Support\RequestOrigin;
 use Throwable;
 
 final class AuditLogger
@@ -16,10 +17,10 @@ final class AuditLogger
     /**
      * @param array<string, mixed> $metadata
      */
-    public function record(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void
+    public function record(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, RequestOrigin $origin, array $metadata = []): void
     {
         try {
-            $this->repository->append($actorId, $action, $entityType, $entityId, $status, $ipAddress, $userAgent, $metadata);
+            $this->repository->append($actorId, $action, $entityType, $entityId, $status, $origin, $metadata);
         } catch (Throwable) {
             // Audit write failure must not hide the original business outcome in this assessment app.
         }

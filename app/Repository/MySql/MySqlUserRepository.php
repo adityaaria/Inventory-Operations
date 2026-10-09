@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Entity\User;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
 use PDO;
-use RuntimeException;
 
 final class MySqlUserRepository implements UserRepositoryInterface
 {
@@ -66,7 +67,7 @@ final class MySqlUserRepository implements UserRepositoryInterface
             'SELECT id, name, email, password_hash, role, is_active FROM users ORDER BY id ASC'
         );
         if ($statement === false) {
-            throw new RuntimeException('Unable to query users.');
+            throw new PersistenceException('Unable to query users.');
         }
 
         $users = [];
@@ -145,7 +146,7 @@ final class MySqlUserRepository implements UserRepositoryInterface
     {
         $user = $this->findById($id);
         if ($user === null) {
-            throw new RuntimeException("User not found after write: {$id}");
+            throw new EntityNotFoundException("User not found after write: {$id}");
         }
 
         return $user;

@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Entity\Warehouse;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\WarehouseRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
 use PDO;
-use RuntimeException;
 
 final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
 {
@@ -40,7 +41,7 @@ final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, location, is_active FROM warehouses ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query warehouses.');
+            throw new PersistenceException('Unable to query warehouses.');
         }
         return array_map(fn (array $row): Warehouse => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -49,7 +50,7 @@ final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, location, is_active FROM warehouses WHERE is_active = 1 ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query active warehouses.');
+            throw new PersistenceException('Unable to query active warehouses.');
         }
         return array_map(fn (array $row): Warehouse => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -96,6 +97,6 @@ final class MySqlWarehouseRepository implements WarehouseRepositoryInterface
 
     private function findRequired(int $id): Warehouse
     {
-        return $this->findById($id) ?? throw new RuntimeException("Warehouse not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Warehouse not found after write: {$id}");
     }
 }

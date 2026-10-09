@@ -6,11 +6,11 @@ namespace App\Repository\InMemory;
 
 use App\Entity\SalesOrder;
 use App\Entity\SalesOrderItem;
+use App\Exception\EntityNotFoundException;
 use App\Repository\Contract\SalesOrderRepositoryInterface;
 use App\Support\OrderSearchCriteria;
 use App\Support\PaginatedResult;
 use InvalidArgumentException;
-use RuntimeException;
 
 final class InMemorySalesOrderRepository implements SalesOrderRepositoryInterface
 {
@@ -104,7 +104,7 @@ final class InMemorySalesOrderRepository implements SalesOrderRepositoryInterfac
 
     private function findRequired(int $id): SalesOrder
     {
-        return $this->findById($id) ?? throw new RuntimeException("Sales order not found: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Sales order not found: {$id}");
     }
 
     /**

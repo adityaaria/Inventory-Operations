@@ -40,39 +40,39 @@ final class MasterDataRepositoryIntegrationTest extends TestCase
              FROM product_stocks ps
              INNER JOIN products p ON p.id = ps.product_id
              INNER JOIN warehouses w ON w.id = ps.warehouse_id
-             WHERE p.sku = "SKU-DEMO-001"
+             WHERE p.sku = "BIS-0001"
              ORDER BY w.name ASC'
         );
         self::assertNotFalse($stocks);
         $rows = $stocks->fetchAll();
 
-        self::assertCount(2, $rows);
-        self::assertNotSame((int) $rows[0]['quantity'], (int) $rows[1]['quantity']);
+        // One balance per warehouse (3 in the FMCG seed), each kept separately.
+        self::assertCount(3, $rows);
+        self::assertGreaterThan(1, count(array_unique(array_map(static fn (array $row): int => (int) $row['quantity'], $rows))));
     }
 
     public function testProductSearchTermWorksWithNativeMySqlPreparedStatements(): void
     {
         $repository = new MySqlProductRepository($this->pdo);
 
-        $result = $repository->search(ProductSearchCriteria::fromArray(['q' => 'Demo']));
+        $result = $repository->search(ProductSearchCriteria::fromArray(['q' => 'Tirta Alam']));
 
         self::assertGreaterThanOrEqual(2, $result->total());
-        self::assertSame('SKU-DEMO-001', $result->items()[0]->sku());
+        self::assertSame('MIN-0038', $result->items()[0]->sku());
     }
 
     public function testProductStockQuantityCannotBeNegative(): void
     {
         $this->expectException(\PDOException::class);
 
+        // The seed already has a balance for every product/warehouse pair; a negative value must be rejected.
         $statement = $this->pdo->prepare(
-            'INSERT INTO product_stocks (product_id, warehouse_id, quantity)
-             SELECT p.id, w.id, -1
-             FROM products p
-             CROSS JOIN warehouses w
-             WHERE p.sku = :sku AND w.code = :warehouse_code
-             LIMIT 1'
+            'UPDATE product_stocks ps
+             INNER JOIN products p ON p.id = ps.product_id
+             SET ps.quantity = -1
+             WHERE p.sku = :sku'
         );
-        $statement->execute(['sku' => 'SKU-DEMO-002', 'warehouse_code' => 'MAIN']);
+        $statement->execute(['sku' => 'MIN-0038']);
     }
 
     private function columnExists(string $table, string $column): bool

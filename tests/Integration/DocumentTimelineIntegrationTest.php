@@ -11,8 +11,8 @@ final class DocumentTimelineIntegrationTest extends TestCase
     {
         \Tests\Support\TestDatabase::reset();$pdo=\Tests\Support\TestDatabase::connect();
         $id=(int)$pdo->query('SELECT id FROM purchase_orders ORDER BY id LIMIT 1')->fetchColumn();
-        $audit=new MySqlAuditLogRepository($pdo);$audit->append(1,'purchase-orders.cancel','purchase-orders',$id,'success','private-ip','private-agent',['reason'=>'Recorded cancellation','secret'=>'not exposed']);
-        $audit->append(1,'purchase-orders.receive','PO',$id,'failure','','',['reason'=>'Failed-only reason']);
+        $audit=new MySqlAuditLogRepository($pdo);$audit->append(1,'purchase-orders.cancel','purchase-orders',$id,'success',new \App\Support\RequestOrigin('private-ip', 'private-agent'),['reason'=>'Recorded cancellation','secret'=>'not exposed']);
+        $audit->append(1,'purchase-orders.receive','PO',$id,'failure',new \App\Support\RequestOrigin('', ''),['reason'=>'Failed-only reason']);
         $service=new DocumentTimelineService(new MySqlDocumentTimelineRepository($pdo));$data=$service->forDocument(new AuthContext(1,'admin@test','Admin'),'PO',$id);
         self::assertContains('Document created',array_column($data['events'],'title'));self::assertContains('Recorded cancellation',array_column($data['events'],'reason'));self::assertNotContains('Failed-only reason',array_column($data['events'],'reason'));
         self::assertStringNotContainsString('private-ip',json_encode($data,JSON_THROW_ON_ERROR));self::assertStringNotContainsString('not exposed',json_encode($data,JSON_THROW_ON_ERROR));

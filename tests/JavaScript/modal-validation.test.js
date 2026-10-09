@@ -35,9 +35,9 @@ test('expired modal submission keeps the form and offers sign-in without retryin
     const alerts = [];
     let submitted = 0;
     const button = {dataset:{},textContent:'Create',disabled:false,classList:{add(){},remove(){}}};
-    const container = {querySelector:()=>null,insertBefore:alert=>alerts.push(alert)};
+    const container = {querySelector:()=>null};
     const form = {
-        dataset:{},elements:[],action:'/categories',querySelectorAll:()=>[],querySelector:selector=>selector.includes('button')?button:null,
+        dataset:{},elements:[],action:'/categories',before:alert=>alerts.push(alert),querySelectorAll:()=>[],querySelector:selector=>selector.includes('button')?button:null,
         getAttribute:name=>name==='method'?'post':'/categories',
         closest:selector=>selector==='.modal-backdrop'?{}:selector==='.modal-body'?container:null,
         addEventListener(name,callback){this.submit=callback;},requestSubmit(){throw new Error('Must not replay POST');},
@@ -86,4 +86,29 @@ test('selected approval decision survives button disabling in native and modal s
         assert.equal(hidden[0].name,'decision');assert.equal(hidden[0].value,'Rejected');
         if(isModal)assert.deepEqual(sent,['Rejected']);
     }
+});
+
+test('a form that already is the confirmation step (reason dialog) submits without a second confirmation', async () => {
+    let loading = false;
+    const button = {dataset: {}, textContent: 'Reject Order', disabled: false, classList: {add() {}, remove() {}}};
+    const form = {
+        dataset: {skipConfirm: ''}, elements: [], action: '/sales-orders/reject',
+        querySelectorAll: () => [], querySelector: selector => (selector.includes('button') ? button : null),
+        getAttribute: name => (name === 'method' ? 'post' : '/sales-orders/reject'),
+        closest: () => null,
+        addEventListener(name, callback) { this.submit = callback; },
+    };
+    const context = {
+        InventoryValidation: {validateFields: () => ({})},
+        InventoryUi: {needsConfirmation: () => true},
+        FormData: class {},
+        document: {createElement: () => ({dataset: {}})},
+    };
+    vm.runInNewContext(fs.readFileSync('public/assets/js/forms.js', 'utf8'), context);
+    const modal = {askConfirmation() { throw new Error('Must not ask a second confirmation'); }, setPageLoading(active) { loading = active; }};
+    context.InventoryForms.create({modal, state: {confirmedForms: new WeakSet()}}).enhanceForms({querySelectorAll: () => [form]});
+    let prevented = false;
+    await form.submit({preventDefault() { prevented = true; }});
+    assert.equal(prevented, false, 'the native POST continues');
+    assert.equal(loading, true);
 });

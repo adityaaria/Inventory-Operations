@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Http\View;
 use App\Service\AuthService;
 
 final class AuthController
@@ -14,7 +15,7 @@ final class AuthController
     {
     }
 
-    public function showLogin(Request $request): Response
+    public function showLogin(): Response
     {
         return $this->renderLogin();
     }
@@ -56,10 +57,6 @@ final class AuthController
 
     private function renderLogin(string $error = '', string $email = ''): Response
     {
-        ob_start();
-        require dirname(__DIR__, 2) . '/views/auth/login.php';
-        $body = ob_get_clean();
-
-        return Response::html(is_string($body) ? $body : '');
+        return View::render('auth/login.php', ['error' => $error, 'email' => $email]);
     }
 }

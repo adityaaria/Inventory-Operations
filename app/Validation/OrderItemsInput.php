@@ -12,28 +12,30 @@ final class OrderItemsInput
     public const MAX_ITEMS = 100;
 
     /**
+     * Prices are not read: services take each line's price from the product master.
+     *
      * @param array<string, mixed> $post
-     * @return list<array{product_id: int, quantity: int, purchase_price: float}>
+     * @return list<array{product_id: int, quantity: int}>
      */
     public static function purchase(array $post): array
     {
-        return array_map(static fn (array $line): array => ['product_id' => $line['product_id'], 'quantity' => $line['quantity'], 'purchase_price' => $line['price']], self::lines($post, 'purchase_price'));
+        return self::lines($post);
     }
 
     /**
      * @param array<string, mixed> $post
-     * @return list<array{product_id: int, quantity: int, selling_price: float}>
+     * @return list<array{product_id: int, quantity: int}>
      */
     public static function sales(array $post): array
     {
-        return array_map(static fn (array $line): array => ['product_id' => $line['product_id'], 'quantity' => $line['quantity'], 'selling_price' => $line['price']], self::lines($post, 'selling_price'));
+        return self::lines($post);
     }
 
     /**
      * @param array<string, mixed> $post
-     * @return list<array{product_id: int, quantity: int, price: float}>
+     * @return list<array{product_id: int, quantity: int}>
      */
-    private static function lines(array $post, string $priceField): array
+    private static function lines(array $post): array
     {
         $extra = $post['items'] ?? [];
         if (!is_array($extra) || count($extra) > self::MAX_ITEMS - 1) {
@@ -47,7 +49,6 @@ final class OrderItemsInput
             $items[] = [
                 'product_id' => InputValidator::positiveInt('product_id', $line['product_id'] ?? ''),
                 'quantity' => InputValidator::positiveInt('quantity', $line['quantity'] ?? ''),
-                'price' => InputValidator::nonNegativeMoney($priceField, $line[$priceField] ?? ''),
             ];
         }
 

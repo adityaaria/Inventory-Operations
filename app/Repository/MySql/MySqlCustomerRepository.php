@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Entity\Customer;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\CustomerRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
 use PDO;
-use RuntimeException;
 
 final class MySqlCustomerRepository implements CustomerRepositoryInterface
 {
@@ -40,7 +41,7 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
     {
         $statement = $this->pdo->query('SELECT id, name, email, phone, address, is_active FROM customers ORDER BY name ASC');
         if ($statement === false) {
-            throw new RuntimeException('Unable to query customers.');
+            throw new PersistenceException('Unable to query customers.');
         }
         return array_map(fn (array $row): Customer => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -87,6 +88,6 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
 
     private function findRequired(int $id): Customer
     {
-        return $this->findById($id) ?? throw new RuntimeException("Customer not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Customer not found after write: {$id}");
     }
 }

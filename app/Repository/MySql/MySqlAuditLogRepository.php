@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository\MySql;
 
 use App\Repository\Contract\AuditLogRepositoryInterface;
+use App\Support\RequestOrigin;
 use PDO;
 
 final class MySqlAuditLogRepository implements AuditLogRepositoryInterface
@@ -16,7 +17,7 @@ final class MySqlAuditLogRepository implements AuditLogRepositoryInterface
     /**
      * @param array<string, mixed> $metadata
      */
-    public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void
+    public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, RequestOrigin $origin, array $metadata = []): void
     {
         $metadataJson = json_encode($metadata, JSON_THROW_ON_ERROR);
 
@@ -30,8 +31,8 @@ final class MySqlAuditLogRepository implements AuditLogRepositoryInterface
             'entity_type' => $entityType,
             'entity_id' => $entityId,
             'status' => $status,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
+            'ip_address' => $origin->ipAddress,
+            'user_agent' => $origin->userAgent,
             'metadata_json' => $metadataJson,
         ]);
     }

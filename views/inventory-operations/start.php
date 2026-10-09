@@ -22,5 +22,5 @@
 <body>
 <?php $workspaceTitle=$title; require dirname(__DIR__).'/partials/workspace-start.php'; $escape=static fn($value): string=>htmlspecialchars((string)$value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); ?>
 <main class="page" id="main-content">
-<header class="page-header"><div><p class="app-title">Inventory Operations</p><h1><?= $escape($title) ?></h1><p class="page-subtitle"><?= $escape($subtitle) ?></p></div><nav class="toolbar"><?= $toolbar ?></nav></header>
+<header class="page-header"><div><p class="app-title">Inventory Operations</p><h1><?= $escape($title) ?></h1><p class="page-subtitle"><?= $escape($subtitle) ?></p></div><nav class="toolbar" aria-label="Page actions"><?= $toolbar ?></nav></header>
 <?php if(($error??'')!==''): ?><p class="alert alert-danger" role="alert"><?= $escape($error) ?></p><?php endif; ?>

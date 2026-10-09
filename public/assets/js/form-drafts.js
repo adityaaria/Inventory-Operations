@@ -6,17 +6,7 @@
 // actually sent (the `formdata` event, after client validation and confirmation) and on logout.
 // Restoring revalidates permissions, master-data status and current stock on the server before submit;
 // the submit itself is still fully validated by the services.
-(function exposeFormDrafts(root, factory) {
-    const api = factory();
-
-    if (typeof module === 'object' && module.exports) {
-        module.exports = api;
-        return;
-    }
-
-    root.InventoryFormDrafts = api;
-    if (root.document) root.document.addEventListener('DOMContentLoaded', () => api.start(root));
-})(typeof globalThis === 'object' ? globalThis : this, () => {
+(function exposeFormDrafts(root) {
     const PREFIX = 'ioms-draft:v1:';
     const TTL_MS = 8 * 60 * 60 * 1000;
     const MAX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -73,7 +63,8 @@
             storage.setItem(probe, '1');
             storage.removeItem(probe);
             return storage;
-        } catch (error) {
+        } catch {
+            // Blocked or full storage (privacy mode): drafts are simply disabled.
             return null;
         }
     }
@@ -83,7 +74,7 @@
         try {
             for (let index = storage.length - 1; index >= 0; index--) {
                 const key = storage.key(index);
-                if (key && key.startsWith(PREFIX)) storage.removeItem(key);
+                if (key?.startsWith(PREFIX)) storage.removeItem(key);
             }
         } catch (error) { /* storage unavailable: nothing to clear */ }
     }
@@ -93,12 +84,28 @@
         try {
             for (let index = storage.length - 1; index >= 0; index--) {
                 const key = storage.key(index);
-                if (!key || !key.startsWith(PREFIX)) continue;
+                if (!key?.startsWith(PREFIX)) continue;
                 let draft = null;
                 try { draft = JSON.parse(storage.getItem(key)); } catch (error) { draft = null; }
                 if (!draft || isExpired(draft.savedAt, now, ttlFrom(draft.ttl / 1000))) storage.removeItem(key);
             }
         } catch (error) { /* storage unavailable */ }
+    }
+
+    function fieldLabel(control) {
+        const label = control.closest('label');
+        const caption = label?.querySelector('.field-label');
+        return (caption ? caption.textContent : control.name).trim().toLowerCase();
+    }
+
+    // Enabled product lines of a restored form, in the shape checkMessages() expects.
+    function productLines(form, outbound) {
+        return [...form.querySelectorAll('select[name="product_id"], select[name$="[product_id]"]')]
+            .filter(select => !select.disabled)
+            .map(select => {
+                const quantity = form.elements.namedItem(select.name.replace('product_id', 'quantity'));
+                return { field: select, productId: Number(select.value), quantity: quantity ? Number(quantity.value) : 0, outbound, label: select.selectedOptions[0] ? select.selectedOptions[0].textContent.trim() : 'This product' };
+            });
     }
 
     function enhance(form, root, storage) {
@@ -115,7 +122,10 @@
         const read = () => { try { return JSON.parse(storage.getItem(key)); } catch (error) { return null; } };
         const remove = () => { try { storage.removeItem(key); } catch (error) { /* ignore */ } };
         function save() {
-            const values = controls().map(control => [control.name, control.type === 'checkbox' ? (control.checked ? control.value : '') : control.value]);
+            const values = controls().map(control => {
+                const unchecked = control.type === 'checkbox' && !control.checked;
+                return [control.name, unchecked ? '' : control.value];
+            });
             try { storage.setItem(key, JSON.stringify({ savedAt: Date.now(), ttl, values })); } catch (error) { /* quota or privacy mode */ }
         }
 
@@ -166,16 +176,13 @@
             list.append(item);
         }
 
-        function fieldLabel(control) {
-            const label = control.closest('label');
-            const caption = label && label.querySelector('.field-label');
-            return (caption ? caption.textContent : control.name).trim().toLowerCase();
-        }
-
         function setValue(control, value, unavailable) {
             if (control.tagName === 'SELECT') {
-                const option = [...control.options].find(candidate => candidate.value === value && !candidate.disabled);
-                if (!option) { if (value !== '') unavailable.push(fieldLabel(control)); return; }
+                const available = [...control.options].some(candidate => candidate.value === value && !candidate.disabled);
+                if (!available) {
+                    if (value !== '') unavailable.push(fieldLabel(control));
+                    return;
+                }
                 control.value = value;
             } else if (control.type === 'checkbox') {
                 control.checked = value !== '' && value === control.value;
@@ -203,21 +210,28 @@
             for (const [name, value] of values) {
                 if (name === 'kind' || !draftable(name, '')) continue;
                 const control = form.elements.namedItem(remapName(name, mapping));
-                if (control && control.tagName) setValue(control, value, unavailable);
+                if (control?.tagName) setValue(control, value, unavailable);
             }
             return unavailable;
+        }
+
+        // Lists every message; blocking ones also stop native submit until the field changes.
+        function showMessages(messages, warehouse) {
+            for (const message of messages) {
+                addMessage(message.text);
+                const field = message.field === 'warehouse_id' ? warehouse : message.field;
+                if (message.blocking && field) {
+                    field.setCustomValidity(message.text);
+                    field.addEventListener('change', () => field.setCustomValidity(''), { once: true });
+                }
+            }
         }
 
         async function revalidate() {
             const kind = form.elements.namedItem('kind');
             const outbound = formKey === 'sales-order' || (kind && ['Transfer', 'SupplierReturn'].includes(kind.value));
             const warehouse = form.elements.namedItem('warehouse_id');
-            const lines = [...form.querySelectorAll('select[name="product_id"], select[name$="[product_id]"]')]
-                .filter(select => !select.disabled)
-                .map(select => {
-                    const quantity = form.elements.namedItem(select.name.replace('product_id', 'quantity'));
-                    return { field: select, productId: Number(select.value), quantity: quantity ? Number(quantity.value) : 0, outbound, label: select.selectedOptions[0] ? select.selectedOptions[0].textContent.trim() : 'This product' };
-                });
+            const lines = productLines(form, outbound);
             const query = new URLSearchParams({ form: formKey });
             if (warehouse && !warehouse.disabled && warehouse.value !== '') query.set('warehouse_id', warehouse.value);
             for (const line of lines) query.append('product_ids[]', String(line.productId));
@@ -230,18 +244,12 @@
                 }
                 if (!response.ok) throw new Error('check failed');
                 const messages = checkMessages(await response.json(), lines, line => line.label);
-                for (const message of messages) {
-                    addMessage(message.text);
-                    const field = message.field === 'warehouse_id' ? warehouse : message.field;
-                    if (message.blocking && field) {
-                        field.setCustomValidity(message.text);
-                        field.addEventListener('change', () => field.setCustomValidity(''), { once: true });
-                    }
-                }
+                showMessages(messages, warehouse);
                 text.textContent = messages.length === 0
                     ? 'Draft restored and checked: permissions, status and current stock are fine. Submitting checks everything again.'
                     : 'Draft restored. Review the items below; submitting checks everything again.';
-            } catch (error) {
+            } catch {
+                // Network or server failure: say so; the submit path revalidates anyway.
                 text.textContent = 'Draft restored, but it could not be checked now. Submitting still validates permissions, status and stock.';
             }
         }
@@ -251,7 +259,7 @@
         const document = root.document;
         const storage = safeStorage(root);
         document.addEventListener('submit', event => {
-            if (event.target.matches && event.target.matches('form[action="/logout"]')) clearAll(storage);
+            if (event.target.matches?.('form[action="/logout"]')) clearAll(storage);
         }, true);
         if (!storage) return;
         purgeExpired(storage, Date.now());
@@ -261,5 +269,13 @@
         if (root.MutationObserver) new root.MutationObserver(enhanceAll).observe(document.body, { childList: true, subtree: true });
     }
 
-    return { PREFIX, TTL_MS, ttlFrom, storageKey, draftable, isExpired, itemIndexes, remapName, checkMessages, clearAll, purgeExpired, start };
-});
+    const api = { PREFIX, TTL_MS, ttlFrom, storageKey, draftable, isExpired, itemIndexes, remapName, checkMessages, clearAll, purgeExpired, start };
+
+    if (typeof module === 'object' && module.exports) {
+        module.exports = api;
+        return;
+    }
+
+    root.InventoryFormDrafts = api;
+    if (root.document) root.document.addEventListener('DOMContentLoaded', () => api.start(root));
+})(typeof globalThis === 'object' ? globalThis : this);

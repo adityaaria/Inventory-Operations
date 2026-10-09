@@ -23,7 +23,7 @@
     <?php $formState = new \App\Support\FormState($old ?? []); ?>
     <?php $workspaceTitle = 'Edit User'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
     <main class="page" id="main-content">
-        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit User</h1><p class="page-subtitle">Update internal access and role details.</p></div><nav class="toolbar"><a href="/users">Users</a></nav></header>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Edit User</h1><p class="page-subtitle">Update internal access and role details.</p></div><nav class="toolbar" aria-label="Page actions"><a href="/users">Users</a></nav></header>
         <?php if ($error !== ''): ?>
             <p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>

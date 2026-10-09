@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Http\Request;
 use App\Http\Response;
 
 final class HomeController
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $body = <<<'HTML'
 <!doctype html>

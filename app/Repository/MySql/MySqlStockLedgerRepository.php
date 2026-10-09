@@ -27,11 +27,15 @@ final class MySqlStockLedgerRepository implements StockLedgerRepositoryInterface
     public function appendAdjustment(int $product,int $warehouse,int $delta,string $reference,int $id,int $actor): void
     {
         if($delta===0) { throw new \InvalidArgumentException('Adjustment delta cannot be zero.'); }
-        $this->append($product,$warehouse,'Adjustment',abs($delta),$reference,$id,$actor,$delta);
+        $this->append($product,$warehouse,'Adjustment',$delta,$reference,$id,$actor);
     }
 
-    private function append(int $productId, int $warehouseId, string $movementType, int $quantity, string $referenceType, int $referenceId, int $performedBy, ?int $delta = null): void
+    /** Receipt and Issue pass a positive quantity; Adjustment passes the signed delta, stored as its absolute quantity plus the delta. */
+    private function append(int $productId, int $warehouseId, string $movementType, int $signedQuantity, string $referenceType, int $referenceId, int $performedBy): void
     {
+        $isAdjustment = $movementType === 'Adjustment';
+        $quantity = $isAdjustment ? abs($signedQuantity) : $signedQuantity;
+        $delta = $isAdjustment ? $signedQuantity : null;
         $statement = $this->pdo->prepare(
             'INSERT INTO stock_ledger (product_id, warehouse_id, movement_type, quantity, reference_type, reference_id, performed_by, quantity_delta)
              VALUES (:product_id, :warehouse_id, :movement_type, :quantity, :reference_type, :reference_id, :performed_by, :quantity_delta)'

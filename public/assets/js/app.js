@@ -14,6 +14,7 @@
         modal.ensureOverlays();
         InventoryNavigation.buildShell();
         tables.enhance();
+        InventoryTables.watchScrollRegions();
         InventoryCharts.render();
         enhanceLinks();
         enhanceCancelButtons();

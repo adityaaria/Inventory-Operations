@@ -37,9 +37,10 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
         await go('/sales-orders/create');
         await evaluate(`(() => { const f = document.querySelector('form[action="/sales-orders"]');
             f.elements.order_number.value = ${JSON.stringify(number)};
-            f.elements.warehouse_id.value = [...f.elements.warehouse_id.options].find(o => /Secondary/.test(o.textContent)).value;
-            f.elements.product_id.value = [...f.elements.product_id.options].find(o => /SKU-DEMO-001/.test(o.textContent)).value;
-            f.elements.quantity.value = '${quantity}'; f.elements.selling_price.value = '25000'; })()`);
+            f.elements.warehouse_id.value = [...f.elements.warehouse_id.options].find(o => /Surabaya/.test(o.textContent)).value;
+            f.elements.product_id.value = [...f.elements.product_id.options].find(o => /BIS-0001/.test(o.textContent)).value;
+            f.elements.product_id.dispatchEvent(new Event('change', {bubbles: true}));
+            f.elements.quantity.value = '${quantity}'; })()`);
     };
 
     fs.mkdirSync(out, { recursive: true });
@@ -51,9 +52,9 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     const fulfil = 'SO-DEMO-OK-' + stamp;
 
     await login('sales1@example.test');
-    await go('/products?q=SKU-DEMO-001');
+    await go('/products?q=BIS-0001');
     const product = await evaluate(`document.querySelector('a[href^="/products/show"]').getAttribute('href')`);
-    await go(product); await shot('01-stok-per-gudang-SKU-DEMO-001');
+    await go(product); await shot('01-stok-per-gudang-BIS-0001');
     await createSalesOrder(oversell, 6); await shot('02-sales-membuat-SO-qty-6'); await submit('/sales-orders');
     const overHref = await salesOrder(oversell); await go(overHref); await submit('/sales-orders/submit');
     await createSalesOrder(fulfil, 2); await submit('/sales-orders');
@@ -75,6 +76,6 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await go(po); await shot('10-PO-ordered-siap-diterima');
     await evaluate(`(() => { const f = document.querySelector('form[action="/purchase-orders/receive"]'); f.elements.quantity.value = '1'; f.submit(); })()`);
     await sleep(300); await settle(); await go(po); await shot('11-PO-partially-received');
-    await go('/api/products/SKU-DEMO-001/availability'); await shot('12-json-api-availability');
+    await go('/api/products/BIS-0001/availability'); await shot('12-json-api-availability');
     ws.close();
 })().catch(error => { console.error(error); process.exit(1); });

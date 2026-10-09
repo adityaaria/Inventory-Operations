@@ -47,7 +47,7 @@ def main():
     if not any(binding['HostPort']==str(port) for bindings in inspected['NetworkSettings']['Ports'].values() if bindings for binding in bindings): parser.error('URL does not map to the target project.')
     import ssl
     context = ssl.create_default_context(cafile=args.ca_file) if args.ca_file else ssl.create_default_context()
-    paths=['/dashboard','/products?q=Demo','/purchase-orders','/sales-orders','/reports?type=orders','/reports/orders.csv','/api/products/SKU-DEMO-001/availability']
+    paths=['/dashboard','/products?q=Tirta','/purchase-orders','/sales-orders','/reports?type=orders','/reports/orders.csv','/api/products/BIS-0001/availability']
     if args.profile=='capacity':
         paths=['/dashboard','/products?q=Capacity&page=1000','/sales-orders?q=CAPACITY&page=1000','/api/products/CAPACITY-000000/availability']
         if args.role!='sales': paths += ['/purchase-orders?q=CAPACITY&page=1000']

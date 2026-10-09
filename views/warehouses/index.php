@@ -28,7 +28,7 @@
                 <h1>Warehouses</h1>
                 <p class="page-subtitle">Review storage locations and availability.</p>
             </div>
-            <nav class="toolbar">
+            <nav class="toolbar" aria-label="Page actions">
 
                 <?php if ($canWrite): ?><a class="button-primary" href="/warehouses/create">Create Warehouse</a><?php endif; ?>
                 <?php if ($canWrite): ?><button type="button" class="button" data-dialog-open="import-dialog">Import CSV</button><?php endif; ?>
@@ -37,7 +37,7 @@
         <?php if ($error !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <?php if ($canWrite): ?>
             <div class="import-dialog" id="import-dialog" <?= $error !== '' ? '' : 'hidden' ?>>
-                <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
+                <dialog open class="modal-panel" aria-modal="true" aria-labelledby="import-dialog-title" tabindex="-1">
                     <header class="modal-header">
                         <h2 id="import-dialog-title">Import CSV</h2>
                         <button class="modal-close" type="button" aria-label="Close dialog">Close</button>
@@ -50,10 +50,10 @@
                             <div class="modal-footer"><button type="button" class="button button-quiet" data-dialog-close>Cancel</button><button type="submit">Import CSV</button></div>
                         </form>
                     </div>
-                </section>
+                </dialog>
             </div>
         <?php endif; ?>
-        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+        <section class="table-scroll" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>">
 <table class="data-table">
             <thead><tr><th>Name</th><th>Location</th><th>Status</th><?php if ($canWrite): ?><th>Action</th><?php endif; ?></tr></thead>
             <tbody>
@@ -76,7 +76,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-</div>
+</section>
         <?php require dirname(__DIR__) . "/partials/pagination.php"; ?>
     </main>
     <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>

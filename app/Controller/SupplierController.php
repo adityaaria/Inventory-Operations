@@ -18,6 +18,8 @@ use App\Validation\InputValidator;
 
 final class SupplierController
 {
+    private const INDEX_PATH = '/suppliers';
+
     public function __construct(
         private readonly SupplierService $suppliers,
         private readonly SupplierRepositoryInterface $repository,
@@ -31,7 +33,7 @@ final class SupplierController
         return $this->renderIndex($this->guard->requireAuth(), $request);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->guard->requireUserManagement();
 
@@ -55,7 +57,7 @@ final class SupplierController
             return $this->render('suppliers/create.php', ['old' => $post, 'error' => $exception->getMessage()], 422);
         }
 
-        return new Response('', 302, ['Location' => '/suppliers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function import(Request $request): Response
@@ -77,7 +79,7 @@ final class SupplierController
             return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
-        return new Response('', 302, ['Location' => '/suppliers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function edit(Request $request): Response
@@ -114,21 +116,21 @@ final class SupplierController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/suppliers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function activate(Request $request): Response
     {
         $this->suppliers->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), true);
 
-        return new Response('', 302, ['Location' => '/suppliers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function deactivate(Request $request): Response
     {
         $this->suppliers->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), false);
 
-        return new Response('', 302, ['Location' => '/suppliers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
@@ -139,7 +141,7 @@ final class SupplierController
             'suppliers' => $result->items(),
             'result' => $result,
             'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
-            'paginationPath' => '/suppliers',
+            'paginationPath' => self::INDEX_PATH,
             'paginationLabel' => 'Suppliers',
             'paginationQuery' => $request->query(),
             'error' => $error,

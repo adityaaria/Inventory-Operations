@@ -15,6 +15,13 @@ import tempfile
 spec=importlib.util.spec_from_file_location('dbops',Path(__file__).with_name('db-operations.py'))
 ops=importlib.util.module_from_spec(spec); spec.loader.exec_module(ops)
 FORMAT='cms-aes256-gcm-v1'
+BUNDLE_ARCHIVE='backup.sql.gz'
+BUNDLE_MANIFEST='backup.sql.gz.json'
+
+
+def manifest_path(path):
+    """Every archive keeps its checksum manifest next to it as <archive>.json."""
+    return Path(str(path)+'.json')
 
 
 def private_directory(path,empty=False):
@@ -31,7 +38,7 @@ def run(command):
 
 
 def verify(path):
-    path=Path(path); metadata=json.loads(Path(str(path)+'.json').read_text())
+    path=Path(path); metadata=json.loads(manifest_path(path).read_text())
     if not isinstance(metadata,dict) or metadata.get('format')!=FORMAT or metadata.get('sha256')!=ops.sha256(path): raise ValueError('Encrypted archive integrity mismatch.')
     return metadata
 
@@ -39,15 +46,15 @@ def verify(path):
 def publish_pair(archive,metadata,directory):
     directory=private_directory(directory)
     target=directory/Path(archive).name
-    if target.exists() or Path(str(target)+'.json').exists(): raise ValueError('Replica already exists; existing backups are preserved.')
+    if target.exists() or manifest_path(target).exists(): raise ValueError('Replica already exists; existing backups are preserved.')
     with tempfile.TemporaryDirectory(prefix='.replica-',dir=directory) as work:
         staged=Path(work)/target.name
         shutil.copyfile(archive,staged); os.chmod(staged,0o600)
-        manifest=Path(str(staged)+'.json'); manifest.write_text(json.dumps(metadata,indent=2)+'\n'); os.chmod(manifest,0o600)
+        manifest=manifest_path(staged); manifest.write_text(json.dumps(metadata,indent=2)+'\n'); os.chmod(manifest,0o600)
         verify(staged)
         # Exclusive link publication prevents replacement of an existing valid replica.
         os.link(staged,target)
-        try: os.link(manifest,Path(str(target)+'.json'))
+        try: os.link(manifest,manifest_path(target))
         except BaseException: target.unlink(); raise
     verify(target)
     return target
@@ -59,20 +66,20 @@ def seal(archive,recipient,directory,openssl='openssl',replica=None):
     run([openssl,'x509','-in',str(recipient),'-checkend','0','-noout'])
     certificate=run([openssl,'x509','-in',str(recipient),'-outform','DER'])
     target=directory/(archive.name+'.cms')
-    if target.exists() or Path(str(target)+'.json').exists(): raise ValueError('Encrypted backup already exists.')
+    if target.exists() or manifest_path(target).exists(): raise ValueError('Encrypted backup already exists.')
     with tempfile.TemporaryDirectory(prefix='.seal-',dir=directory) as work:
         bundle=Path(work)/'bundle.tar'; sealed=Path(work)/target.name
         with tarfile.open(bundle,'w') as tar:
-            tar.add(archive,arcname='backup.sql.gz',recursive=False)
-            tar.add(Path(str(archive)+'.json'),arcname='backup.sql.gz.json',recursive=False)
+            tar.add(archive,arcname=BUNDLE_ARCHIVE,recursive=False)
+            tar.add(manifest_path(archive),arcname=BUNDLE_MANIFEST,recursive=False)
         os.chmod(bundle,0o600)
         run([openssl,'cms','-encrypt','-binary','-aes-256-gcm','-in',str(bundle),'-outform','DER','-out',str(sealed),'-recip',str(recipient),'-keyopt','rsa_padding_mode:oaep','-keyopt','rsa_oaep_md:sha256'])
         os.chmod(sealed,0o600)
         envelope={'format':FORMAT,'created_utc':metadata['created_utc'],'sha256':ops.sha256(sealed),'bytes':sealed.stat().st_size,'recipient_certificate_sha256':hashlib.sha256(certificate).hexdigest()}
-        manifest=Path(str(sealed)+'.json'); manifest.write_text(json.dumps(envelope,indent=2)+'\n'); os.chmod(manifest,0o600)
+        manifest=manifest_path(sealed); manifest.write_text(json.dumps(envelope,indent=2)+'\n'); os.chmod(manifest,0o600)
         verify(sealed)
         os.link(sealed,target)
-        try: os.link(manifest,Path(str(target)+'.json'))
+        try: os.link(manifest,manifest_path(target))
         except BaseException: target.unlink(); raise
     result={'status':'encrypted','archive':str(target),'sha256':envelope['sha256']}
     if replica:
@@ -84,7 +91,7 @@ def seal(archive,recipient,directory,openssl='openssl',replica=None):
 
 def safe_members(tar):
     members=tar.getmembers()
-    if len(members)!=2 or {m.name for m in members}!={'backup.sql.gz','backup.sql.gz.json'}: raise ValueError('Unexpected encrypted bundle contents.')
+    if len(members)!=2 or {m.name for m in members}!={BUNDLE_ARCHIVE,BUNDLE_MANIFEST}: raise ValueError('Unexpected encrypted bundle contents.')
     if any(not m.isfile() or m.size<0 or m.size>2*1024*1024*1024 for m in members): raise ValueError('Unsafe encrypted bundle member.')
     return members
 
@@ -104,10 +111,10 @@ def unseal(archive,recipient,key,directory,openssl='openssl'):
                 path=Path(work)/member.name
                 with source,path.open('xb') as output: shutil.copyfileobj(source,output)
                 os.chmod(path,0o600)
-        plain=Path(work)/'backup.sql.gz'; ops.verify_archive(plain)
-        for name in ('backup.sql.gz','backup.sql.gz.json'):
+        plain=Path(work)/BUNDLE_ARCHIVE; ops.verify_archive(plain)
+        for name in (BUNDLE_ARCHIVE,BUNDLE_MANIFEST):
             with (Path(work)/name).open('rb') as source,os.fdopen(os.open(directory/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600),'wb') as output: shutil.copyfileobj(source,output)
-    return {'status':'decrypted','archive':str(directory/'backup.sql.gz')}
+    return {'status':'decrypted','archive':str(directory/BUNDLE_ARCHIVE)}
 
 
 def prune(directory,keep=7,apply=False):
@@ -116,7 +123,7 @@ def prune(directory,keep=7,apply=False):
     for path in archives: verify(path)
     expired=archives[keep:]
     if apply:
-        for path in expired: path.unlink(); Path(str(path)+'.json').unlink()
+        for path in expired: path.unlink(); manifest_path(path).unlink()
     return {'status':'pruned' if apply else 'dry_run','expired':[p.name for p in expired],'kept':len(archives)-len(expired)}
 
 

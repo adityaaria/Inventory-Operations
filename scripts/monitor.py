@@ -26,6 +26,25 @@ def backup_alert(directory, max_age, now):
     return None
 
 
+def container_alerts(args, alerts):
+    """Appends in place so alerts found before a failing probe are kept."""
+    services = dbops.run(dbops.compose(args) + ['config', '--services'], stdout=subprocess.PIPE).stdout.decode().splitlines()
+    for service in ('app', 'db', 'web'):
+        if service not in services: continue
+        container = dbops.run(dbops.compose(args) + ['ps', '-q', service], stdout=subprocess.PIPE).stdout.decode().strip()
+        if not container: alerts.append(service + '_not_running'); continue
+        state = json.loads(dbops.run([args.docker, 'inspect', '--format', '{{json .State}}', container], stdout=subprocess.PIPE).stdout)
+        if not state.get('Running') or state.get('Health', {}).get('Status', 'healthy') != 'healthy': alerts.append(service + '_unhealthy')
+
+
+def application_alerts(args, alerts):
+    health = subprocess.run(dbops.compose(args) + ['exec', '-T', 'app', 'php', 'scripts/health-check.php'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
+    if health.returncode: alerts.append('application_not_ready')
+    logs = json.loads(dbops.run(dbops.compose(args) + ['exec', '-T', 'app', 'php', 'scripts/log-summary.php', str(args.error_window_seconds)], stdout=subprocess.PIPE).stdout)
+    if logs['errors'] >= args.error_threshold: alerts.append('application_error_threshold')
+    if logs['malformed_lines']: alerts.append('malformed_application_log')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--docker', default='docker')
@@ -41,18 +60,8 @@ def main():
         parser.error('Invalid monitoring thresholds.')
     alerts = []
     try:
-        services = dbops.run(dbops.compose(args) + ['config', '--services'], stdout=subprocess.PIPE).stdout.decode().splitlines()
-        for service in ('app', 'db', 'web'):
-            if service not in services: continue
-            container = dbops.run(dbops.compose(args) + ['ps', '-q', service], stdout=subprocess.PIPE).stdout.decode().strip()
-            if not container: alerts.append(service + '_not_running'); continue
-            state = json.loads(dbops.run([args.docker, 'inspect', '--format', '{{json .State}}', container], stdout=subprocess.PIPE).stdout)
-            if not state.get('Running') or state.get('Health', {}).get('Status', 'healthy') != 'healthy': alerts.append(service + '_unhealthy')
-        health = subprocess.run(dbops.compose(args) + ['exec', '-T', 'app', 'php', 'scripts/health-check.php'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
-        if health.returncode: alerts.append('application_not_ready')
-        logs = json.loads(dbops.run(dbops.compose(args) + ['exec', '-T', 'app', 'php', 'scripts/log-summary.php', str(args.error_window_seconds)], stdout=subprocess.PIPE).stdout)
-        if logs['errors'] >= args.error_threshold: alerts.append('application_error_threshold')
-        if logs['malformed_lines']: alerts.append('malformed_application_log')
+        container_alerts(args, alerts)
+        application_alerts(args, alerts)
     except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired): alerts.append('monitor_probe_failed')
     import time
     issue = backup_alert(args.backup_directory, args.backup_max_age_hours * 3600, time.time())

@@ -9,6 +9,41 @@
   const input = (row, name) => row.querySelector('[data-stock-input="' + name + '"]');
   let revision = 0, next = rows().length;
   for (const row of rows()) if (input(row, 'baseline').value !== '') row.dataset.retainBaseline = 'true';
+  async function loadBaseline(row, current) {
+    const query = new URLSearchParams({ product_id: input(row, 'product_id').value, warehouse_id: form.elements.warehouse_id.value });
+    const response = await fetch('/inventory-operations/balance?' + query, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('Current stock could not be loaded.');
+    const balance = await response.json();
+    if (current !== revision) return false;
+    if (!row.dataset.retainBaseline) { input(row, 'baseline').value = balance.quantity; row.dataset.retainBaseline = 'true'; }
+    return { product: input(row, 'product_id').value };
+  }
+  async function loadReturnSource(row, value, summary, current) {
+    const id = input(row, 'source_ledger_id').value;
+    if (!/^[1-9]\d*$/.test(id)) throw new Error('Choose the original receipt/issue ledger ID.');
+    const response = await fetch('/inventory-operations/source?id=' + encodeURIComponent(id), { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('Original movement could not be loaded.');
+    const source = await response.json();
+    if (current !== revision) return false;
+    if (source.movement_type !== (value === 'SupplierReturn' ? 'Receipt' : 'Issue')) throw new Error('Original movement does not match the return type.');
+    summary.textContent = 'Original ' + source.reference_type + ' #' + source.reference_id + ' · product #' + source.product_id + ' · warehouse #' + source.warehouse_id + ' · original quantity ' + source.quantity;
+    return { product: String(source.product_id), warehouse: String(source.warehouse_id) };
+  }
+  // Resolves to the row's product (and return warehouse) or false; stale results from an older refresh are ignored.
+  async function checkRow(row, value, isReturn, current) {
+    const summary = row.querySelector('[data-stock-source-summary]');
+    row.querySelector('[data-stock-quantity-label]').textContent = value === 'Adjustment' ? 'Counted Quantity' : 'Quantity';
+    input(row, 'quantity').min = value === 'Adjustment' ? '0' : '1';
+    summary.textContent = '';
+    try {
+      if (value === 'Adjustment') return await loadBaseline(row, current);
+      if (isReturn) return await loadReturnSource(row, value, summary, current);
+      return { product: input(row, 'product_id').value };
+    } catch (error) {
+      if (current === revision) summary.textContent = error.message || 'Please reload and try again.';
+      return false;
+    }
+  }
   async function refresh() {
     const current = ++revision, value = kind.value;
     const isReturn = value === 'SupplierReturn' || value === 'CustomerReturn';
@@ -21,38 +56,7 @@
     }
     add.disabled = items.length >= 100;
     submit.disabled = true;
-    const valid = await Promise.all(items.map(async row => {
-      const summary = row.querySelector('[data-stock-source-summary]');
-      row.querySelector('[data-stock-quantity-label]').textContent = value === 'Adjustment' ? 'Counted Quantity' : 'Quantity';
-      input(row, 'quantity').min = value === 'Adjustment' ? '0' : '1';
-      summary.textContent = '';
-      try {
-        if (value === 'Adjustment') {
-          const query = new URLSearchParams({ product_id: input(row, 'product_id').value, warehouse_id: form.elements.warehouse_id.value });
-          const response = await fetch('/inventory-operations/balance?' + query, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-          if (!response.ok) throw new Error('Current stock could not be loaded.');
-          const balance = await response.json();
-          if (current !== revision) return false;
-          if (!row.dataset.retainBaseline) { input(row, 'baseline').value = balance.quantity; row.dataset.retainBaseline = 'true'; }
-          return { product: input(row, 'product_id').value };
-        }
-        if (isReturn) {
-          const id = input(row, 'source_ledger_id').value;
-          if (!/^[1-9][0-9]*$/.test(id)) throw new Error('Choose the original receipt/issue ledger ID.');
-          const response = await fetch('/inventory-operations/source?id=' + encodeURIComponent(id), { headers: { Accept: 'application/json' }, cache: 'no-store' });
-          if (!response.ok) throw new Error('Original movement could not be loaded.');
-          const source = await response.json();
-          if (current !== revision) return false;
-          if (source.movement_type !== (value === 'SupplierReturn' ? 'Receipt' : 'Issue')) throw new Error('Original movement does not match the return type.');
-          summary.textContent = 'Original ' + source.reference_type + ' #' + source.reference_id + ' · product #' + source.product_id + ' · warehouse #' + source.warehouse_id + ' · original quantity ' + source.quantity;
-          return { product: String(source.product_id), warehouse: String(source.warehouse_id) };
-        }
-        return { product: input(row, 'product_id').value };
-      } catch (error) {
-        if (current === revision) summary.textContent = error.message || 'Please reload and try again.';
-        return false;
-      }
-    }));
+    const valid = await Promise.all(items.map(row => checkRow(row, value, isReturn, current)));
     if (current !== revision) return;
     const products = new Set(), warehouses = new Set();
     let allValid = valid.every(Boolean);

@@ -66,7 +66,7 @@ final class AuditRemediationIntegrationTest extends TestCase
     public function testAuditFailureRollsBackOrderStockAndLedger(): void
     {
         $audit = new class implements AuditLogRepositoryInterface {
-            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, string $ipAddress, string $userAgent, array $metadata = []): void { throw new \RuntimeException('Forced audit failure'); }
+            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, \App\Support\RequestOrigin $origin, array $metadata = []): void { throw new \RuntimeException('Forced audit failure'); }
         };
         [$service, $repo, $stock, $ledger, $actor] = $this->sales($audit);
         $order = $service->createDraft($actor, 'SO-AUDIT-ROLLBACK', 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
@@ -112,7 +112,7 @@ final class AuditRemediationIntegrationTest extends TestCase
         $repo = new MySqlProductRepository($this->pdo);
         $this->expectException(\App\Exception\ValidationException::class);
         $this->expectExceptionMessage('A record with that unique value already exists.');
-        $repo->create(new \App\Support\ProductInput('SKU-DEMO-001', 'Duplicate', 'pcs', 0, 0, 0, 1), true);
+        $repo->create(new \App\Support\ProductInput('BIS-0001', 'Duplicate', 'pcs', 0, 0, 0, 1), true);
     }
 
     private function sales(?AuditLogRepositoryInterface $audit = null): array

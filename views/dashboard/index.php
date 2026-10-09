@@ -41,7 +41,7 @@
                 <h1>Dashboard</h1>
                 <p class="page-subtitle">Role: <?= htmlspecialchars((string) $dashboard['role'], ENT_QUOTES, 'UTF-8') ?></p>
             </div>
-            <nav class="toolbar"><a href="/reports">Reports</a></nav>
+            <nav class="toolbar" aria-label="Page actions"><a href="/reports">Reports</a></nav>
         </header>
         <section class="metric-grid">
         <?php if ($purchaseStatus !== []): ?>
@@ -59,7 +59,7 @@
         <?php if (isset($dashboard['inventory_value'])): ?>
             <article class="metric-card">
                 <span>Inventory Value</span>
-                <strong><?= number_format((float) $dashboard['inventory_value'], 2) ?></strong>
+                <strong><?= \App\Support\Money::rupiah((float) $dashboard['inventory_value']) ?></strong>
             </article>
         <?php endif; ?>
         <?php if (isset($dashboard['low_stock_count'])): ?>
@@ -94,7 +94,7 @@
                 <h2>Purchase Status Data</h2>
                 <?php if ($purchaseStatus === []): ?><div class="empty-state"><strong>No purchase order data</strong><span>Create purchase orders to populate this widget.</span></div><?php endif; ?>
                 <?php if ($purchaseStatus !== []): ?>
-                    <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+                    <section class="table-scroll" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>">
 <table class="data-table">
                         <thead><tr><th>Status</th><th>Total</th></tr></thead>
                         <tbody>
@@ -103,7 +103,7 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-</div>
+</section>
                 <?php endif; ?>
             </article>
             <aside class="quick-panel">

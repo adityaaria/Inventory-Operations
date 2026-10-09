@@ -8,11 +8,12 @@ use App\Entity\User;
 use App\Exception\HttpException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Http\View;
 use App\Security\AuthGuard;
 use App\Service\ReportService;
 use App\Support\CsvResponse;
-use InvalidArgumentException;
 use App\Support\Pagination;
+use InvalidArgumentException;
 
 final class ReportController
 {
@@ -48,19 +49,28 @@ final class ReportController
             $filters = ['document' => '', 'age' => ''];
             $report = null;
         }
-        $outstandingDocuments = $this->reports->outstandingDocuments($actor);
-        $filterQuery = $type === 'outstanding' ? array_map(static fn (mixed $value): string => is_string($value) ? $value : '', $filters) : [];
-        $canViewStock = $actor->role() !== User::ROLE_SALES;
-        $paginationPath = '/reports';
-        $paginationLabel = 'Report records';
-        $paginationQuery = ['type' => $type, 'from' => $from ?? '', 'to' => $to ?? ''] + $filterQuery;
-        $result = $report['result'] ?? null;
-        $exportUrl = '/reports/' . $type . '.csv?' . http_build_query(['from' => $from ?? '', 'to' => $to ?? ''] + $filterQuery);
-        ob_start();
-        require dirname(__DIR__, 2) . '/views/reports/index.php';
-        $body = ob_get_clean();
+        $filterQuery = [];
+        if ($type === 'outstanding') {
+            $filterQuery = array_map(static fn (mixed $value): string => is_string($value) ? $value : '', $filters);
+        }
+        $dateQuery = ['from' => $from ?? '', 'to' => $to ?? ''] + $filterQuery;
 
-        return Response::html(is_string($body) ? $body : '', $status);
+        return View::render('reports/index.php', [
+            'actor' => $actor,
+            'type' => $type,
+            'from' => $from,
+            'to' => $to,
+            'error' => $error,
+            'report' => $report,
+            'result' => $report['result'] ?? null,
+            'filterQuery' => $filterQuery,
+            'outstandingDocuments' => $this->reports->outstandingDocuments($actor),
+            'canViewStock' => $actor->role() !== User::ROLE_SALES,
+            'paginationPath' => '/reports',
+            'paginationLabel' => 'Report records',
+            'paginationQuery' => ['type' => $type] + $dateQuery,
+            'exportUrl' => '/reports/' . $type . '.csv?' . http_build_query($dateQuery),
+        ], $status);
     }
 
     public function stockLedger(Request $request): Response

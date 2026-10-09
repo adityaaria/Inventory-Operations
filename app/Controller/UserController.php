@@ -19,6 +19,8 @@ use App\Validation\InputValidator;
 
 final class UserController
 {
+    private const INDEX_PATH = '/users';
+
     public function __construct(
         private readonly UserService $users,
         private readonly UserRepositoryInterface $repository,
@@ -32,7 +34,7 @@ final class UserController
         return $this->renderIndex($this->guard->requireUserManagement(), $request);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->guard->requireUserManagement();
 
@@ -60,7 +62,7 @@ final class UserController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function import(Request $request): Response
@@ -82,7 +84,7 @@ final class UserController
             return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function edit(Request $request): Response
@@ -120,21 +122,21 @@ final class UserController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function activate(Request $request): Response
     {
         $this->users->setActive($this->guard->requireUserManagement(), $this->idFromPost($request), true);
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function deactivate(Request $request): Response
     {
         $this->users->setActive($this->guard->requireUserManagement(), $this->idFromPost($request), false);
 
-        return new Response('', 302, ['Location' => '/users']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
@@ -144,7 +146,7 @@ final class UserController
         return $this->render('users/index.php', [
             'users' => $result->items(),
             'result' => $result,
-            'paginationPath' => '/users',
+            'paginationPath' => self::INDEX_PATH,
             'paginationLabel' => 'Users',
             'paginationQuery' => $request->query(),
             'error' => $error,

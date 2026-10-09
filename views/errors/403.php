@@ -27,7 +27,7 @@
                 <h1>Forbidden</h1>
                 <p class="page-subtitle">This account is not allowed to access the requested page.</p>
             </div>
-            <nav class="toolbar"><a class="button-primary" href="/">Back to dashboard</a></nav>
+            <nav class="toolbar" aria-label="Page actions"><a class="button-primary" href="/">Back to dashboard</a></nav>
         </header>
         <p class="alert alert-danger" role="alert">You are not allowed to access this page.</p>
     </main>

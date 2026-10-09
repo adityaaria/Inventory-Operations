@@ -21,7 +21,10 @@ final class InMemoryStockCatalogRepository implements StockCatalogRepositoryInte
         $this->warehouses = array_values(array_unique($warehouseIds));
     }
 
-    public function lockCreation(): void {}
+    public function lockCreation(): void
+    {
+        // Single-process test double: there is no concurrent creation to serialize.
+    }
     public function productIds(): array { return $this->products; }
     public function warehouseIds(): array { return $this->warehouses; }
 }

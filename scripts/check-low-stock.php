@@ -9,8 +9,7 @@ use App\Support\DatabaseFactory;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-/** @var Config $config */
-$config = require dirname(__DIR__) . '/config/config.php';
+$config = Config::fromEnvironment();
 $service = new LowStockService(new MySqlOperationalQueryRepository((new DatabaseFactory($config))->create()));
 $rows = $service->rows();
 

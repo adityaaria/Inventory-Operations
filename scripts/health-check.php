@@ -4,12 +4,12 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 $ready = false;
 try {
-    $config = require dirname(__DIR__) . '/config/config.php';
+    $config = App\Support\Config::fromEnvironment();
     $pdo = (new App\Support\DatabaseFactory($config))->create();
     (new App\Repository\MySql\MySqlOperationalHealthRepository($pdo))->assertReady();
     foreach (['log', 'sessions'] as $directory) {
         $path = dirname(__DIR__) . '/var/' . $directory;
-        if (!is_dir($path) || !is_writable($path)) { throw new RuntimeException('Storage unavailable.'); }
+        if (!is_dir($path) || !is_writable($path)) { throw new \App\Exception\InfrastructureException('Storage unavailable.'); }
     }
     $ready = true;
 } catch (Throwable $error) {

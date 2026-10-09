@@ -50,20 +50,23 @@ use App\Service\SupplierService;
 use App\Service\StockService;
 use App\Service\UserService;
 use App\Service\WarehouseService;
-use App\Support\Config;
+use App\Support\ApplicationBootstrap;
 use App\Support\DatabaseFactory;
 use App\Support\RequestAuditRecorder;
 
-/** @var Config $config */
-$config = require dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$config = ApplicationBootstrap::boot(dirname(__DIR__));
 
 $router = new Router();
 $request = Request::fromGlobals();
-$secureCookie = $config->string('SESSION_COOKIE_SECURE') === 'auto'
-    ? ($config->string('APP_ENV') === 'production' ? true : null)
-    : $config->bool('SESSION_COOKIE_SECURE');
+// 'auto' forces secure cookies in production and lets PHP decide elsewhere (null).
+$secureCookie = $config->string('APP_ENV') === 'production' ? true : null;
+if ($config->string('SESSION_COOKIE_SECURE') !== 'auto') {
+    $secureCookie = $config->bool('SESSION_COOKIE_SECURE');
+}
 if ($config->string('APP_ENV') === 'production' && $secureCookie !== true) {
-    throw new RuntimeException('Production sessions require secure cookies.');
+    throw new \App\Exception\InfrastructureException('Production sessions require secure cookies.');
 }
 $session = new NativeSessionManager(
     new \App\Security\SessionPolicy($config->int('SESSION_IDLE_SECONDS'), $config->int('SESSION_ABSOLUTE_SECONDS'), $config->int('SESSION_ROTATION_SECONDS')),
@@ -144,16 +147,22 @@ $customerController = new CustomerController(
     $authGuard,
     $csvImports,
 );
+$loginPath = '/login';
+$purchaseOrdersPath = '/purchase-orders';
+$salesOrdersPath = '/sales-orders';
+// Party and warehouse names are only loaded for the order pages that display them.
+$onPurchaseOrders = str_starts_with($request->path(), $purchaseOrdersPath);
+$onSalesOrders = str_starts_with($request->path(), $salesOrdersPath);
 $suppliersById = [];
-foreach (str_starts_with($request->path(), '/purchase-orders') ? $supplierRepository->all() : [] as $supplier) {
+foreach ($onPurchaseOrders ? $supplierRepository->all() : [] as $supplier) {
     $suppliersById[$supplier->id()] = $supplier;
 }
 $warehousesById = [];
-foreach (str_starts_with($request->path(), '/purchase-orders') || str_starts_with($request->path(), '/sales-orders') ? $warehouseRepository->all() : [] as $warehouse) {
+foreach ($onPurchaseOrders || $onSalesOrders ? $warehouseRepository->all() : [] as $warehouse) {
     $warehousesById[$warehouse->id()] = $warehouse;
 }
 $customersById = [];
-foreach (str_starts_with($request->path(), '/sales-orders') ? $customerRepository->all() : [] as $customer) {
+foreach ($onSalesOrders ? $customerRepository->all() : [] as $customer) {
     $customersById[$customer->id()] = $customer;
 }
 $purchaseOrderController = new PurchaseOrderController(
@@ -221,8 +230,8 @@ $router->get('/reports/stock-ledger.csv', [$reportController, 'stockLedger']);
 $router->get('/reports/orders.csv', [$reportController, 'orders']);
 $router->get('/reports/outstanding.csv', [$reportController, 'outstanding']);
 $router->get('/api/products/{sku}/availability', [$availabilityController, 'show']);
-$router->get('/login', [$authController, 'showLogin']);
-$router->post('/login', [$authController, 'login']);
+$router->get($loginPath, [$authController, 'showLogin']);
+$router->post($loginPath, [$authController, 'login']);
 $router->post('/logout', [$authController, 'logout']);
 $router->get('/users', [$userController, 'index']);
 $router->get('/users/create', [$userController, 'create']);
@@ -257,17 +266,17 @@ $router->get('/products/edit', [$productController, 'edit']);
 $router->post('/products/update', [$productController, 'update']);
 $router->post('/products/activate', [$productController, 'activate']);
 $router->post('/products/deactivate', [$productController, 'deactivate']);
-$router->get('/purchase-orders', [$purchaseOrderController, 'index']);
+$router->get($purchaseOrdersPath, [$purchaseOrderController, 'index']);
 $router->get('/purchase-orders/show', [$purchaseOrderController, 'show']);
 $router->get('/purchase-orders/create', [$purchaseOrderController, 'create']);
-$router->post('/purchase-orders', [$purchaseOrderController, 'store']);
+$router->post($purchaseOrdersPath, [$purchaseOrderController, 'store']);
 $router->post('/purchase-orders/order', [$purchaseOrderController, 'order']);
 $router->post('/purchase-orders/receive', [$purchaseOrderController, 'receive']);
 $router->post('/purchase-orders/cancel', [$purchaseOrderController, 'cancel']);
-$router->get('/sales-orders', [$salesOrderController, 'index']);
+$router->get($salesOrdersPath, [$salesOrderController, 'index']);
 $router->get('/sales-orders/show', [$salesOrderController, 'show']);
 $router->get('/sales-orders/create', [$salesOrderController, 'create']);
-$router->post('/sales-orders', [$salesOrderController, 'store']);
+$router->post($salesOrdersPath, [$salesOrderController, 'store']);
 $router->post('/sales-orders/submit', [$salesOrderController, 'submit']);
 $router->post('/sales-orders/approve', [$salesOrderController, 'approve']);
 $router->post('/sales-orders/cancel', [$salesOrderController, 'cancel']);
@@ -291,18 +300,21 @@ $router->post('/customers/deactivate', [$customerController, 'deactivate']);
 
 try {
     // Expired protected POSTs are authentication failures, rather than misleading CSRF failures.
-    if ($request->method() === 'POST' && $request->path() !== '/login') { $authGuard->requireAuth(); }
+    if ($request->method() === 'POST' && $request->path() !== $loginPath) { $authGuard->requireAuth(); }
     $csrfInput = $request->post()['csrf_token'] ?? '';
     if ($request->method() === 'POST' && (!is_string($csrfInput) || !$session->isValidCsrfToken($csrfInput))) {
         throw new HttpException(403, 'Invalid CSRF token.');
     }
     $response = $router->dispatch($request);
 } catch (HttpException $exception) {
-    $response = str_starts_with($request->path(), '/api/')
-        ? ErrorResponder::api($exception->statusCode() === 401 ? 'Authentication required' : $exception->getMessage(), $exception->statusCode())
-        : ($exception->statusCode() === 401 && ($request->server()['HTTP_X_REQUESTED_WITH'] ?? '') !== 'fetch'
-            ? new Response('', 302, ['Location' => '/login'])
-            : ErrorResponder::browser($exception, $config->bool('APP_DEBUG')));
+    $unauthenticated = $exception->statusCode() === 401;
+    if (str_starts_with($request->path(), '/api/')) {
+        $response = ErrorResponder::api($unauthenticated ? 'Authentication required' : $exception->getMessage(), $exception->statusCode());
+    } elseif ($unauthenticated && ($request->server()['HTTP_X_REQUESTED_WITH'] ?? '') !== 'fetch') {
+        $response = new Response('', 302, ['Location' => $loginPath]);
+    } else {
+        $response = ErrorResponder::browser($exception, $config->bool('APP_DEBUG'));
+    }
 } catch (Throwable $throwable) {
     $status = method_exists($throwable, 'statusCode') && is_int($throwable->statusCode()) ? $throwable->statusCode() : 500;
     if ($status >= 500) {
@@ -314,9 +326,11 @@ try {
                 ? $request->server()['HTTP_X_REQUEST_ID'] : null,
         ]);
     }
-    $response = str_starts_with($request->path(), '/api/')
-        ? ErrorResponder::api($status === 500 ? 'Unexpected server error.' : $throwable->getMessage(), $status)
-        : ErrorResponder::browser($throwable, $config->bool('APP_DEBUG'));
+    if (str_starts_with($request->path(), '/api/')) {
+        $response = ErrorResponder::api($status === 500 ? 'Unexpected server error.' : $throwable->getMessage(), $status);
+    } else {
+        $response = ErrorResponder::browser($throwable, $config->bool('APP_DEBUG'));
+    }
 }
 
 $requestAuditRecorder->record($request, $response, $session->auth());

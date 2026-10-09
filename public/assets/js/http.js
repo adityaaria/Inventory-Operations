@@ -1,15 +1,6 @@
 'use strict';
 
-(function exposeHttp(root, factory) {
-    const api = factory(root);
-
-    if (typeof module === 'object' && module.exports) {
-        module.exports = api;
-        return;
-    }
-
-    root.InventoryHttp = api;
-})(typeof globalThis === 'object' ? globalThis : this, (root) => {
+(function exposeHttp(root) {
     class HttpResponseError extends Error {
         constructor(response, body) {
             super(`HTTP request failed with status ${response.status}`);
@@ -91,5 +82,12 @@
         return {cancel, start};
     }
 
-    return {createRequestCoordinator, fetchHtml, HttpResponseError, NetworkRequestError, sessionFailureMessage};
-});
+    const api = {createRequestCoordinator, fetchHtml, HttpResponseError, NetworkRequestError, sessionFailureMessage};
+
+    if (typeof module === 'object' && module.exports) {
+        module.exports = api;
+        return;
+    }
+
+    root.InventoryHttp = api;
+})(typeof globalThis === 'object' ? globalThis : this);

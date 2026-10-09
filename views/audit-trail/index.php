@@ -33,10 +33,10 @@
 <button type="submit">Apply Filters</button><a class="button" href="/audit-trail">Reset</a>
 </form>
 <?php if ($result!==null): ?>
-<div class="table-scroll" role="region" aria-label="Audit trail table" tabindex="0"><table class="data-table"><thead><tr><th>Date</th><th>Actor</th><th>Action</th><th>Entity</th><th>Status</th></tr></thead><tbody>
+<section class="table-scroll" aria-label="Audit trail table"><table class="data-table"><thead><tr><th>Date</th><th>Actor</th><th>Action</th><th>Entity</th><th>Status</th></tr></thead><tbody>
 <?php foreach ($result->items() as $row): ?><tr><td><?= $escape($row['created_at']) ?></td><td><?= $escape($row['actor_email'] ?? 'System / unavailable') ?><?php if ($row['actor_id']!==null): ?> (#<?= $escape($row['actor_id']) ?>)<?php endif; ?></td><td><?= $escape($row['action']) ?></td><td><?= $escape($row['entity_type']) ?> <?= $escape($row['entity_id'] ?? '') ?></td><td><span class="status-badge <?= $row['status']==='success'?'status-success':'status-danger' ?>"><?= $escape(ucfirst($row['status'])) ?></span></td></tr><?php endforeach; ?>
 <?php if ($result->total()===0): ?><tr><td colspan="5">No audit records match these filters.</td></tr><?php endif; ?>
-</tbody></table></div>
+</tbody></table></section>
 <?php require dirname(__DIR__).'/partials/pagination.php'; endif; ?>
 </main><?php require dirname(__DIR__).'/partials/workspace-end.php'; ?>
 </body></html>

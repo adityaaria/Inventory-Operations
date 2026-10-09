@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli' || getenv('APP_ENV') !== 'test' || getenv('DB_DATABASE') 
     fwrite(STDERR, "Refusing fixture generation outside a disposable capacity project/database.\n"); exit(2);
 }
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-$config = require dirname(__DIR__, 2) . '/config/config.php';
+$config = App\Support\Config::fromEnvironment();
 $pdo = (new App\Support\DatabaseFactory($config))->create();
 $productsCount = (int) ($argv[1] ?? '10000');
 $ordersCount = (int) ($argv[2] ?? '10000');

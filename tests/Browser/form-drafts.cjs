@@ -70,12 +70,12 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
         const form = document.querySelector('form[data-draft]');
         const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('input', {bubbles: true})); };
         set(form.elements.order_number, ${JSON.stringify(poNumber)});
-        set(form.elements.product_id, ${JSON.stringify(products[0])}); set(form.elements.quantity, '4'); set(form.elements.purchase_price, '1200');
+        set(form.elements.product_id, ${JSON.stringify(products[0])}); set(form.elements.quantity, '4');
         form.querySelector('[data-order-add]').click(); form.querySelector('[data-order-add]').click();
         const rows = form.querySelectorAll('[data-order-item]');
         const line = (row, f) => row.querySelector('[data-order-input="' + f + '"]');
-        set(line(rows[1], 'product_id'), ${JSON.stringify(products[1])}); set(line(rows[1], 'quantity'), '7'); set(line(rows[1], 'purchase_price'), '300');
-        set(line(rows[2], 'product_id'), ${JSON.stringify(products[2])}); set(line(rows[2], 'quantity'), '2'); set(line(rows[2], 'purchase_price'), '50');
+        set(line(rows[1], 'product_id'), ${JSON.stringify(products[1])}); set(line(rows[1], 'quantity'), '7');
+        set(line(rows[2], 'product_id'), ${JSON.stringify(products[2])}); set(line(rows[2], 'quantity'), '2');
     })()`);
     await wait(`!!localStorage.getItem('ioms-draft:v1:1:Admin:purchase-order')`, 'draft saved');
     const stored = JSON.parse(await evaluate(`localStorage.getItem('ioms-draft:v1:1:Admin:purchase-order')`));
@@ -91,11 +91,14 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await wait(`/checked|Review the items/.test(document.querySelector('[data-draft-banner] p').textContent)`, 'server revalidation');
     const restored = await evaluate(`(() => { const f = document.querySelector('form[data-draft]'); return {
         number: f.elements.order_number.value,
-        lines: [...f.querySelectorAll('[data-order-item]')].map(r => ['product_id', 'quantity', 'purchase_price'].map(n => r.querySelector('[data-order-input="' + n + '"]').value)),
+        lines: [...f.querySelectorAll('[data-order-item]')].map(r => ['product_id', 'quantity'].map(n => r.querySelector('[data-order-input="' + n + '"]').value)),
+        // Display-only price: read-only, never submitted, equal to the selected product's master price.
+        prices: [...f.querySelectorAll('[data-order-item]')].map(r => { const p = r.querySelector('[data-order-price]'); const o = r.querySelector('[data-order-input="product_id"]').selectedOptions[0]; return p.readOnly && !p.name && p.value !== '' && p.value === window.InventoryOrderItems.formatRupiah(o.dataset.price) && p.value.startsWith('Rp '); }),
         names: [...f.querySelectorAll('[data-order-item] [data-order-input="quantity"]')].map(i => i.name),
         banner: document.querySelector('[data-draft-banner]').textContent }; })()`);
     assert.equal(restored.number, poNumber);
-    assert.deepEqual(restored.lines, [[products[0], '4', '1200'], [products[1], '7', '300'], [products[2], '2', '50']]);
+    assert.deepEqual(restored.lines, [[products[0], '4'], [products[1], '7'], [products[2], '2']]);
+    assert.deepEqual(restored.prices, [true, true, true], 'each line shows its product master price, read-only and unsubmitted');
     assert.deepEqual(restored.names, ['quantity', 'items[1][quantity]', 'items[2][quantity]']);
     assert.match(restored.banner, /permissions, status and current stock are fine/);
     pass('restore rebuilds three PO lines and server check passes');
@@ -177,9 +180,9 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     const soProducts = await evaluate(`[...document.querySelector('[name=product_id]').options].map(o => o.value).slice(0, 2)`);
     await evaluate(`(() => { const f = document.querySelector('form[data-draft]');
         const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('input', {bubbles: true})); };
-        set(f.elements.product_id, ${JSON.stringify(soProducts[0])}); set(f.elements.quantity, '999998'); set(f.elements.selling_price, '10');
+        set(f.elements.product_id, ${JSON.stringify(soProducts[0])}); set(f.elements.quantity, '999998');
         f.querySelector('[data-order-add]').click();
-        set(f.elements['items[1][product_id]'], ${JSON.stringify(soProducts[1])}); set(f.elements['items[1][quantity]'], '999997'); set(f.elements['items[1][selling_price]'], '20'); })()`);
+        set(f.elements['items[1][product_id]'], ${JSON.stringify(soProducts[1])}); set(f.elements['items[1][quantity]'], '999997'); })()`);
     await wait(`Object.keys(localStorage).some(k => k.endsWith(':sales-order') && JSON.parse(localStorage.getItem(k)).values.some(([n, v]) => n === 'items[1][quantity]' && v === '999997'))`, 'SO multi-item draft saved');
     await navigate('/sales-orders/create');
     await wait(`!!document.querySelector('[data-draft-banner]')`, 'SO banner');

@@ -8,7 +8,8 @@ final class InMemoryBusinessOperationRepository implements BusinessOperationRepo
     /** @var array<int,int> */ private array $totals=[];
     /** @param array<string,array<string,mixed>> $pairs @param array<int,array<string,mixed>> $sources */
     public function __construct(private readonly array $pairs=[],private readonly array $sources=[]) {}
-    public function create(array $header,array $items): int {$id=count($this->rows)+1;$this->rows[$id]=array_merge($header,['id'=>$id,'status'=>'PendingApproval','approved_by'=>null,'items'=>$items]);return $id;}
+    /** Same row shape as the MySQL repository (nullable review columns, item SKU and product name). */
+    public function create(array $header,array $items): int {$id=count($this->rows)+1;$items=array_map(static fn(array $item): array => $item+['sku'=>'SKU-'.$item['product_id'],'product_name'=>'Product '.$item['product_id']],$items);$this->rows[$id]=array_merge($header,['id'=>$id,'status'=>'PendingApproval','approved_by'=>null,'posted_by'=>null,'decision_reason'=>null,'items'=>$items]);return $id;}
     public function find(int $id,bool $lock=false): ?array {return $this->rows[$id]??null;}
     public function decide(int $id,string $status,int $actor,string $reason): void {$this->rows[$id]['status']=$status;$this->rows[$id]['decision_reason']=$reason;if($status!=='Cancelled') { $this->rows[$id]['approved_by']=$actor; }}
     public function posted(int $id,int $actor): void {$this->rows[$id]['status']='Posted';$this->rows[$id]['posted_by']=$actor;}

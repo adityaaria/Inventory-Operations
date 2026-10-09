@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Repository\InMemory;
 
 use App\Entity\User;
+use App\Exception\EntityNotFoundException;
 use App\Repository\Contract\UserRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\Pagination;
-use RuntimeException;
 
 final class InMemoryUserRepository implements UserRepositoryInterface
 {
@@ -75,7 +75,7 @@ final class InMemoryUserRepository implements UserRepositoryInterface
     {
         $existing = $this->findById($id);
         if ($existing === null) {
-            throw new RuntimeException("User not found: {$id}");
+            throw new EntityNotFoundException("User not found: {$id}");
         }
 
         $updated = new User($id, $name, $email, $existing->passwordHash(), $role, $existing->isActive());
@@ -88,7 +88,7 @@ final class InMemoryUserRepository implements UserRepositoryInterface
     {
         $existing = $this->findById($id);
         if ($existing === null) {
-            throw new RuntimeException("User not found: {$id}");
+            throw new EntityNotFoundException("User not found: {$id}");
         }
 
         $this->users[$id] = new User(

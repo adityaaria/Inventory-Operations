@@ -28,7 +28,7 @@
                 <h1>Sales Orders</h1>
                 <p class="page-subtitle">Search, filter, and review customer fulfillment orders.</p>
             </div>
-            <nav class="toolbar">
+            <nav class="toolbar" aria-label="Page actions">
 
                 <?php if ($canCreate): ?><a href="/sales-orders/create">Create Sales Order</a><?php endif; ?>
             </nav>
@@ -44,10 +44,11 @@
             <?php require dirname(__DIR__) . '/partials/sort-state.php'; ?>
             <button type="submit">Filter</button>
         </form>
-        <div class="table-scroll" role="region" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+        <section class="table-scroll" aria-label="<?= htmlspecialchars($workspaceTitle . ' table', ENT_QUOTES, 'UTF-8') ?>">
 <table class="data-table">
             <thead>
-                <tr><?php $sortPath = '/sales-orders'; $sortKey = 'order_number'; $sortLabel = 'Order Number'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'party'; $sortLabel = 'Customer'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'warehouse'; $sortLabel = 'Warehouse'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'status'; $sortLabel = 'Status'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><?php $sortPath = '/sales-orders'; $sortKey = 'order_date'; $sortLabel = 'Date'; require dirname(__DIR__) . '/partials/sort-heading.php'; ?><th>Action</th></tr>
+                <?php $sortPath = '/sales-orders'; $sortHeading = dirname(__DIR__) . '/partials/sort-heading.php'; ?>
+                <tr><?php $sortKey = 'order_number'; $sortLabel = 'Order Number'; require $sortHeading; ?><?php $sortKey = 'party'; $sortLabel = 'Customer'; require $sortHeading; ?><?php $sortKey = 'warehouse'; $sortLabel = 'Warehouse'; require $sortHeading; ?><?php $sortKey = 'status'; $sortLabel = 'Status'; require $sortHeading; ?><?php $sortKey = 'order_date'; $sortLabel = 'Date'; require $sortHeading; ?><th>Action</th></tr>
             </thead>
             <tbody>
                 <?php if ($result->items() === []): ?>
@@ -84,7 +85,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-</div>
+</section>
         <?php
         $baseQuery = [
             'q' => $criteria->term(),

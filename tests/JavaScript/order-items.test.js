@@ -17,3 +17,18 @@ test('cross-page replenishment picks add only products not shown on the current 
     assert.deepEqual(orderItems.offPagePicks(stored, ['7', '8']), ['4:10', '9:1']);
     assert.deepEqual(orderItems.offPagePicks({}, ['7']), []);
 });
+
+test('line price shows the selected product master price and is empty without a selection', () => {
+    const select = price => ({selectedOptions: price === null ? [] : [{dataset: {price}}]});
+    assert.equal(orderItems.masterPrice(select('250.00')), '250.00');
+    assert.equal(orderItems.masterPrice(select(null)), '');
+});
+
+test('line prices are shown in Rupiah exactly like Money::rupiah() on the server', () => {
+    assert.equal(orderItems.formatRupiah('20000.00'), 'Rp 20.000,00');
+    assert.equal(orderItems.formatRupiah('1234567.89'), 'Rp 1.234.567,89');
+    assert.equal(orderItems.formatRupiah('250.5'), 'Rp 250,50');
+    assert.equal(orderItems.formatRupiah('0'), 'Rp 0,00');
+    assert.equal(orderItems.formatRupiah(''), '');
+    assert.equal(orderItems.formatRupiah('not a price'), '');
+});

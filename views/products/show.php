@@ -24,19 +24,19 @@
     <main class="page" id="main-content">
         <header class="page-header">
             <div><h1><?= htmlspecialchars($product->name(), ENT_QUOTES, 'UTF-8') ?></h1><p class="page-subtitle"><?= htmlspecialchars($product->sku(), ENT_QUOTES, 'UTF-8') ?></p></div>
-            <nav class="toolbar"><a href="/products">Products</a><?php if ($canWrite): ?><a href="/products/edit?id=<?= $product->id() ?>">Edit Product</a><?php endif; ?></nav>
+            <nav class="toolbar" aria-label="Page actions"><a href="/products">Products</a><?php if ($canWrite): ?><a href="/products/edit?id=<?= $product->id() ?>">Edit Product</a><?php endif; ?></nav>
         </header>
         <dl class="detail-summary" aria-label="Product details">
             <div><dt>Category</dt><dd><?= htmlspecialchars($category?->name() ?? 'Unavailable', ENT_QUOTES, 'UTF-8') ?></dd></div>
             <div><dt>Unit</dt><dd><?= htmlspecialchars($product->unit(), ENT_QUOTES, 'UTF-8') ?></dd></div>
-            <div><dt>Purchase Price</dt><dd><?= number_format($product->purchasePrice(), 2) ?></dd></div>
-            <div><dt>Selling Price</dt><dd><?= number_format($product->sellingPrice(), 2) ?></dd></div>
+            <div><dt>Purchase Price</dt><dd><?= \App\Support\Money::rupiah($product->purchasePrice()) ?></dd></div>
+            <div><dt>Selling Price</dt><dd><?= \App\Support\Money::rupiah($product->sellingPrice()) ?></dd></div>
             <div><dt>Reorder Point</dt><dd><?= $product->reorderPoint() ?></dd></div>
             <div><dt>Status</dt><dd><span class="status-badge <?= $product->isActive() ? 'status-normal' : 'status-cancelled' ?>"><?= $product->isActive() ? 'Active' : 'Inactive' ?></span></dd></div>
             <div><dt>Total Stock</dt><dd><?= array_sum(array_map(static fn ($stock): int => $stock->quantity(), $stocks)) ?></dd></div>
         </dl>
         <h2>Stock by Warehouse</h2>
-        <div class="table-scroll" role="region" aria-label="Product stock table" tabindex="0">
+        <section class="table-scroll" aria-label="Product stock table">
             <table class="data-table">
                 <thead><tr><th>Warehouse</th><th>Quantity</th><th>Status</th></tr></thead>
                 <tbody>
@@ -44,7 +44,7 @@
                 <?php foreach ($stocks as $stock): ?><tr><td><?= htmlspecialchars($stock->warehouseName(), ENT_QUOTES, 'UTF-8') ?></td><td><?= $stock->quantity() ?></td><td><span class="status-badge <?= $stock->isLowStock() ? 'stock-low' : 'status-normal' ?>"><?= $stock->isLowStock() ? 'Low stock' : 'Normal' ?></span></td></tr><?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
+        </section>
     </main>
     <?php require dirname(__DIR__) . '/partials/workspace-end.php'; ?>
 </body>

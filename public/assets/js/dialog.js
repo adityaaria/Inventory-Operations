@@ -1,6 +1,52 @@
 'use strict';
 
 (function exposeDialog(root) {
+    function close(backdrop) {
+        if (!backdrop.classList.contains('is-open')) {
+            backdrop.hidden = true;
+            return;
+        }
+        backdrop.classList.remove('is-open');
+        const finish = () => {
+            clearTimeout(timeoutId);
+            backdrop.removeEventListener('transitionend', onEnd);
+            delete backdrop._pendingCloseCancel;
+            backdrop.hidden = true;
+        };
+        // 220ms = the 180ms CSS transition (app.css) plus a small safety
+        // margin, in case transitionend never fires.
+        const timeoutId = setTimeout(finish, 220);
+        function onEnd(event) {
+            if (event.target !== backdrop) {
+                return;
+            }
+            finish();
+        }
+        backdrop.addEventListener('transitionend', onEnd);
+        backdrop._pendingCloseCancel = () => {
+            clearTimeout(timeoutId);
+            backdrop.removeEventListener('transitionend', onEnd);
+        };
+    }
+
+    function trapFocus(container, event) {
+        const focusable = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+            .filter((element) => !element.disabled && !element.hidden);
+        if (focusable.length === 0) {
+            event.preventDefault();
+            return;
+        }
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
     root.InventoryDialog = {
         enhance(scope = document) {
             function open(backdrop) {
@@ -11,35 +57,8 @@
                 wire(backdrop);
                 backdrop.hidden = false;
                 requestAnimationFrame(() => backdrop.classList.add('is-open'));
-                backdrop.querySelector('.modal-panel')?.focus();
-            }
-
-            function close(backdrop) {
-                if (!backdrop.classList.contains('is-open')) {
-                    backdrop.hidden = true;
-                    return;
-                }
-                backdrop.classList.remove('is-open');
-                const finish = () => {
-                    clearTimeout(timeoutId);
-                    backdrop.removeEventListener('transitionend', onEnd);
-                    delete backdrop._pendingCloseCancel;
-                    backdrop.hidden = true;
-                };
-                // 220ms = the 180ms CSS transition (app.css) plus a small safety
-                // margin, in case transitionend never fires.
-                const timeoutId = setTimeout(finish, 220);
-                function onEnd(event) {
-                    if (event.target !== backdrop) {
-                        return;
-                    }
-                    finish();
-                }
-                backdrop.addEventListener('transitionend', onEnd);
-                backdrop._pendingCloseCancel = () => {
-                    clearTimeout(timeoutId);
-                    backdrop.removeEventListener('transitionend', onEnd);
-                };
+                // A reason dialog starts in its text field; other dialogs focus the panel.
+                (backdrop.querySelector('[data-dialog-focus]') ?? backdrop.querySelector('.modal-panel'))?.focus();
             }
 
             function wire(backdrop) {
@@ -64,24 +83,6 @@
                         trapFocus(backdrop, event);
                     }
                 });
-            }
-
-            function trapFocus(container, event) {
-                const focusable = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
-                    .filter((element) => !element.disabled && !element.hidden);
-                if (focusable.length === 0) {
-                    event.preventDefault();
-                    return;
-                }
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (event.shiftKey && document.activeElement === first) {
-                    event.preventDefault();
-                    last.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault();
-                    first.focus();
-                }
             }
 
             scope.querySelectorAll('.import-dialog:not([hidden])').forEach((backdrop) => open(backdrop));

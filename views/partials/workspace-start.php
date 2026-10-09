@@ -47,7 +47,11 @@ $workspaceIcons = [
                     [$workspaceLabel, $workspaceHref, $workspaceItemGroup] = $workspaceItem;
                     if ($workspaceItemGroup !== $workspaceGroup || (isset($workspaceItem[3]) && !in_array($workspaceRole, $workspaceItem[3], true))) { continue; }
                     $workspaceActive = $workspacePath === $workspaceHref || str_starts_with($workspacePath, $workspaceHref . '/') || ($workspaceHref === '/dashboard' && $workspacePath === '/');
-                    $workspaceIcon = str_contains($workspaceLabel, 'Orders') ? 'Orders' : (in_array($workspaceLabel, ['Suppliers', 'Customers'], true) ? 'Parties' : $workspaceLabel);
+                    $workspaceIcon = match (true) {
+                        str_contains($workspaceLabel, 'Orders') => 'Orders',
+                        in_array($workspaceLabel, ['Suppliers', 'Customers'], true) => 'Parties',
+                        default => $workspaceLabel,
+                    };
                     ?>
                     <a href="<?= $workspaceHref ?>"<?= $workspaceActive ? ' class="is-active" aria-current="page"' : '' ?>><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $workspaceIcons[$workspaceIcon] ?></svg><span><?= $workspaceLabel ?></span></a>
                 <?php endforeach; ?>

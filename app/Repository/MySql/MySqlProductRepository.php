@@ -6,12 +6,13 @@ namespace App\Repository\MySql;
 
 use App\Entity\Product;
 use App\Entity\ProductStock;
+use App\Exception\EntityNotFoundException;
+use App\Exception\PersistenceException;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Support\PaginatedResult;
 use App\Support\ProductInput;
 use App\Support\ProductSearchCriteria;
 use PDO;
-use RuntimeException;
 
 final class MySqlProductRepository implements ProductRepositoryInterface
 {
@@ -211,7 +212,7 @@ final class MySqlProductRepository implements ProductRepositoryInterface
         $statement->execute($params);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($row)) {
-            throw new RuntimeException('Unable to count products.');
+            throw new PersistenceException('Unable to count products.');
         }
 
         return (int) $row['total'];
@@ -235,6 +236,6 @@ final class MySqlProductRepository implements ProductRepositoryInterface
 
     private function findRequired(int $id): Product
     {
-        return $this->findById($id) ?? throw new RuntimeException("Product not found after write: {$id}");
+        return $this->findById($id) ?? throw new EntityNotFoundException("Product not found after write: {$id}");
     }
 }

@@ -19,7 +19,7 @@ final class StockLedgerEntry
     ) {
     }
 
-    public function delta(): int { return $this->movementType==='Adjustment' ? ($this->quantityDelta ?? 0) : ($this->movementType==='Receipt' ? $this->quantity : -$this->quantity); }
+    public function delta(): int { return match ($this->movementType) { 'Adjustment' => $this->quantityDelta ?? 0, 'Receipt' => $this->quantity, default => -$this->quantity }; }
     public function id(): int { return $this->id; }
     public function productId(): int { return $this->productId; }
     public function warehouseId(): int { return $this->warehouseId; }

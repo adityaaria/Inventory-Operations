@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
-$config = require dirname(__DIR__) . '/config/config.php';
+$config = App\Support\Config::fromEnvironment();
 $pdo = (new App\Support\DatabaseFactory($config))->create();
 $service = new App\Service\StockService(
     new App\Repository\MySql\MySqlStockRepository($pdo),

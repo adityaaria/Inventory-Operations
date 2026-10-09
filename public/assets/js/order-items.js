@@ -1,20 +1,6 @@
 'use strict';
 
-(function exposeOrderItems(root, factory) {
-    const api = factory();
-
-    if (typeof module === 'object' && module.exports) {
-        module.exports = api;
-        return;
-    }
-
-    root.InventoryOrderItems = api;
-    if (root.document) root.document.addEventListener('DOMContentLoaded', () => {
-        api.enhanceAll(root.document);
-        // Create forms are also loaded into the modal on list pages.
-        if (root.MutationObserver) new root.MutationObserver(() => api.enhanceAll(root.document)).observe(root.document.body, { childList: true, subtree: true });
-    });
-})(typeof globalThis === 'object' ? globalThis : this, () => {
+(function exposeOrderItems(root) {
     const MAX_ITEMS = 100;
 
     /** Positions whose product already appeared on an earlier line (server rejects duplicates too). */
@@ -25,6 +11,21 @@
             seen.add(id);
             return duplicates;
         }, []);
+    }
+
+    /** Master price carried by the selected product option; the line price is display-only. */
+    function masterPrice(select) {
+        return select.selectedOptions[0]?.dataset.price ?? '';
+    }
+
+    /** Same display as App\Support\Money::rupiah(): "Rp 20.000,00"; empty when there is no price. */
+    function formatRupiah(value) {
+        const amount = Number(value);
+        if (value === '' || value === null || value === undefined || !Number.isFinite(amount)) return '';
+        const [whole, cents] = Math.abs(amount).toFixed(2).split('.');
+        let grouped = '';
+        for (let end = whole.length; end > 0; end -= 3) grouped = whole.slice(Math.max(0, end - 3), end) + (grouped ? '.' + grouped : '');
+        return (amount < 0 ? '-' : '') + 'Rp ' + grouped + ',' + cents;
     }
 
     function itemName(index, field) {
@@ -43,6 +44,8 @@
             items.forEach((row, index) => {
                 row.querySelector('legend').textContent = 'Product item ' + (index + 1);
                 row.querySelector('[data-order-item-message]').textContent = '';
+                const price = row.querySelector('[data-order-price]');
+                if (price) price.value = formatRupiah(masterPrice(row.querySelector('[data-order-input="product_id"]')));
             });
             const duplicates = duplicateIndexes(items.map(row => row.querySelector('[data-order-input="product_id"]').value));
             for (const index of duplicates) items[index].querySelector('[data-order-item-message]').textContent = 'Choose a different product; duplicate products are not allowed.';
@@ -140,5 +143,17 @@
         document.querySelectorAll('[data-replenishment-selection]').forEach(enhanceSelection);
     }
 
-    return { MAX_ITEMS, duplicateIndexes, itemName, offPagePicks, enhanceAll };
-});
+    const api = { MAX_ITEMS, duplicateIndexes, formatRupiah, itemName, masterPrice, offPagePicks, enhanceAll };
+
+    if (typeof module === 'object' && module.exports) {
+        module.exports = api;
+        return;
+    }
+
+    root.InventoryOrderItems = api;
+    if (root.document) root.document.addEventListener('DOMContentLoaded', () => {
+        api.enhanceAll(root.document);
+        // Create forms are also loaded into the modal on list pages.
+        if (root.MutationObserver) new root.MutationObserver(() => api.enhanceAll(root.document)).observe(root.document.body, { childList: true, subtree: true });
+    });
+})(typeof globalThis === 'object' ? globalThis : this);

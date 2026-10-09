@@ -25,6 +25,8 @@ final class BusinessEnhancementIntegrationTest extends TestCase
     private function purchase(): PurchaseOrderService {return new PurchaseOrderService(new MySqlPurchaseOrderRepository($this->pdo),$this->products,[1=>new Supplier(1,'Supplier','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock,new OperationIdempotency(new MySqlOperationRequestRepository($this->pdo)),$this->exceptions);}
     private function sales(): SalesOrderService {return new SalesOrderService(new MySqlSalesOrderRepository($this->pdo),$this->products,[1=>new Customer(1,'Customer','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock);}
     private function orderExceptions(): OrderExceptionService {return new OrderExceptionService($this->exceptions,new MySqlPurchaseOrderRepository($this->pdo),new MySqlSalesOrderRepository($this->pdo),$this->stock,$this->audit);}
+    /** Ledger rows of the products created by a test; the seed has its own history for other products. */
+    private function ledgerRows(int ...$products): int {$statement=$this->pdo->prepare('SELECT COUNT(*) FROM stock_ledger WHERE product_id IN ('.implode(',',array_fill(0,count($products),'?')).')');$statement->execute($products);return (int)$statement->fetchColumn();}
     public function testMultipleProductTransferRollsBackTogetherAndPostsOnce(): void
     {
         $first=$this->product(10);
@@ -35,13 +37,13 @@ final class BusinessEnhancementIntegrationTest extends TestCase
         try{$this->service->post($this->creator,$bad);self::fail('Insufficient item accepted');}catch(\InvalidArgumentException){
             foreach([$first,$second] as $id){self::assertSame(10,$this->balances->quantity($id,1));self::assertSame(0,$this->balances->quantity($id,2));}
             self::assertSame('Approved',$this->service->show($this->creator,$bad)['status']);
-            self::assertSame(2,(int)$this->pdo->query('SELECT COUNT(*) FROM stock_ledger')->fetchColumn());
+            self::assertSame(2,$this->ledgerRows($first,$second));
         }
         $good=$this->service->propose($this->creator,'Transfer',1,2,'Multiple products',[['product_id'=>$first,'quantity'=>3],['product_id'=>$second,'quantity'=>4]]);
         $this->service->decide($this->reviewer,$good,'Approved','Reviewed');$this->service->post($this->creator,$good);$this->service->post($this->creator,$good);
         self::assertSame(7,$this->balances->quantity($first,1));self::assertSame(3,$this->balances->quantity($first,2));
         self::assertSame(6,$this->balances->quantity($second,1));self::assertSame(4,$this->balances->quantity($second,2));
-        self::assertSame(6,(int)$this->pdo->query('SELECT COUNT(*) FROM stock_ledger')->fetchColumn());
+        self::assertSame(6,$this->ledgerRows($first,$second));
     }
     public function testRecommendationWarehouseFilterKeepsCountAndPageInOneWarehouse(): void
     {
@@ -78,7 +80,7 @@ final class BusinessEnhancementIntegrationTest extends TestCase
     public function testTransferConservationAndAuditFailureRollsEverythingBack(): void
     {
         $product=$this->product();$id=$this->service->propose($this->creator,'Transfer',1,2,'Move stock',[['product_id'=>$product,'quantity'=>4]]);$this->service->decide($this->reviewer,$id,'Approved','Verified');
-        $bad=new class implements \App\Repository\Contract\AuditLogRepositoryInterface {public function append(?int $actorId,string $action,string $entityType,?int $entityId,string $status,string $ipAddress,string $userAgent,array $metadata=[]):void{throw new \RuntimeException('Forced audit failure');}};
+        $bad=new class implements \App\Repository\Contract\AuditLogRepositoryInterface {public function append(?int $actorId,string $action,string $entityType,?int $entityId,string $status, \App\Support\RequestOrigin $origin, array $metadata = []):void{throw new \RuntimeException('Forced audit failure');}};
         try{(new BusinessOperationService($this->repository,$this->stock($bad),$bad))->post($this->creator,$id);self::fail('Expected failure');}catch(\RuntimeException $error){self::assertSame('Forced audit failure',$error->getMessage());}
         self::assertSame(10,$this->balances->quantity($product,1));self::assertSame(0,$this->balances->quantity($product,2));self::assertSame('Approved',$this->repository->find($id)['status']);self::assertCount(0,(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id));
         $this->service->post($this->creator,$id);self::assertSame(6,$this->balances->quantity($product,1));self::assertSame(4,$this->balances->quantity($product,2));$movements=(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id);self::assertCount(2,$movements);self::assertSame(0,array_sum(array_map(static fn($m):int=>$m->delta(),$movements)));

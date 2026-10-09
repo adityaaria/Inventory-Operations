@@ -26,7 +26,7 @@
             <div>
                 <p class="app-title">Inventory Operations</p>
                 <h1>Reports</h1>
-                <p class="page-subtitle"><?= match ($type) { 'orders' => 'Order status report', 'outstanding' => 'Outstanding orders by age', default => 'Stock movement report' } ?> · <?= htmlspecialchars(($from ?? ($to !== null ? 'Beginning' : 'All dates')) . ($to !== null ? ' — ' . $to : ($from !== null ? ' onwards' : '')), ENT_QUOTES, 'UTF-8') ?><?= $actor->role() === \App\Entity\User::ROLE_SALES ? ' · Your orders only' : '' ?></p>
+                <p class="page-subtitle"><?= match ($type) { 'orders' => 'Order status report', 'outstanding' => 'Outstanding orders by age', default => 'Stock movement report' } ?> · <?= htmlspecialchars(match (true) { $from !== null && $to !== null => $from . ' — ' . $to, $from !== null => $from . ' onwards', $to !== null => 'Beginning — ' . $to, default => 'All dates' }, ENT_QUOTES, 'UTF-8') ?><?= $actor->role() === \App\Entity\User::ROLE_SALES ? ' · Your orders only' : '' ?></p>
                 <?php if ($type === 'outstanding'): ?><p class="page-subtitle">Age is whole days since the document was created. It is not a due date, SLA or lateness measure.<?= $actor->role() === \App\Entity\User::ROLE_WAREHOUSE_STAFF ? ' Showing receipts, issues and approved stock proposals awaiting warehouse action.' : '' ?></p><?php endif; ?>
             </div>
             <nav class="toolbar" aria-label="Report actions">
@@ -73,7 +73,7 @@
                 <a class="button button-quiet" href="/reports">Reset</a>
             </form>
             <?php if ($report !== null && $result !== null): ?>
-                <div class="table-scroll report-table-scroll" role="region" aria-label="Report table" tabindex="0">
+                <section class="table-scroll report-table-scroll" aria-label="Report table">
                     <table class="data-table" data-export="server" id="report-records">
                         <thead><tr><?php foreach ($report['columns'] as $column): ?><th scope="col"><?= htmlspecialchars((string) preg_replace('/(?<!^)([A-Z][a-z])/', ' $1', $column), ENT_QUOTES, 'UTF-8') ?></th><?php endforeach; ?></tr></thead>
                         <tbody>
@@ -107,7 +107,7 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                </div>
+                </section>
                 <?php require dirname(__DIR__) . '/partials/pagination.php'; ?>
             <?php endif; ?>
         </section>

@@ -18,6 +18,8 @@ use App\Validation\InputValidator;
 
 final class CustomerController
 {
+    private const INDEX_PATH = '/customers';
+
     public function __construct(
         private readonly CustomerService $customers,
         private readonly CustomerRepositoryInterface $repository,
@@ -31,7 +33,7 @@ final class CustomerController
         return $this->renderIndex($this->guard->requireAuth(), $request);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->guard->requireUserManagement();
 
@@ -55,7 +57,7 @@ final class CustomerController
             return $this->render('customers/create.php', ['old' => $post, 'error' => $exception->getMessage()], 422);
         }
 
-        return new Response('', 302, ['Location' => '/customers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function import(Request $request): Response
@@ -77,7 +79,7 @@ final class CustomerController
             return $this->renderIndex($actor, $request, $exception->getMessage(), 422);
         }
 
-        return new Response('', 302, ['Location' => '/customers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function edit(Request $request): Response
@@ -114,21 +116,21 @@ final class CustomerController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/customers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function activate(Request $request): Response
     {
         $this->customers->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), true);
 
-        return new Response('', 302, ['Location' => '/customers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function deactivate(Request $request): Response
     {
         $this->customers->setActive($this->guard->requireUserManagement(), (int) ($request->post()['id'] ?? 0), false);
 
-        return new Response('', 302, ['Location' => '/customers']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     private function renderIndex(AuthContext $actor, Request $request, string $error = '', int $status = 200): Response
@@ -139,7 +141,7 @@ final class CustomerController
             'customers' => $result->items(),
             'result' => $result,
             'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
-            'paginationPath' => '/customers',
+            'paginationPath' => self::INDEX_PATH,
             'paginationLabel' => 'Customers',
             'paginationQuery' => $request->query(),
             'error' => $error,

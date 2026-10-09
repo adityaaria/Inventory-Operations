@@ -8,8 +8,12 @@ $headingQuery['sort'] = $sortKey;
 $headingQuery['direction'] = $headingDirection;
 $headingQuery['page'] = 1;
 $headingUrl = $sortPath . '?' . http_build_query($headingQuery);
-$headingAria = $headingActive ? ($criteria->direction() === 'asc' ? 'ascending' : 'descending') : 'none';
-$headingArrow = $headingActive ? ($criteria->direction() === 'asc' ? '↑' : '↓') : '↕';
+$headingAria = 'none';
+$headingArrow = '↕';
+if ($headingActive) {
+    $headingAria = $criteria->direction() === 'asc' ? 'ascending' : 'descending';
+    $headingArrow = $criteria->direction() === 'asc' ? '↑' : '↓';
+}
 $headingAction = 'Sort by ' . $sortLabel . ($headingDirection === 'asc' ? ', ascending' : ', descending');
 ?>
 <th scope="col" data-sort-key="<?= htmlspecialchars($sortKey, ENT_QUOTES, 'UTF-8') ?>" aria-sort="<?= $headingAria ?>"><a class="sort-link<?= $headingActive ? ' is-active' : '' ?>" href="<?= htmlspecialchars($headingUrl, ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars($headingAction, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($sortLabel, ENT_QUOTES, 'UTF-8') ?><span class="sort-indicator" aria-hidden="true"><?= $headingArrow ?></span></a></th>

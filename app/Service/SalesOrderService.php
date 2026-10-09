@@ -32,15 +32,45 @@ final class SalesOrderService
     }
 
     /**
-     * @param list<array{product_id: int, quantity: int, selling_price: float}> $items
+     * Line prices always come from the product master (selling_price); any price sent by the client is ignored.
+     *
+     * @param list<array{product_id: int, quantity: int}> $items
      */
     public function createDraft(AuthContext $actor, string $orderNumber, int $customerId, int $warehouseId, array $items): SalesOrder
     {
         $this->assertCanCreate($actor);
         $this->assertHeader($orderNumber, $customerId, $warehouseId);
-        $this->assertItems($items);
+        $lines = $this->pricedItems($items);
 
-        return $this->orders->createDraft(trim($orderNumber), $customerId, $warehouseId, $actor->userId(), $items);
+        return $this->orders->createDraft(trim($orderNumber), $customerId, $warehouseId, $actor->userId(), $lines);
+    }
+
+    /**
+     * Stock currently on hand at the order's source warehouse per ordered product, for open orders only.
+     * Informational: issue() still locks and re-checks stock inside its transaction.
+     *
+     * @return array<int, int> product id => quantity on hand
+     */
+    public function sourceAvailability(AuthContext $actor, SalesOrder $order): array
+    {
+        if ($actor->role() === User::ROLE_SALES && $order->createdBy() !== $actor->userId()) {
+            throw new HttpException(403, 'Forbidden');
+        }
+        $open = [SalesOrder::STATUS_DRAFT, SalesOrder::STATUS_PENDING_APPROVAL, SalesOrder::STATUS_APPROVED];
+        if (!in_array($order->status(), $open, true)) {
+            return [];
+        }
+        $productIds = array_map(static fn ($item): int => $item->productId(), $order->items());
+        $available = array_fill_keys($productIds, 0);
+        foreach ($this->products->stocksForProducts($productIds) as $stocks) {
+            foreach ($stocks as $stock) {
+                if ($stock->warehouseId() === $order->sourceWarehouseId()) {
+                    $available[$stock->productId()] = $stock->quantity();
+                }
+            }
+        }
+
+        return $available;
     }
 
     public function submit(AuthContext $actor, int $id): void
@@ -164,14 +194,18 @@ final class SalesOrderService
     }
 
     /**
-     * @param list<array{product_id: int, quantity: int, selling_price: float}> $items
+     * Validates the lines and prices each one from the active product's master selling_price.
+     *
+     * @param list<array{product_id: int, quantity: int}> $items
+     * @return list<array{product_id: int, quantity: int, selling_price: float}>
      */
-    private function assertItems(array $items): void
+    private function pricedItems(array $items): array
     {
         if ($items === []) {
             throw new ValidationException('At least one item is required.');
         }
         $seenProducts = [];
+        $lines = [];
         foreach ($items as $item) {
             $product = $this->products->findById($item['product_id']);
             if (!$product instanceof Product || !$product->isActive()) {
@@ -183,12 +217,11 @@ final class SalesOrderService
             if ($item['quantity'] <= 0) {
                 throw new ValidationException('Quantity must be positive.');
             }
-            \App\Validation\InputValidator::nonNegativeMoney('selling_price', $item['selling_price']);
-            if ($item['selling_price'] < 0) {
-                throw new ValidationException('Selling price cannot be negative.');
-            }
             $seenProducts[$item['product_id']] = true;
+            $lines[] = ['product_id' => $item['product_id'], 'quantity' => $item['quantity'], 'selling_price' => $product->sellingPrice()];
         }
+
+        return $lines;
     }
 
     private function findOrder(int $id): SalesOrder

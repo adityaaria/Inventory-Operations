@@ -9,4 +9,5 @@ if (is_file($file)) {
     return false;
 }
 
-require __DIR__ . '/index.php';
+// The built-in server resets the included-files list per request, so require_once still runs on every request.
+require_once __DIR__ . '/index.php';

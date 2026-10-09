@@ -1,15 +1,6 @@
 'use strict';
 
-(function exposeUiHelpers(root, factory) {
-    const api = factory();
-
-    if (typeof module === 'object' && module.exports) {
-        module.exports = api;
-        return;
-    }
-
-    root.InventoryUi = api;
-})(typeof globalThis === 'object' ? globalThis : this, () => {
+(function exposeUiHelpers(root) {
     function needsConfirmation(action) {
         return /(activate|deactivate|submit|approve|cancel|issue|receive|order|delete)/.test(action);
     }
@@ -18,15 +9,22 @@
         return String(value).toLowerCase().includes(String(term).trim().toLowerCase());
     }
 
+    // Rupiah cells ("Rp 20.000,00") use dots for thousands and a comma for decimals.
+    function numericValue(text) {
+        const rupiah = /^(-?)Rp\s?([\d.]+)(?:,(\d+))?$/.exec(text);
+        if (rupiah) return Number(rupiah[1] + rupiah[2].replaceAll('.', '') + '.' + (rupiah[3] || '0'));
+        return Number(text.replace(/[^0-9.-]/g, ''));
+    }
+
     function compareTableValues(left, right, direction = 'asc') {
         const a = String(left).trim();
         const b = String(right).trim();
-        const numericA = Number(a.replace(/[^0-9.-]/g, ''));
-        const numericB = Number(b.replace(/[^0-9.-]/g, ''));
+        const numericA = numericValue(a);
+        const numericB = numericValue(b);
         const bothNumeric = Number.isFinite(numericA)
             && Number.isFinite(numericB)
-            && /[0-9]/.test(a)
-            && /[0-9]/.test(b);
+            && /\d/.test(a)
+            && /\d/.test(b);
         const result = bothNumeric ? numericA - numericB : a.localeCompare(b);
 
         return direction === 'asc' ? result : -result;
@@ -69,5 +67,12 @@
         return isInsideModal ? {action: 'close-modal'} : {action: 'navigate', href: cancelHref};
     }
 
-    return {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation, resolveCancelTarget};
-});
+    const api = {compareTableValues, debounce, escapeCsvCell, escapeHtml, matchesFilter, needsConfirmation, resolveCancelTarget};
+
+    if (typeof module === 'object' && module.exports) {
+        module.exports = api;
+        return;
+    }
+
+    root.InventoryUi = api;
+})(typeof globalThis === 'object' ? globalThis : this);

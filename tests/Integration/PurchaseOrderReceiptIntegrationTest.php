@@ -33,11 +33,11 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
     {
         $service = $this->service(new MySqlStockLedgerRepository($this->pdo));
         $actor = new AuthContext($this->id('users', 'email', 'admin@example.test'), 'admin@example.test', User::ROLE_ADMIN);
-        $productId = $this->id('products', 'sku', 'SKU-DEMO-001');
-        $warehouseId = $this->id('warehouses', 'name', 'Main Warehouse');
+        $productId = $this->id('products', 'sku', 'BIS-0001');
+        $warehouseId = $this->id('warehouses', 'name', 'Gudang Pusat Cikarang');
         $before = (new MySqlStockRepository($this->pdo))->quantity($productId, $warehouseId);
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'Demo Supplier One'), $warehouseId, [
+        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 4, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
@@ -53,10 +53,10 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
     {
         $service = $this->service(new MySqlStockLedgerRepository($this->pdo));
         $actor = new AuthContext($this->id('users', 'email', 'admin@example.test'), 'admin@example.test', User::ROLE_ADMIN);
-        $productId = $this->id('products', 'sku', 'SKU-DEMO-002');
-        $warehouseId = $this->id('warehouses', 'name', 'Secondary Warehouse');
+        $productId = $this->id('products', 'sku', 'MIN-0038');
+        $warehouseId = $this->id('warehouses', 'name', 'Gudang Distribusi Surabaya');
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'Demo Supplier One'), $warehouseId, [
+        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 10, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
@@ -71,12 +71,12 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
     {
         $service = $this->service(new FailingStockLedgerRepository());
         $actor = new AuthContext($this->id('users', 'email', 'admin@example.test'), 'admin@example.test', User::ROLE_ADMIN);
-        $productId = $this->id('products', 'sku', 'SKU-DEMO-001');
-        $warehouseId = $this->id('warehouses', 'name', 'Secondary Warehouse');
+        $productId = $this->id('products', 'sku', 'BIS-0001');
+        $warehouseId = $this->id('warehouses', 'name', 'Gudang Distribusi Surabaya');
         $stock = new MySqlStockRepository($this->pdo);
         $before = $stock->quantity($productId, $warehouseId);
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'Demo Supplier One'), $warehouseId, [
+        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 5, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
@@ -94,17 +94,17 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
 
     private function service(StockLedgerRepositoryInterface $ledger): PurchaseOrderService
     {
-        $supplierId = $this->id('suppliers', 'name', 'Demo Supplier One');
-        $warehouseOne = $this->id('warehouses', 'name', 'Main Warehouse');
-        $warehouseTwo = $this->id('warehouses', 'name', 'Secondary Warehouse');
+        $supplierId = $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera');
+        $warehouseOne = $this->id('warehouses', 'name', 'Gudang Pusat Cikarang');
+        $warehouseTwo = $this->id('warehouses', 'name', 'Gudang Distribusi Surabaya');
 
         return new PurchaseOrderService(
             new MySqlPurchaseOrderRepository($this->pdo),
             new MySqlProductRepository($this->pdo),
-            [$supplierId => new Supplier($supplierId, 'Demo Supplier One', 'supplier1@example.test', '021-0001', 'Jl. Supplier Raya 1, Jakarta', true)],
+            [$supplierId => new Supplier($supplierId, 'PT Tirta Alam Sejahtera', 'order@tirtaalam.test', '021-8990-1120', 'Jl. Raya Narogong Km 12, Bekasi', true)],
             [
-                $warehouseOne => new Warehouse($warehouseOne, 'Main Warehouse', 'Jakarta', true),
-                $warehouseTwo => new Warehouse($warehouseTwo, 'Secondary Warehouse', 'Bandung', true),
+                $warehouseOne => new Warehouse($warehouseOne, 'Gudang Pusat Cikarang', 'Cikarang', true),
+                $warehouseTwo => new Warehouse($warehouseTwo, 'Gudang Distribusi Surabaya', 'Surabaya', true),
             ],
             new StockService(new MySqlStockRepository($this->pdo), $ledger),
         );

@@ -23,7 +23,7 @@
     <?php $formState = new \App\Support\FormState($old ?? []); ?>
     <?php $workspaceTitle = 'Create Product'; require dirname(__DIR__) . '/partials/workspace-start.php'; ?>
     <main class="page" id="main-content">
-        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Product</h1><p class="page-subtitle">Add a product and its stock policy.</p></div><nav class="toolbar"><a href="/products">Products</a></nav></header>
+        <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Product</h1><p class="page-subtitle">Add a product and its stock policy.</p></div><nav class="toolbar" aria-label="Page actions"><a href="/products">Products</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/products" class="form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">

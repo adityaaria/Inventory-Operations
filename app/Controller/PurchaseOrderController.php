@@ -22,6 +22,8 @@ use App\Validation\InputValidator;
 
 final class PurchaseOrderController
 {
+    private const INDEX_PATH = '/purchase-orders';
+
     /**
      * @param array<int, Supplier> $suppliers
      * @param array<int, Warehouse> $warehouses
@@ -108,7 +110,7 @@ final class PurchaseOrderController
         }
         $lines = [];
         foreach ($picks as $pick) {
-            if (!is_string($pick) || preg_match('/^([1-9][0-9]{0,9}):([1-9][0-9]{0,9})$/', $pick, $match) !== 1 || isset($lines[$match[1]])) {
+            if (!is_string($pick) || preg_match('/^([1-9]\d{0,9}):([1-9]\d{0,9})$/', $pick, $match) !== 1 || isset($lines[$match[1]])) {
                 throw new InvalidArgumentException('Invalid replenishment selection.');
             }
             $lines[$match[1]] = ['product_id' => $match[1], 'quantity' => $match[2]];
@@ -145,14 +147,14 @@ final class PurchaseOrderController
             ], 422);
         }
 
-        return new Response('', 302, ['Location' => '/purchase-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function order(Request $request): Response
     {
         $this->purchaseOrders->markOrdered($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
-        return new Response('', 302, ['Location' => '/purchase-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function receive(Request $request): Response
@@ -184,7 +186,7 @@ final class PurchaseOrderController
     {
         $this->purchaseOrders->cancel($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
 
-        return new Response('', 302, ['Location' => '/purchase-orders']);
+        return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function closeRemainder(Request $request): Response
