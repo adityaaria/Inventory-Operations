@@ -1,0 +1,30 @@
+{
+    "migration": "20261012-stock-counts",
+    "destructive": false,
+    "status": "ready",
+    "already_applied": false,
+    "tables_created": [
+        "stock_counts",
+        "stock_count_products",
+        "stock_count_counters",
+        "stock_count_lines"
+    ],
+    "lot_source_widened": true,
+    "barcodes_available": 0,
+    "count_checks": {
+        "count_posted_delta_mismatches": 0,
+        "count_below_reserved": 0,
+        "count_approved_by_counter": 0,
+        "count_expected_mismatches": 0,
+        "count_open_overlaps": 0
+    },
+    "lot_checks": {
+        "lot_aggregate_mismatches": 0,
+        "lot_ledger_mismatches": 0,
+        "lot_count_mismatches": 0,
+        "ledger_rows_without_lot": 0,
+        "issue_from_expired_lot": 0,
+        "fefo_violations": 0,
+        "transfer_lot_mismatches": 0
+    }
+}

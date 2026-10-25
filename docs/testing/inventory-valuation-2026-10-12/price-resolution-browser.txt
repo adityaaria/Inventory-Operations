@@ -1,0 +1,6 @@
+ok - Below the tier the first price-list tier applies and the next tier is offered
+ok - Crossing the tier updates the price and its source live
+ok - An overridden price is kept and requires a reason
+ok - Printable surat jalan has a Print button, print CSS and no overflow at 360/768 px
+ok - No page exceptions
+{"passed":5,"failed":0}

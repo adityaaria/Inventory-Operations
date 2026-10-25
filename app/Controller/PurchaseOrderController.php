@@ -37,7 +37,14 @@ final class PurchaseOrderController
         private readonly AuthGuard $guard,
         private readonly ?\App\Service\OrderExceptionService $exceptions = null,
         private readonly ?\App\Repository\Contract\StockLedgerRepositoryInterface $ledger = null,
+        private readonly ?\App\Service\ProductUnitCatalog $units = null,
     ) {
+    }
+
+    /** Units per product (D-16, ADR-022) for the order form and quantity display; base unit only without a catalog. */
+    private function unitCatalog(): \App\Service\ProductUnitCatalog
+    {
+        return $this->units ?? new \App\Service\ProductUnitCatalog($this->products);
     }
 
     public function index(Request $request): Response
@@ -75,7 +82,7 @@ final class PurchaseOrderController
             throw new HttpException(403, 'Forbidden');
         }
 
-        $old = array_intersect_key(array_filter($request->query(), 'is_string'), array_flip(['warehouse_id','product_id','quantity']));
+        $old = array_intersect_key(array_filter($request->query(), 'is_string'), array_flip(['warehouse_id','product_id','quantity','unit_code']));
         $error = '';
         try {
             $old = $this->replenishmentPrefill($request->query()) + $old;
@@ -93,7 +100,8 @@ final class PurchaseOrderController
     }
 
     /**
-     * Turns selected replenishment recommendations (`pick[]=productId:quantity`) into reviewable lines.
+     * Turns selected replenishment recommendations (`pick[]=productId:quantity[:unit]`) into reviewable lines. Since
+     * D-16/ADR-022 the quantity is in whole purchase-default units (the unit after the second colon; none = base unit).
      * Prefill only: supplier, quantities and prices are still reviewed and fully revalidated on submit.
      *
      * @param array<string, mixed> $query
@@ -110,10 +118,10 @@ final class PurchaseOrderController
         }
         $lines = [];
         foreach ($picks as $pick) {
-            if (!is_string($pick) || preg_match('/^([1-9]\d{0,9}):([1-9]\d{0,9})$/', $pick, $match) !== 1 || isset($lines[$match[1]])) {
+            if (!is_string($pick) || preg_match('/^([1-9]\d{0,9}):([1-9]\d{0,9})(?::([^:]{1,30}))?$/uD', $pick, $match) !== 1 || isset($lines[$match[1]])) {
                 throw new InvalidArgumentException('Invalid replenishment selection.');
             }
-            $lines[$match[1]] = ['product_id' => $match[1], 'quantity' => $match[2]];
+            $lines[$match[1]] = ['product_id' => $match[1], 'quantity' => $match[2]] + (isset($match[3]) ? ['unit_code' => $match[3]] : []);
         }
         $first = array_shift($lines);
         $items = [];
@@ -121,7 +129,7 @@ final class PurchaseOrderController
             $items[$index + 1] = $line;
         }
 
-        return ['product_id' => $first['product_id'], 'quantity' => $first['quantity'], 'items' => $items];
+        return array_intersect_key($first, array_flip(['product_id', 'quantity', 'unit_code'])) + ['items' => $items];
     }
 
     public function store(Request $request): Response
@@ -130,9 +138,9 @@ final class PurchaseOrderController
         $post = $request->post();
 
         try {
+            // Any client-sent order_number is ignored: the service assigns it (D-11, ADR-017).
             $this->purchaseOrders->createDraft(
                 $actor,
-                InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
                 InputValidator::positiveInt('supplier_id', $post['supplier_id'] ?? ''),
                 InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
                 \App\Validation\OrderItemsInput::purchase($post),
@@ -165,9 +173,11 @@ final class PurchaseOrderController
         $order = $this->findOrder($id);
 
         try {
-            $this->purchaseOrders->receive($actor, $id, [
-                InputValidator::positiveInt('item_id', $post['item_id'] ?? '') => InputValidator::positiveInt('quantity', $post['quantity'] ?? ''),
-            ], \App\Service\OperationIdempotency::validateKey($post['operation_key'] ?? null));
+            $itemId = InputValidator::positiveInt('item_id', $post['item_id'] ?? '');
+            $quantity = InputValidator::positiveInt('quantity', $post['quantity'] ?? '');
+            // Lot splits (D-17, ADR-023): lot_code[], expiry_date[], lot_quantity[] in the line unit.
+            $splits = \App\Validation\LotInput::splitsFromForm($post['lot_code'] ?? [], $post['expiry_date'] ?? [], $post['lot_quantity'] ?? [], $quantity);
+            $this->purchaseOrders->receive($actor, $id, [$itemId => $quantity], \App\Service\OperationIdempotency::validateKey($post['operation_key'] ?? null), $splits === [] ? null : [$itemId => $splits]);
         } catch (InvalidArgumentException $exception) {
             return $this->render('purchase-orders/show.php', [
                 'order' => $order,
@@ -176,6 +186,7 @@ final class PurchaseOrderController
                 'canOrderOrCancel' => $actor->role() === User::ROLE_ADMIN,
                 'canReceive' => in_array($actor->role(), [User::ROLE_ADMIN, User::ROLE_WAREHOUSE_STAFF], true),
                 'error' => $exception->getMessage(),
+                'receiptInput' => $post,
             ], 422);
         }
 
@@ -220,15 +231,25 @@ final class PurchaseOrderController
         foreach ($items as $item) {
             $product = $this->products->findById($item->productId());
             $labels[$item->productId()] = $product === null ? 'Product #' . $item->productId() : $product->sku() . ' — ' . $product->name();
+            $this->tracked[$item->productId()] = $product !== null && $product->tracksExpiry();
         }
 
         return $labels;
     }
 
+    /** @var array<int, bool> product id => tracks expiry (D-17), filled with the labels */
+    private array $tracked = [];
+
     /** @param array<string, mixed> $data */
     private function render(string $view, array $data = [], int $statusCode = 200): Response
     {
-        if(isset($data['order']) && $data['order'] instanceof PurchaseOrder){$data['closure']=$this->exceptions?->closure($data['order']->id());$data['movements']=$this->ledger?->forReference('PO',$data['order']->id())??[];$data['productLabels']=$this->productLabels($data['order']->items());}
+        if(isset($data['order']) && $data['order'] instanceof PurchaseOrder){$data['closure']=$this->exceptions?->closure($data['order']->id());$data['movements']=$this->ledger?->forReference('PO',$data['order']->id())??[];$data['productLabels']=$this->productLabels($data['order']->items());$data['trackedProducts']=$this->tracked;}
+        if (isset($data['order']) && is_object($data['order']) && method_exists($data['order'], 'items')) {
+            $data['unitSets'] = $this->unitCatalog()->forProductIds(array_map(static fn ($item): int => $item->productId(), $data['order']->items()));
+        }
+        if (isset($data['products']) && is_array($data['products'])) {
+            $data['unitSets'] = $this->unitCatalog()->forProducts($data['products']);
+        }
         extract($data, EXTR_SKIP);
         ob_start();
         require dirname(__DIR__, 2) . '/views/' . $view;

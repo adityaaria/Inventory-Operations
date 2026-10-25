@@ -1,0 +1,10 @@
+# BarcodeDetector camera path available in this browser: true
+ok - PO detail shows the scan panel; the camera button follows BarcodeDetector support
+ok - Typing a barcode + Enter increments the matching receive line by one unit
+ok - A second scan increments the line again
+ok - Unknown and misread barcodes show a visible error and change nothing
+ok - Scan to pick counts the line and prefills the issue quantity
+ok - Scanning on the blind count sheet adds to the lot line
+ok - Scan panel fits at 360 and 768 px
+ok - No page exceptions
+{"passed":8,"failed":0}

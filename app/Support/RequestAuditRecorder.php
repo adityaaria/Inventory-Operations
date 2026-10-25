@@ -21,7 +21,11 @@ final class RequestAuditRecorder
             return;
         }
 
-        if ($response->statusCode() < 400 && in_array($request->path(), ['/purchase-orders/receive', '/sales-orders/issue', '/purchase-orders/close-remainder', '/sales-orders/reject', '/inventory-operations', '/inventory-operations/decide', '/inventory-operations/post'], true)) {
+        if ($response->statusCode() < 400 && in_array($request->path(), ['/purchase-orders/receive', '/sales-orders/issue', '/sales-orders/approve', '/sales-orders/cancel', '/purchase-orders/close-remainder', '/sales-orders/reject', '/sales-orders/close-remaining', '/inventory-operations', '/inventory-operations/decide', '/inventory-operations/post', '/inventory-operations/dispatch', '/inventory-operations/receive', '/products/reorder-point', '/products/units', '/products/units/update', '/stock-counts', '/stock-counts/start', '/stock-counts/count', '/stock-counts/found-lot', '/stock-counts/submit', '/stock-counts/recount', '/stock-counts/approve', '/stock-counts/post', '/stock-counts/cancel',
+            // D-19 / ADR-025: price lists, quotations, invoices and payments are audited by their services.
+            '/price-lists', '/price-lists/update', '/price-lists/items', '/price-lists/items/update', '/price-lists/items/delete', '/price-lists/assign',
+            '/quotations', '/quotations/send', '/quotations/accept', '/quotations/reject', '/quotations/cancel', '/quotations/convert',
+            '/invoices', '/invoices/payments', '/invoices/void'], true)) {
             return; // Success is recorded atomically by the business service.
         }
         $parts = array_values(array_filter(explode('/', trim($request->path(), '/'))));

@@ -33,6 +33,12 @@
                 <label class="field"><span class="field-label">Email</span><input name="email" type="email" value="<?= htmlspecialchars($formState->value('email', $customer->email()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
                 <label class="field"><span class="field-label">Phone</span><input name="phone" value="<?= htmlspecialchars($formState->value('phone', $customer->phone()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
                 <label class="field"><span class="field-label">Address</span><textarea name="address" rows="3"><?= htmlspecialchars($formState->value('address', $customer->address()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea></label>
+                <fieldset class="stock-proposal-item" data-customer-tax><legend>Tax identity (optional, printed on invoices)</legend>
+                    <label class="field"><span class="field-label">NPWP</span><input name="npwp" inputmode="numeric" maxlength="24" value="<?= htmlspecialchars($formState->value('npwp', (string) $customer->npwp()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"><span class="field-hint">15 or 16 digits; dots and dashes are ignored.</span></label>
+                    <label class="field"><span class="field-label">NIK</span><input name="nik" inputmode="numeric" maxlength="24" value="<?= htmlspecialchars($formState->value('nik', (string) $customer->nik()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"><span class="field-hint">16 digits, for customers without NPWP.</span></label>
+                    <label class="field"><span class="field-label">Tax name</span><input name="tax_name" maxlength="120" value="<?= htmlspecialchars($formState->value('tax_name', (string) $customer->taxName()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+                    <label class="field"><span class="field-label">Tax address</span><textarea name="tax_address" rows="2" maxlength="255"><?= htmlspecialchars($formState->value('tax_address', (string) $customer->taxAddress()), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea></label>
+                </fieldset>
                 <div class="form-actions"><button type="submit">Update</button><button type="button" class="button button-quiet" data-cancel-href="/customers">Cancel</button></div>
             </form>
         <?php endif; ?>

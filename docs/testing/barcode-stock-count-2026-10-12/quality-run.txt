@@ -1,0 +1,139 @@
+ Container inventory-operations-test-db-1 Running 
+ Image inventory-operations-test Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 626B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.61kB 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/php:8.3-cli
+#3 DONE 0.0s
+
+#4 [auth] library/composer:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#5 DONE 1.1s
+
+#6 [internal] load metadata for docker.io/library/composer:2
+#6 DONE 1.5s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 225B done
+#7 DONE 0.0s
+
+#8 [node-runtime 1/1] FROM docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#8 resolve docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 0.0s done
+#8 DONE 0.0s
+
+#9 [runtime  1/13] FROM docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319
+#9 resolve docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319 0.0s done
+#9 DONE 0.0s
+
+#10 FROM docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#10 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac 0.0s done
+#10 DONE 0.0s
+
+#11 [internal] load build context
+#11 transferring context: 5.54MB 0.3s done
+#11 DONE 0.3s
+
+#12 [runtime  8/13] COPY config ./config
+#12 CACHED
+
+#13 [runtime  2/13] RUN apt-get update     && apt-get install -y --no-install-recommends unzip autoconf 		dpkg-dev 		file 		g++ 		gcc 		libc-dev 		make 		pkg-config 		re2c     && docker-php-ext-install pdo_mysql     && pecl install pcov xdebug     && docker-php-ext-enable pcov xdebug     && {         echo 'pcov.enabled=1';         echo 'pcov.directory=/var/www/html/app';     } > /usr/local/etc/php/conf.d/pcov.ini     && {         echo 'xdebug.mode=off';         echo 'xdebug.discover_client_host=1';         echo 'xdebug.client_host=host.docker.internal';     } > /usr/local/etc/php/conf.d/xdebug-custom.ini
+#13 CACHED
+
+#14 [runtime  4/13] WORKDIR /var/www/html
+#14 CACHED
+
+#15 [runtime 11/13] COPY views ./views
+#15 CACHED
+
+#16 [runtime  5/13] COPY composer.json composer.lock ./
+#16 CACHED
+
+#17 [runtime  7/13] COPY app ./app
+#17 CACHED
+
+#18 [runtime 12/13] COPY database/migrations ./database/migrations
+#18 CACHED
+
+#19 [runtime  6/13] RUN composer install --no-interaction --prefer-dist
+#19 CACHED
+
+#20 [runtime  3/13] COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#20 CACHED
+
+#21 [runtime 10/13] COPY scripts ./scripts
+#21 CACHED
+
+#22 [runtime  9/13] COPY public ./public
+#22 CACHED
+
+#23 [runtime 13/13] RUN mkdir -p /var/www/html/var/log /var/www/html/var/sessions     && chown -R www-data:www-data /var/www/html
+#23 CACHED
+
+#24 [test 1/5] COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
+#24 CACHED
+
+#25 [test 2/5] COPY tests ./tests
+#25 CACHED
+
+#26 [test 3/5] COPY database ./database
+#26 DONE 0.2s
+
+#27 [test 4/5] COPY phpunit.xml phpstan.neon ./
+#27 DONE 0.0s
+
+#28 [test 5/5] RUN chown -R www-data:www-data /var/www/html
+#28 DONE 7.3s
+
+#29 exporting to image
+#29 exporting layers
+#29 exporting layers 1.3s done
+#29 exporting manifest sha256:7c5a11b1ac29d63b5364a430e2747a7bb8aeb734be77ea617e360edf057e5029 done
+#29 exporting config sha256:49f80fd688105b766938528145fe56e3228bde2976a713dc3322cfdce2c9053f done
+#29 exporting attestation manifest sha256:4f6fd2125fc9d83a9739c4d466b34d080f17b4d27e8bcc59486fab9a69ff1b09 done
+#29 exporting manifest list sha256:8fcd3534a79c7c8ca885f03e956c8e846412658eb459d4dd6715f188bd2dd4d3 done
+#29 naming to docker.io/library/inventory-operations-test:latest done
+#29 unpacking to docker.io/library/inventory-operations-test:latest
+#29 unpacking to docker.io/library/inventory-operations-test:latest 0.2s done
+#29 DONE 1.5s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.0s
+ Image inventory-operations-test Built 
+ Container inventory-operations-test-db-1 Waiting 
+ Container inventory-operations-test-db-1 Healthy 
+ Container inventory-operations-test-run-425927545610 Creating 
+ Container inventory-operations-test-run-425927545610 Created 
+PHPUnit 10.5.64 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.35
+Configuration: /var/www/html/phpunit.xml
+
+...............................................................  63 / 820 (  7%)
+............................................................... 126 / 820 ( 15%)
+............................................................... 189 / 820 ( 23%)
+............................................................... 252 / 820 ( 30%)
+............................................................... 315 / 820 ( 38%)
+............................................................... 378 / 820 ( 46%)
+............................................................... 441 / 820 ( 53%)
+............................................................... 504 / 820 ( 61%)
+............................................................... 567 / 820 ( 69%)
+............................................................... 630 / 820 ( 76%)
+............................................................... 693 / 820 ( 84%)
+............................................................... 756 / 820 ( 92%)
+............................................................... 819 / 820 ( 99%)
+.                                                               820 / 820 (100%)
+
+Time: 04:08.233, Memory: 46.52 MB
+
+OK (820 tests, 6402 assertions)
+Note: Using configuration file /var/www/html/phpstan.neon.
+
+ [OK] No errors                                                                 
+

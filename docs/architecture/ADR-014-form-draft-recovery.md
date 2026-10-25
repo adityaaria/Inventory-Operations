@@ -13,3 +13,5 @@ Date: 7 October 2026. Optional scope: user target list item 6 ("Pemulihan draft 
 **Authority unchanged.** The check is advisory. On submit, services still enforce authorization, state transitions, stock locks, ledger and audit exactly as before.
 
 **Risk accepted (D-08).** Draft contents (order details and prices, reasons) sit unencrypted in the browser profile of that device until submit, discard, expiry or logout. On shared computers a user who closes the browser without logging out leaves a draft for up to the session limit (8 hours), readable by anyone with access to that browser profile, although the application only offers it to the same user and role.
+
+Note 12 October 2026 (D-18, ADR-024, user decision): barcode scan counts are deliberately not drafted. The scan field has no name and is outside every form; receive/issue forms have no drafts; count sheets save on the server.

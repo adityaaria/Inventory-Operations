@@ -1,0 +1,27 @@
+login 302
+product 1 pcs
+PO create 302
+PO order 302
+PO detail has lot form True
+receipt without expiry 422
+receipt 2 lots 302
+lots SMOKE-NEAR	2026-11-06	2	10195.83
+SMOKE-FAR	2027-06-09	3	10195.83
+LEGACY	NULL	4773	10195.83
+SO create 302
+submit 302 approve 302 issue 302
+issued lots SMOKE-NEAR	2
+SMOKE-FAR	1
+/products/show?id=1 200 True True
+/reports/expiry?status=near 200 False True
+/reports/expiry.csv?status=all 200 True True
+/lots?q=SMOKE 200 True True
+/lots/show?id=2048 200 True True
+/sales-orders/show?id=608 200 True True
+/purchase-orders/show?id=408 200 True True
+/dashboard 200 True True
+/timeline?kind=SO&id=608 200 True True
+/inventory-operations/create 200 True True
+api 200 11063 2027-06-09
+documents PO-2610-0020 SO-2610-0042 lot 2048
+checks 0	0

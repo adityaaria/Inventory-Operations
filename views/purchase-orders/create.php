@@ -27,7 +27,7 @@
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
         <form method="post" action="/purchase-orders" class="form" data-order-form <?= \App\Support\Html::draftAttributes('purchase-order') ?>>
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label class="field"><span class="field-label">Order Number</span><input name="order_number" required value="<?= htmlspecialchars($formState->value('order_number', 'PO-' . date('YmdHis')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <div class="field" data-order-number-note><span class="field-label">Order Number</span><p class="field-hint">Order number is assigned when the draft is saved (PO-YYMM-NNNN, e.g. PO-2610-0001).</p></div>
             <label class="field"><span class="field-label">Supplier</span>
                 <select name="supplier_id" required>
                     <?php foreach ($suppliers as $supplier): ?>
@@ -47,6 +47,7 @@
                 </select>
             </label>
             <?php $priceField = 'purchase_price'; $priceLabel = 'Purchase Price'; ?>
+            <p class="field-hint" data-price-policy>Each line starts at the product master purchase price. A negotiated supplier price must be greater than zero and needs a reason.</p>
             <div data-order-items>
                 <?php $orderItem = dirname(__DIR__) . '/partials/order-item.php'; $itemState = $formState; $prefix = ''; require $orderItem; ?>
                 <?php $next = 1; foreach (is_array($old['items'] ?? null) ? array_slice($old['items'], 0, 99, true) : [] as $line): if (!is_array($line)) { continue; } $itemState = new \App\Support\FormState($line); $prefix = 'items[' . $next++ . ']['; require $orderItem; endforeach; ?>

@@ -60,7 +60,8 @@ class OperationalSafetyTest(unittest.TestCase):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as d:
             a=self.archive(d); b=Path(d)/'inventory-20261008.sql.gz'; b.write_bytes(b'bad'); Path(str(b)+'.json').write_text('{"format":1,"sha256":"bad"}')
-            with self.assertRaises(ValueError): ops.prune(SimpleNamespace(directory=d,keep=1,apply=True))
+            arguments=SimpleNamespace(directory=d,keep=1,apply=True)
+            with self.assertRaises(ValueError): ops.prune(arguments)
             self.assertTrue(a.exists())
 
     def assert_load_refused(self,arguments):
@@ -86,14 +87,16 @@ class OperationalSafetyTest(unittest.TestCase):
     def test_dump_failure_preserves_previous_backup_and_removes_partial(self):
         with tempfile.TemporaryDirectory() as d:
             old=Path(d)/'inventory-stamp-42.sql.gz'; old.write_bytes(b'previous good archive'); manifest=Path(str(old)+'.json'); manifest.write_text('previous manifest')
+            arguments=self.backup_args(d)
             with patch.object(ops,'database_info',return_value='fixture'),patch.object(ops.time,'strftime',return_value='stamp'),patch.object(ops.time,'time_ns',return_value=42),patch.object(ops,'run',side_effect=RuntimeError('dump failed')):
-                with self.assertRaises(RuntimeError): ops.backup(self.backup_args(d))
+                with self.assertRaises(RuntimeError): ops.backup(arguments)
             self.assertEqual(b'previous good archive',old.read_bytes()); self.assertEqual('previous manifest',manifest.read_text())
             self.assertFalse(list(Path(d).glob('.dump-*')))
     def test_filename_collision_preserves_existing_backup(self):
         with tempfile.TemporaryDirectory() as d:
             old=Path(d)/'inventory-stamp-42.sql.gz'; old.write_bytes(b'previous good archive')
             def write_dump(command,**kwargs): kwargs['stdout'].write(b'SELECT 1;')
+            arguments=self.backup_args(d)
             with patch.object(ops,'database_info',return_value='fixture'),patch.object(ops.time,'strftime',return_value='stamp'),patch.object(ops.time,'time_ns',return_value=42),patch.object(ops,'run',side_effect=write_dump):
-                with self.assertRaises(FileExistsError): ops.backup(self.backup_args(d))
+                with self.assertRaises(FileExistsError): ops.backup(arguments)
             self.assertEqual(b'previous good archive',old.read_bytes()); self.assertFalse(list(Path(d).glob('.dump-*')))

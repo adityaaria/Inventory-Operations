@@ -26,7 +26,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service, $orders] = $this->service();
         $sales = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
-        $order = $service->createDraft($sales, 'SO-001', 1, 1, [
+        $order = $service->createDraft($sales, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
         $service->submit($sales, $order->id());
@@ -41,7 +41,7 @@ final class SalesOrderServiceTest extends TestCase
         [$service] = $this->service();
         $owner = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
         $other = new AuthContext(8, 'sales2@example.test', User::ROLE_SALES);
-        $order = $service->createDraft($owner, 'SO-001', 1, 1, [
+        $order = $service->createDraft($owner, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -54,7 +54,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service] = $this->service();
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -67,7 +67,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service, $orders] = $this->service(stockQuantity: 5);
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 2, 'selling_price' => 2000.0],
         ]);
         $service->submit($admin, $order->id());
@@ -82,7 +82,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service, $orders] = $this->service(stockQuantity: 5);
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
         $service->submit($admin, $order->id());
@@ -98,7 +98,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service] = $this->service();
         $sales = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
-        $order = $service->createDraft($sales, 'SO-001', 1, 1, [
+        $order = $service->createDraft($sales, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
         $service->submit($sales, $order->id());
@@ -112,7 +112,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service] = $this->service();
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -126,7 +126,7 @@ final class SalesOrderServiceTest extends TestCase
         [$service, $orders] = $this->service();
         $sales = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($sales, 'SO-001', 1, 1, [
+        $order = $service->createDraft($sales, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -139,7 +139,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service, $orders] = $this->service();
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -152,7 +152,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service] = $this->service(stockQuantity: 5);
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($admin, 'SO-001', 1, 1, [
+        $order = $service->createDraft($admin, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
         $service->submit($admin, $order->id());
@@ -168,7 +168,7 @@ final class SalesOrderServiceTest extends TestCase
     {
         [$service] = $this->service();
         $sales = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
-        $order = $service->createDraft($sales, 'SO-001', 1, 1, [
+        $order = $service->createDraft($sales, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
 
@@ -183,7 +183,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(HttpException::class);
 
-        $service->createDraft(new AuthContext(3, 'warehouse@example.test', User::ROLE_WAREHOUSE_STAFF), 'SO-001', 1, 1, [
+        $service->createDraft(new AuthContext(3, 'warehouse@example.test', User::ROLE_WAREHOUSE_STAFF), 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
     }
@@ -193,7 +193,7 @@ final class SalesOrderServiceTest extends TestCase
         [$service] = $this->service(stockQuantity: 5);
         $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
         $sales = new AuthContext(7, 'sales@example.test', User::ROLE_SALES);
-        $order = $service->createDraft($sales, 'SO-001', 1, 1, [
+        $order = $service->createDraft($sales, 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
         $service->submit($sales, $order->id());
@@ -214,15 +214,21 @@ final class SalesOrderServiceTest extends TestCase
         $service->approve($admin, 999);
     }
 
-    public function testRejectsBlankOrderNumber(): void
+    public function testOrderNumberIsAssignedByServerAndNotConsumedByRejectedInput(): void
     {
         [$service] = $this->service();
+        $admin = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
+        try {
+            $service->createDraft($admin, 999, 1, [['product_id' => 10, 'quantity' => 1]]);
+            self::fail('Unknown customer must be rejected.');
+        } catch (InvalidArgumentException) {
+        }
 
-        $this->expectException(InvalidArgumentException::class);
+        $first = $service->createDraft($admin, 1, 1, [['product_id' => 10, 'quantity' => 1]]);
+        $second = $service->createDraft($admin, 1, 1, [['product_id' => 10, 'quantity' => 2]]);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), '   ', 1, 1, [
-            ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
-        ]);
+        self::assertMatchesRegularExpression('/^SO-\d{4}-0001$/', $first->orderNumber());
+        self::assertSame(substr($first->orderNumber(), 0, 8) . '0002', $second->orderNumber());
     }
 
     public function testRejectsUnknownCustomer(): void
@@ -231,7 +237,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-002', 999, 1, [
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 999, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
     }
@@ -242,7 +248,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-003', 1, 999, [
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 999, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
     }
@@ -253,7 +259,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-004', 1, 1, []);
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 1, []);
     }
 
     public function testRejectsUnknownProduct(): void
@@ -262,7 +268,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-005', 1, 1, [
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 1, [
             ['product_id' => 999, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
     }
@@ -273,7 +279,7 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-006', 1, 1, [
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 1, [
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
             ['product_id' => 10, 'quantity' => 1, 'selling_price' => 2000.0],
         ]);
@@ -285,21 +291,22 @@ final class SalesOrderServiceTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-007', 1, 1, [
+        $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 1, [
             ['product_id' => 10, 'quantity' => 0, 'selling_price' => 2000.0],
         ]);
     }
 
-    public function testLinePriceComesFromProductMasterNotFromInput(): void
+    public function testWithoutSubmittedPriceTheMasterPriceIsUsedAndTamperedKeysAreIgnored(): void
     {
         [$service] = $this->service();
 
-        // A tampered (even negative) price from the client is ignored; the master price is stored.
-        $order = $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 'SO-008', 1, 1, [
-            ['product_id' => 10, 'quantity' => 1, 'selling_price' => -1.0],
+        // D-13 / ADR-019 (was ADR-015 "master only"): the service reads only `price`/`price_reason`; legacy
+        // `selling_price` and a client `list_price` are ignored, so the master price is stored and snapshotted.
+        $order = $service->createDraft(new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN), 1, 1, [
+            ['product_id' => 10, 'quantity' => 1, 'selling_price' => -1.0, 'list_price' => -1.0],
         ]);
 
-        self::assertSame(1500.0, $order->items()[0]->sellingPrice());
+        self::assertSame([1500.0, 1500.0, null], [$order->items()[0]->sellingPrice(), $order->items()[0]->listPrice(), $order->items()[0]->priceReason()]);
     }
 
     /**
@@ -307,9 +314,9 @@ final class SalesOrderServiceTest extends TestCase
      */
     public function testRepeatedApprovalIsAnHttp422ValidationFailure(): void
     {
-        [$service] = $this->service();
+        [$service] = $this->service(stockQuantity: 5); // approval reserves stock since D-12, so the first one needs some
         $actor = new AuthContext(1, 'admin@example.test', User::ROLE_ADMIN);
-        $order = $service->createDraft($actor, 'SO-STATE', 1, 1, [['product_id'=>10,'quantity'=>1,'selling_price'=>20.0]]);
+        $order = $service->createDraft($actor, 1, 1, [['product_id'=>10,'quantity'=>1,'selling_price'=>20.0]]);
         $service->submit($actor, $order->id()); $service->approve($actor, $order->id());
         try { $service->approve($actor, $order->id()); self::fail('Transition must fail.'); }
         catch (\App\Exception\ValidationException $exception) {
@@ -326,7 +333,7 @@ final class SalesOrderServiceTest extends TestCase
 
         return [
             new SalesOrderService(
-                $orders,
+                $orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(),
                 new InMemoryProductRepository([new Product(10, 'SKU-001', 'Widget A', 'pcs', 1000.0, 1500.0, 5, 1, true)]),
                 [1 => new Customer(1, 'Demo Customer', '', '', '', true)],
                 [1 => new Warehouse(1, 'Main Warehouse', 'Jakarta', true)],

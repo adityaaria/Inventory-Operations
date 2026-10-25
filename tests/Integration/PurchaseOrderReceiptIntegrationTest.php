@@ -37,11 +37,11 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
         $warehouseId = $this->id('warehouses', 'name', 'Gudang Pusat Cikarang');
         $before = (new MySqlStockRepository($this->pdo))->quantity($productId, $warehouseId);
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
+        $order = $service->createDraft($actor, $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 4, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
-        $service->receive($actor, $order->id(), [$order->items()[0]->id() => 4]);
+        $service->receive($actor, $order->id(), [$order->items()[0]->id() => 4], null, [$order->items()[0]->id() => [['lot_code' => 'IT-RECEIPT', 'expiry_date' => '2027-12-31', 'quantity' => 4]]]); // D-17 / ADR-023: the seed product tracks expiry, so the receipt names its lot and expiry date.
 
         $repository = new MySqlPurchaseOrderRepository($this->pdo);
         self::assertSame($before + 4, (new MySqlStockRepository($this->pdo))->quantity($productId, $warehouseId));
@@ -56,11 +56,11 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
         $productId = $this->id('products', 'sku', 'MIN-0038');
         $warehouseId = $this->id('warehouses', 'name', 'Gudang Distribusi Surabaya');
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
+        $order = $service->createDraft($actor, $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 10, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
-        $service->receive($actor, $order->id(), [$order->items()[0]->id() => 3]);
+        $service->receive($actor, $order->id(), [$order->items()[0]->id() => 3], null, [$order->items()[0]->id() => [['lot_code' => 'IT-PARTIAL', 'expiry_date' => '2027-12-31', 'quantity' => 3]]]);
 
         $updated = (new MySqlPurchaseOrderRepository($this->pdo))->findById($order->id());
         self::assertSame(PurchaseOrder::STATUS_PARTIALLY_RECEIVED, $updated?->status());
@@ -76,13 +76,13 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
         $stock = new MySqlStockRepository($this->pdo);
         $before = $stock->quantity($productId, $warehouseId);
 
-        $order = $service->createDraft($actor, 'PO-IT-' . uniqid(), $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
+        $order = $service->createDraft($actor, $this->id('suppliers', 'name', 'PT Tirta Alam Sejahtera'), $warehouseId, [
             ['product_id' => $productId, 'quantity' => 5, 'purchase_price' => 12000.0],
         ]);
         $service->markOrdered($actor, $order->id());
 
         try {
-            $service->receive($actor, $order->id(), [$order->items()[0]->id() => 2]);
+            $service->receive($actor, $order->id(), [$order->items()[0]->id() => 2], null, [$order->items()[0]->id() => [['lot_code' => 'IT-FAIL', 'expiry_date' => '2027-12-31', 'quantity' => 2]]]);
             self::fail('Expected ledger failure.');
         } catch (RuntimeException) {
             $updated = (new MySqlPurchaseOrderRepository($this->pdo))->findById($order->id());
@@ -99,7 +99,7 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
         $warehouseTwo = $this->id('warehouses', 'name', 'Gudang Distribusi Surabaya');
 
         return new PurchaseOrderService(
-            new MySqlPurchaseOrderRepository($this->pdo),
+            new MySqlPurchaseOrderRepository($this->pdo), new \App\Repository\MySql\MySqlDocumentSequenceRepository($this->pdo),
             new MySqlProductRepository($this->pdo),
             [$supplierId => new Supplier($supplierId, 'PT Tirta Alam Sejahtera', 'order@tirtaalam.test', '021-8990-1120', 'Jl. Raya Narogong Km 12, Bekasi', true)],
             [
@@ -122,12 +122,12 @@ final class PurchaseOrderReceiptIntegrationTest extends TestCase
 
 final class FailingStockLedgerRepository implements StockLedgerRepositoryInterface
 {
-    public function appendReceipt(int $productId, int $warehouseId, int $quantity, string $referenceType, int $referenceId, int $performedBy): void
+    public function appendReceipt(int $productId, int $warehouseId, int $quantity, string $referenceType, int $referenceId, int $performedBy, ?int $lotId = null, ?string $unitCost = null): void
     {
         throw new RuntimeException('Forced ledger failure.');
     }
 
-    public function appendIssue(int $productId, int $warehouseId, int $quantity, string $referenceType, int $referenceId, int $performedBy): void
+    public function appendIssue(int $productId, int $warehouseId, int $quantity, string $referenceType, int $referenceId, int $performedBy, ?int $lotId = null, ?string $unitCost = null): void
     {
         throw new RuntimeException('Forced ledger failure.');
     }

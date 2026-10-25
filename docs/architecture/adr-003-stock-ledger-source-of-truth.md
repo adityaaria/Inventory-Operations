@@ -21,3 +21,7 @@ All stock mutations must go through `StockService`. The service starts a transac
 - Failed receipt/issue operations leave neither balance changes nor ledger rows.
 - Future audit trail features can build on this ledger without changing the mandatory stock mutation path.
 - Manual stock adjustment and warehouse transfer require new ledger movement types and ADR/test updates before implementation.
+
+Note 12 October 2026 (D-17, ADR-023): every new ledger row names its lot (`lot_id`); per lot, quantity = opening + Σ its ledger rows, and Σ lots = product_stocks.quantity.
+
+Note 12 October 2026 (D-20, ADR-026): every ledger row with a lot also carries the lot's `unit_cost` and `cost_amount` = signed quantity × unit cost (whole cents, CHECK `chk_stock_ledger_cost`); per lot, value = opening value + Σ cost amounts. Rows before the lot watermark keep no cost.

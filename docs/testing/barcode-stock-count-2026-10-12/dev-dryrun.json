@@ -1,0 +1,14 @@
+{
+    "migration": "20261012-stock-counts",
+    "mode": "dry-run",
+    "destructive": false,
+    "tables_missing": [
+        "stock_counts",
+        "stock_count_products",
+        "stock_count_counters",
+        "stock_count_lines"
+    ],
+    "lot_source_allows_stock_count": false,
+    "already_applied": false,
+    "barcodes_available": 0
+}

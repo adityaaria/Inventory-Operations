@@ -25,6 +25,9 @@ test('secrets, idempotency keys and stale count baselines are never stored', () 
     assert.equal(drafts.draftable('items[2][quantity]', 'number'), true);
     assert.equal(drafts.draftable('anything', 'hidden'), false);
     assert.equal(drafts.draftable('anything', 'password'), false);
+    // Negotiated prices (D-13, ADR-019): typed price and reason are kept, the master list price never.
+    for (const name of ['list_price', 'items[4][list_price]']) assert.equal(drafts.draftable(name, 'text'), false, name);
+    for (const name of ['purchase_price', 'selling_price', 'price_reason', 'items[4][selling_price]', 'items[4][price_reason]']) assert.equal(drafts.draftable(name, 'text'), true, name);
 });
 
 test('drafts expire with the session limit (default 8 hours) and reject future or malformed timestamps', () => {
@@ -60,7 +63,7 @@ test('server check blocks inactive master data and warns about outbound stock sh
         items: [{ product_id: 1, active: true, available: 2 }, { product_id: 2, active: false, available: 10 }, { product_id: 3, active: true, available: 0 }],
     }, lines, line => line.label);
     assert.deepEqual(messages.map(message => [message.blocking, message.field]), [[true, 'warehouse_id'], [false, 'a'], [true, 'b']]);
-    assert.match(messages[1].text, /Only 2 unit\(s\) of SKU-1/);
+    assert.match(messages[1].text, /Only 2 base unit\(s\) of SKU-1/);
     assert.deepEqual(drafts.checkMessages({ warehouse: { id: 1, active: true }, items: [{ product_id: 1, active: true, available: 5 }] }, lines, line => line.label), []);
 });
 
@@ -78,4 +81,20 @@ test('logout clearing removes only this application\'s drafts; housekeeping drop
     drafts.clearAll(storage);
     assert.deepEqual(storage.keys(), ['theme']);
     assert.doesNotThrow(() => drafts.clearAll(null));
+});
+
+test('restored order lines compare stock in base units: quantity × the selected unit factor (D-16)', () => {
+    const select = name => ({ name, disabled: false, value: '10', selectedOptions: [{ textContent: 'MIE-0001 - Mi Goreng' }] });
+    const controls = {
+        quantity: { value: '2' }, unit_code: { selectedOptions: [{ dataset: { factor: '48' } }] },
+        'items[1][quantity]': { value: '5' }, 'items[1][unit_code]': { selectedOptions: [] },
+    };
+    const form = {
+        querySelectorAll: () => [select('product_id'), select('items[1][product_id]')],
+        elements: { namedItem: name => controls[name] ?? null },
+    };
+    const lines = drafts.productLines(form, true);
+    assert.deepEqual(lines.map(line => line.quantity), [96, 5]);
+    const messages = drafts.checkMessages({ warehouse: { id: 1, active: true }, items: [{ product_id: 10, active: true, available: 50 }] }, lines.slice(0, 1), line => line.label);
+    assert.match(messages[0].text, /Only 50 base unit\(s\) of MIE-0001 - Mi Goreng are available/);
 });

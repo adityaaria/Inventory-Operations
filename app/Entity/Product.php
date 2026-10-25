@@ -16,6 +16,7 @@ final class Product
         private readonly int $reorderPoint,
         private readonly int $categoryId,
         private readonly bool $isActive,
+        private readonly bool $tracksExpiry = false,
     ) {
     }
 
@@ -67,5 +68,11 @@ final class Product
     public function isActive(): bool
     {
         return $this->isActive;
+    }
+
+    /** Every new lot needs an expiry date (D-17, ADR-023). */
+    public function tracksExpiry(): bool
+    {
+        return $this->tracksExpiry;
     }
 }

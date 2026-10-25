@@ -89,8 +89,8 @@
                                 <div>
                                     <?= htmlspecialchars($stock->warehouseName(), ENT_QUOTES, 'UTF-8') ?>:
                                     <span class="<?= $stock->isLowStock() ? 'status-badge stock-low' : 'status-badge status-normal' ?>">
-                                        <?= $stock->quantity() ?><?= $stock->isLowStock() ? ' Low' : ' In stock' ?>
-                                    </span>
+                                        <?= htmlspecialchars(isset($unitSets[$product->id()]) ? $unitSets[$product->id()]->format($stock->quantity()) : (string) $stock->quantity(), ENT_QUOTES, 'UTF-8') ?><?= $stock->isLowStock() ? ' Low' : ' In stock' ?>
+                                    </span><?php if ($stock->reservedQuantity() > 0): ?> <small class="field-hint"><?= $stock->reservedQuantity() ?> reserved, <?= $stock->availableQuantity() ?> available</small><?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </td>

@@ -28,8 +28,10 @@ final class OutstandingReportIntegrationTest extends TestCase
     {
         $admin = new AuthContext(1, 'admin@test', 'Admin');
         $expected = $this->scalar("SELECT COUNT(*) FROM purchase_orders po LEFT JOIN purchase_order_closures c ON c.purchase_order_id = po.id WHERE po.status IN ('Draft', 'Ordered', 'PartiallyReceived') AND c.purchase_order_id IS NULL")
-            + $this->scalar("SELECT COUNT(*) FROM sales_orders WHERE status IN ('Draft', 'PendingApproval', 'Approved')")
-            + $this->scalar("SELECT COUNT(*) FROM inventory_operations WHERE status IN ('PendingApproval', 'Approved')");
+            // D-14/ADR-020: a PartiallyFulfilled SO is open until its remainder is shipped or closed.
+            + $this->scalar("SELECT COUNT(*) FROM sales_orders so LEFT JOIN sales_order_closures c ON c.sales_order_id = so.id WHERE so.status IN ('Draft', 'PendingApproval', 'Approved', 'PartiallyFulfilled') AND c.sales_order_id IS NULL")
+            // D-15/ADR-021: a dispatched transfer stays open until it is received.
+            + $this->scalar("SELECT COUNT(*) FROM inventory_operations WHERE status IN ('PendingApproval', 'Approved', 'Dispatched')");
         $preview = $this->reports->preview($admin, 'outstanding', null, null, new Pagination());
         self::assertGreaterThan(0, $expected);
         self::assertSame($expected, $preview['result']->total());
@@ -54,13 +56,23 @@ final class OutstandingReportIntegrationTest extends TestCase
         self::assertNotSame([], $rows);
         self::assertCount($preview['result']->total(), $rows);
         $remaining = $this->pdo->prepare('SELECT SUM(poi.quantity - poi.received_quantity) FROM purchase_order_items poi INNER JOIN purchase_orders po ON po.id = poi.purchase_order_id WHERE po.order_number = :number');
+        $unshipped = $this->pdo->prepare('SELECT SUM(soi.quantity - soi.issued_quantity) FROM sales_order_items soi INNER JOIN sales_orders so ON so.id = soi.sales_order_id WHERE so.order_number = :number');
         $inbound = 0;
         foreach ($rows as [$type, $number, , $status, , , , , $quantity]) {
-            self::assertContains($type . ' ' . $status, ['PO Ordered', 'PO PartiallyReceived', 'SO Approved', 'OP Approved']);
+            self::assertContains($type . ' ' . $status, ['PO Ordered', 'PO PartiallyReceived', 'SO Approved', 'SO PartiallyFulfilled', 'OP Approved', 'OP Dispatched']);
+            if ($type === 'OP' && $status === 'Dispatched') {
+                // D-15/ADR-021: outstanding = units in transit.
+                self::assertSame($this->scalar("SELECT SUM(i.dispatched_quantity) FROM inventory_operation_items i JOIN inventory_operations o ON o.id = i.operation_id WHERE CONCAT(o.kind, ' #', o.id) = " . $this->pdo->quote($number)), (int) $quantity);
+            }
             if ($type === 'PO') {
                 $remaining->execute(['number' => $number]);
                 self::assertSame((int) $remaining->fetchColumn(), (int) $quantity);
                 $inbound += (int) $quantity;
+            }
+            if ($type === 'SO') {
+                // D-14/ADR-020: SO outstanding = ordered − issued.
+                $unshipped->execute(['number' => $number]);
+                self::assertSame((int) $unshipped->fetchColumn(), (int) $quantity);
             }
         }
         self::assertSame($inbound, $preview['metrics']['PO Units Awaiting Receipt']);
@@ -115,19 +127,23 @@ final class OutstandingReportIntegrationTest extends TestCase
         $numbers = array_column($proposals['result']->items(), 'OrderNumber');
         self::assertContains($pending, $numbers);
         self::assertContains($approved, $numbers);
-        self::assertSame($this->scalar("SELECT COUNT(*) FROM inventory_operations WHERE status IN ('PendingApproval', 'Approved')"), $proposals['result']->total());
+        self::assertSame($this->scalar("SELECT COUNT(*) FROM inventory_operations WHERE status IN ('PendingApproval', 'Approved', 'Dispatched')"), $proposals['result']->total());
         self::assertSame($proposals['result']->total(), $proposals['metrics']['Stock Proposals Waiting']);
         self::assertSame(0, $proposals['metrics']['PO Units Awaiting Receipt'] + $proposals['metrics']['SO Units Awaiting Issue']);
         foreach ($proposals['result']->items() as $row) {
             self::assertSame('OP', $row['Type']);
-            self::assertNull($row['OutstandingQty']);
+            if ($row['Status'] === 'Dispatched') { self::assertGreaterThan(0, (int) $row['OutstandingQty'], 'Units in transit (D-15).'); } else { self::assertNull($row['OutstandingQty']); }
             if ($row['OrderNumber'] === $approved) self::assertSame(1, (int) $row['DaysSinceApproval'], 'Approved proposals age from approval.');
             if ($row['OrderNumber'] === $pending) self::assertNull($row['DaysSinceApproval'], 'Pending proposals have no approval time.');
         }
 
+        // The seed's open transfers (D-15) age with the real clock, so only the inserted proposals are pinned here.
         $aged = $this->reports->preview($admin, 'outstanding', null, null, new Pagination(), ['document' => 'OP', 'age' => '31+ days']);
-        self::assertSame([$pending], array_column($aged['result']->items(), 'OrderNumber'));
-        self::assertSame([$pending], array_column($this->csvRows($admin, ['document' => 'OP', 'age' => '31+ days']), 1));
+        $agedNumbers = array_column($aged['result']->items(), 'OrderNumber');
+        self::assertContains($pending, $agedNumbers);
+        self::assertNotContains($approved, $agedNumbers);
+        foreach ($aged['result']->items() as $row) { self::assertGreaterThanOrEqual(31, (int) $row['AgeDays']); }
+        self::assertSame($agedNumbers, array_column($this->csvRows($admin, ['document' => 'OP', 'age' => '31+ days']), 1));
 
         $warehouse = new AuthContext(4, 'warehouse@test', 'WarehouseStaff');
         $ready = array_column($this->reports->preview($warehouse, 'outstanding', null, null, new Pagination(), ['document' => 'OP'])['result']->items(), 'OrderNumber');

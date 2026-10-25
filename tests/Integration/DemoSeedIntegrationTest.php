@@ -29,6 +29,13 @@ final class DemoSeedIntegrationTest extends TestCase
         self::assertSame($this->rowCount('products') * $this->rowCount('warehouses'), $this->rowCount('product_stocks'));
     }
 
+    public function testSeedDemonstratesAuditedPerWarehouseReorderOverrides(): void
+    {
+        $overrides = (int) $this->pdo->query('SELECT COUNT(*) FROM product_stocks WHERE reorder_point_override IS NOT NULL')->fetchColumn();
+        self::assertGreaterThan(0, $overrides, 'D-10 demo: some warehouses use their own reorder point.');
+        self::assertSame($overrides, $this->countWhere('audit_logs', 'action', 'products.reorder-point'));
+    }
+
     private function rowCount(string $table): int
     {
         return (int) $this->pdo->query("SELECT COUNT(*) AS total FROM {$table}")->fetch()['total'];

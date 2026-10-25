@@ -1,0 +1,55 @@
+{
+    "migration": "20261012-sales-documents",
+    "destructive": false,
+    "tables_missing": [
+        "price_lists",
+        "price_list_items",
+        "quotations",
+        "quotation_items",
+        "delivery_notes",
+        "delivery_note_lines",
+        "delivery_note_lots",
+        "invoices",
+        "invoice_lines",
+        "invoice_payments"
+    ],
+    "columns_present": [],
+    "sequence_prefixes_widened": false,
+    "already_applied": false,
+    "orders_with_shipments": 529,
+    "delivery_notes": {
+        "mode": "dry-run",
+        "orders": 529,
+        "shipments_to_create": 529,
+        "issue_rows_to_link": 2820,
+        "conflicts": [],
+        "first_shipments": [
+            {
+                "sales_order_id": 5,
+                "shipped_at": "2026-04-22 14:58:00",
+                "lines": 2
+            },
+            {
+                "sales_order_id": 3,
+                "shipped_at": "2026-04-22 14:59:37",
+                "lines": 3
+            },
+            {
+                "sales_order_id": 1,
+                "shipped_at": "2026-04-23 08:50:00",
+                "lines": 9
+            },
+            {
+                "sales_order_id": 2,
+                "shipped_at": "2026-04-24 08:07:00",
+                "lines": 3
+            },
+            {
+                "sales_order_id": 4,
+                "shipped_at": "2026-04-24 11:04:00",
+                "lines": 8
+            }
+        ],
+        "message": "The new tables do not exist yet; the run without --dry-run adds them (additive DDL) before creating delivery notes."
+    }
+}

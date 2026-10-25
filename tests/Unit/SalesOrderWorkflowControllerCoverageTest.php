@@ -128,6 +128,7 @@ final class SalesOrderWorkflowControllerCoverageTest extends TestCase
         $order = $this->draft('SO-CANCEL', 7, 1);
         $this->orders->submit($order->id());
         $this->orders->approve($order->id(), 1);
+        $this->stock->seed(10, 1, 5, 1); // the reservation an approval holds (D-12)
         try {
             $this->controller(new AuthContext(7, 'sales@test', User::ROLE_SALES))->cancel(new Request('POST', '/sales-orders/cancel', [], ['id' => (string) $order->id()], []));
             self::fail('Sales must not cancel');
@@ -138,6 +139,8 @@ final class SalesOrderWorkflowControllerCoverageTest extends TestCase
         $response = $this->controller(new AuthContext(1, 'admin@test', User::ROLE_ADMIN))->cancel(new Request('POST', '/sales-orders/cancel', [], ['id' => (string) $order->id()], []));
         self::assertSame(302, $response->statusCode());
         self::assertSame(SalesOrder::STATUS_CANCELLED, $this->orders->findById($order->id())?->status());
+        self::assertSame(0, $this->stock->reservedQuantity(10, 1), 'Cancelling an Approved order releases its reservation.');
+        self::assertSame(5, $this->stock->quantity(10, 1));
     }
 
     public function testRejectingNoLongerPendingOrderShowsErrorOnPageWithoutDialog(): void
@@ -228,7 +231,7 @@ final class SalesOrderWorkflowControllerCoverageTest extends TestCase
             : null;
 
         return new SalesOrderController(
-            new SalesOrderService($this->orders, $this->products, $customers, $warehouses, $stock, new OperationIdempotency(new InMemoryOperationRequestRepository())),
+            new SalesOrderService($this->orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(), $this->products, $customers, $warehouses, $stock, new OperationIdempotency(new InMemoryOperationRequestRepository())),
             $this->orders,
             $this->products,
             $customers,

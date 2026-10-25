@@ -22,7 +22,10 @@ interface PurchaseOrderRepositoryInterface
     public function lockById(int $id): ?PurchaseOrder;
 
     /**
-     * @param list<array{product_id: int, quantity: int, purchase_price: float}> $items
+     * list_price is the master price snapshot (defaults to purchase_price); price_reason is required by the schema when the
+     * two differ (D-13, ADR-019). Callers outside PurchaseOrderService are tests and fixtures.
+     *
+     * @param list<array{product_id: int, quantity: int, purchase_price: float, list_price?: float, price_reason?: string|null, unit_code?: string|null, unit_factor?: int, unit_quantity?: int}> $items quantity in base units; unit_* is the D-16 snapshot
      */
     public function createDraft(string $orderNumber, int $supplierId, int $warehouseId, int $createdBy, array $items): PurchaseOrder;
 

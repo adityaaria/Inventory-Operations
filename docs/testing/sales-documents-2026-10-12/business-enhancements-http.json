@@ -1,0 +1,1887 @@
+{
+  "project": "inventory-e2e-salesdocs",
+  "url": "http://localhost:18099",
+  "checks": 347,
+  "passed": 347,
+  "failed": 0,
+  "results": [
+    {
+      "name": "admin@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "admin@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "warehouse1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouse1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "sales1@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "sales1@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "Sales denied /inventory-operations",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /inventory-operations/create",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /replenishment",
+      "passed": true
+    },
+    {
+      "name": "Sales denied /inventory-operations/balance?product_id=1&warehouse_id=1",
+      "passed": true
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Inbound recommendation includes open remainder",
+      "passed": true
+    },
+    {
+      "name": "/purchase-orders/close-remainder",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/purchase-orders/close-remainder",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Close preserves stock and official PO status",
+      "passed": true
+    },
+    {
+      "name": "Closed PO reason visible and new receipt form absent",
+      "passed": true
+    },
+    {
+      "name": "Replenishment shows reviewed PO shortcut",
+      "passed": true
+    },
+    {
+      "name": "PO shortcut prefills product warehouse quantity",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/reject",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/sales-orders/reject",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales sees rejection reason with Cancelled status",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Adjustment posted once",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Transfer dispatched once: goods in transit",
+      "passed": true
+    },
+    {
+      "name": "Receive transfer #50 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receive transfer #50 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Transfer receipt conserves total once",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Supplier return decreases stock once",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Supplier over-return leaves stock untouched",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/issue",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Fit customer return increases stock and preserves Fulfilled",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Approval reserves without a ledger movement",
+      "passed": true
+    },
+    {
+      "name": "Availability API adds reserved and available",
+      "passed": true
+    },
+    {
+      "name": "Product detail shows reserved and available columns",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Second approval refused with 422 when stock is reserved",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Transfer cannot cut into reserved stock",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Cancelling the Approved SO releases its reservation",
+      "passed": true
+    },
+    {
+      "name": "Timeline traces reservation and release",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Transfer dispatches after the release",
+      "passed": true
+    },
+    {
+      "name": "Receive transfer #54 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Transfer received after the release",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receive transfer #55 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Reverse transfer restores the earlier balances",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Different price without reason refused",
+      "passed": true
+    },
+    {
+      "name": "Sales discount above the cap refused",
+      "passed": true
+    },
+    {
+      "name": "Below-cost price refused even for Admin",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Negotiated price stored with server list price and reason",
+      "passed": true,
+      "detail": "19.00|20.00|Promo akhir bulan HTTP"
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Approval page shows override and notice",
+      "passed": true
+    },
+    {
+      "name": "Anonymous detail request is not served",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Reservation invariant holds for this product",
+      "passed": true
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Partial shipment of 4 of 6",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "PartiallyFulfilled keeps 2 reserved",
+      "passed": true,
+      "detail": [
+        6,
+        2
+      ]
+    },
+    {
+      "name": "Work queue lists the remaining issue",
+      "passed": true
+    },
+    {
+      "name": "Outstanding report shows 2 unshipped units",
+      "passed": true,
+      "detail": [
+        [
+          "SO",
+          "SO-2610-0053",
+          "Minimarket Lancar Jaya Bekasi",
+          "PartiallyFulfilled",
+          "2026-10-12",
+          "0",
+          "0-2 days",
+          "0",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "Customer return is bounded by the partial Issue row",
+      "passed": true,
+      "detail": [
+        9,
+        2
+      ]
+    },
+    {
+      "name": "Admin closes the unshipped remainder",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Closure released the remainder",
+      "passed": true,
+      "detail": [
+        9,
+        0
+      ]
+    },
+    {
+      "name": "Closed remainder leaves the work queue",
+      "passed": true
+    },
+    {
+      "name": "Timeline shows shipment and closure",
+      "passed": true
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/receive",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Approved transfer offers Dispatch, not Post",
+      "passed": true
+    },
+    {
+      "name": "Work queue lists the dispatch task",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot dispatch",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Source warehouse dispatches the transfer",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Repeated dispatch is a no-op",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Dispatch moves 6 units into transit once",
+      "passed": true,
+      "detail": [
+        34,
+        0
+      ]
+    },
+    {
+      "name": "Transfer detail shows in-transit badge and receive form",
+      "passed": true
+    },
+    {
+      "name": "In Transit page lists the open transfer",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot open the In Transit page",
+      "passed": true
+    },
+    {
+      "name": "Product detail shows inbound in transit separately",
+      "passed": true
+    },
+    {
+      "name": "Replenishment subtracts goods in transit",
+      "passed": true
+    },
+    {
+      "name": "Work queue lists the receive task",
+      "passed": true
+    },
+    {
+      "name": "Dispatched transfer cannot be cancelled",
+      "passed": true
+    },
+    {
+      "name": "Discrepancy without reason refused",
+      "passed": true
+    },
+    {
+      "name": "Good plus damaged above dispatched refused",
+      "passed": true
+    },
+    {
+      "name": "Receive transfer #58 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receive transfer #58 -> 302",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receipt: 4 good enter stock, 1 damaged and 1 short written off, once",
+      "passed": true,
+      "detail": [
+        34,
+        4,
+        {
+          "r": 4,
+          "d": 1,
+          "s": 1
+        }
+      ]
+    },
+    {
+      "name": "Detail shows discrepancy and reason",
+      "passed": true
+    },
+    {
+      "name": "Timeline shows dispatch, receipt and write-off",
+      "passed": true
+    },
+    {
+      "name": "Stock equals ledger; write-off is not a movement",
+      "passed": true
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "New product has exactly one base unit pcs",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot add units",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Warehouse cannot add units",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Factor 1 for a non-base unit refused",
+      "passed": true
+    },
+    {
+      "name": "Invalid EAN-13 check digit refused",
+      "passed": true
+    },
+    {
+      "name": "Admin adds karton (24 pcs) with own prices and defaults",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Admin adds box (6 pcs) priced base x factor",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Product page lists units with factors and derived prices",
+      "passed": true
+    },
+    {
+      "name": "Each successful unit change is audited once by the service",
+      "passed": true
+    },
+    {
+      "name": "PO form offers units per product with the purchase default",
+      "passed": true
+    },
+    {
+      "name": "PO in karton at the karton master price",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "PO line stores base quantity and the unit snapshot",
+      "passed": true,
+      "detail": {
+        "id": 3306,
+        "quantity": 96,
+        "unit_quantity": 4,
+        "unit_code": "karton",
+        "unit_factor": 24,
+        "purchase_price": "22000.00",
+        "list_price": "22000.00"
+      }
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receive 3 karton",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receipt above the remaining karton refused",
+      "passed": true
+    },
+    {
+      "name": "Receipt of 3 karton adds 72 pcs and the detail shows units and totals",
+      "passed": true,
+      "detail": [
+        72,
+        0
+      ]
+    },
+    {
+      "name": "Sales discount cap applies per karton",
+      "passed": true
+    },
+    {
+      "name": "Cost floor per karton = 24 x base purchase price",
+      "passed": true
+    },
+    {
+      "name": "SO in karton within the cap",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "SO in pieces for a minimarket",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Piece line priced per piece",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Approval reserves 48 pcs (2 karton)",
+      "passed": true,
+      "detail": [
+        72,
+        48
+      ]
+    },
+    {
+      "name": "Ship 1 of 2 karton",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Shipping more karton than remain refused",
+      "passed": true
+    },
+    {
+      "name": "Partial issue in karton moves 24 pcs",
+      "passed": true,
+      "detail": [
+        48,
+        24
+      ]
+    },
+    {
+      "name": "SO detail shows the line unit, per-unit price and Rupiah total",
+      "passed": true
+    },
+    {
+      "name": "Factor of a used unit cannot change",
+      "passed": true
+    },
+    {
+      "name": "Availability API keeps base fields and adds units",
+      "passed": true,
+      "detail": {
+        "sku": "E2E1791791248938558000-UNITS",
+        "name": "E2E1791791248938558000 units (24 pcs)",
+        "total_quantity": 48,
+        "total_reserved": 24,
+        "total_available": 24,
+        "warehouses": [
+          {
+            "warehouse": "E2E1791791186825779000 warehouse edited",
+            "quantity": 0,
+            "reserved_quantity": 0,
+            "available_quantity": 0,
+            "expired_quantity": 0,
+            "available_excluding_expired": 0,
+            "nearest_expiry": null
+          },
+          {
+            "warehouse": "Gudang Distribusi Surabaya",
+            "quantity": 0,
+            "reserved_quantity": 0,
+            "available_quantity": 0,
+            "expired_quantity": 0,
+            "available_excluding_expired": 0,
+            "nearest_expiry": null
+          },
+          {
+            "warehouse": "Gudang Pusat Cikarang",
+            "quantity": 48,
+            "reserved_quantity": 24,
+            "available_quantity": 24,
+            "expired_quantity": 0,
+            "available_excluding_expired": 24,
+            "nearest_expiry": null
+          },
+          {
+            "warehouse": "Gudang Regional Makassar",
+            "quantity": 0,
+            "reserved_quantity": 0,
+            "available_quantity": 0,
+            "expired_quantity": 0,
+            "available_excluding_expired": 0,
+            "nearest_expiry": null
+          }
+        ],
+        "base_unit": "pcs",
+        "units": [
+          {
+            "unit": "karton",
+            "factor_to_base": 24,
+            "barcode": null,
+            "is_base": false,
+            "is_purchase_default": true,
+            "is_sales_default": true
+          },
+          {
+            "unit": "box",
+            "factor_to_base": 6,
+            "barcode": null,
+            "is_base": false,
+            "is_purchase_default": false,
+            "is_sales_default": false
+          },
+          {
+            "unit": "pcs",
+            "factor_to_base": 1,
+            "barcode": null,
+            "is_base": true,
+            "is_purchase_default": false,
+            "is_sales_default": false
+          }
+        ],
+        "total_expired": 0,
+        "total_available_excluding_expired": 24,
+        "nearest_expiry": null
+      }
+    },
+    {
+      "name": "Replenishment rounds 52 pcs (100 - 24 available - 24 open PO) up to 3 karton",
+      "passed": true
+    },
+    {
+      "name": "Replenishment prefill selects karton and 3 units",
+      "passed": true
+    },
+    {
+      "name": "Transfer proposed in karton",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Operation line stores 24 pcs with the karton snapshot",
+      "passed": true
+    },
+    {
+      "name": "Unit invariants hold",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "All new movements reconcile with both warehouse balances",
+      "passed": true
+    },
+    {
+      "name": "Signed Adjustment exported in stock report",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations?kind=Transfer&status=Received",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations?kind=Transfer&status=Dispatched",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations/in-transit",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations/create",
+      "passed": true
+    },
+    {
+      "name": "New page renders /inventory-operations/show?id=49",
+      "passed": true
+    },
+    {
+      "name": "New page renders /replenishment",
+      "passed": true
+    },
+    {
+      "name": "Successful operation replay does not duplicate audit",
+      "passed": true
+    },
+    {
+      "name": "Invalid stock filters rejected",
+      "passed": true
+    },
+    {
+      "name": "Every new ledger row of the product has a lot",
+      "passed": true
+    },
+    {
+      "name": "Customer return went back to the lot of the original issue",
+      "passed": true
+    },
+    {
+      "name": "Supplier return took units from the original receipt lot",
+      "passed": true
+    },
+    {
+      "name": "Balance endpoint lists the lots for the count form",
+      "passed": true
+    },
+    {
+      "name": "A lot count against a stale baseline is refused (409)",
+      "passed": true,
+      "detail": 409
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Count of one lot changes only that lot, one ledger row",
+      "passed": true
+    },
+    {
+      "name": "/inventory-operations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/decide",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/inventory-operations/post",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Units found at a count become a new lot at the current purchase price",
+      "passed": true
+    },
+    {
+      "name": "Pairs equal their lots and lots equal their ledger",
+      "passed": true
+    },
+    {
+      "name": "Operation detail names the new lot",
+      "passed": true
+    },
+    {
+      "name": "Barcode lookup resolves product, unit and factor",
+      "passed": true,
+      "detail": {
+        "barcode": "8991000202681",
+        "product": {
+          "id": 1,
+          "sku": "BIS-0001",
+          "name": "Biskuit Mentari Biskuit Kelapa Original 300g (24 pcs)",
+          "is_active": true,
+          "base_unit": "pcs",
+          "tracks_expiry": true
+        },
+        "unit": {
+          "code": "box",
+          "factor_to_base": 12,
+          "is_base": false,
+          "is_active": true
+        },
+        "usable": true
+      }
+    },
+    {
+      "name": "Barcode lookup: Sales 403, anonymous 401, unknown 404, wrong check digit 422",
+      "passed": true
+    },
+    {
+      "name": "warehouse2@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "warehouse2@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "/products",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "PO detail offers scan to receive with line data",
+      "passed": true
+    },
+    {
+      "name": "Count product received in lots CNT-A 20 and CNT-B 10",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Sales cannot open stock counts",
+      "passed": true
+    },
+    {
+      "name": "Warehouse cannot create a count",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Admin creates a count with two counters",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Warehouse cannot start a count",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Admin starts the count (snapshot)",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Counter sees a blind count sheet with scan support",
+      "passed": true
+    },
+    {
+      "name": "Reviewer sees expected quantities",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "SO detail offers scan to pick with line data",
+      "passed": true
+    },
+    {
+      "name": "5 units ship between the snapshot and the count (FEFO from CNT-A)",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Counter saves the counts",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Expected = snapshot + movements between snapshot and count; variance = counted - expected",
+      "passed": true,
+      "detail": {
+        "s": 20,
+        "e": 15,
+        "v": -2
+      }
+    },
+    {
+      "name": "Counter enters a found lot",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Counter submits the count",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Work queue lists the count to review",
+      "passed": true
+    },
+    {
+      "name": "Warehouse cannot request a recount",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Admin requests a recount of CNT-A",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "The first counter cannot recount the line",
+      "passed": true
+    },
+    {
+      "name": "Work queue lists the recount for the second counter",
+      "passed": true
+    },
+    {
+      "name": "Second counter recounts CNT-A",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Second counter submits the recount",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Admin who did not count approves",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/sales-orders/approve",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Posting that would go below the reservation is refused (422) and lists the line",
+      "passed": true,
+      "detail": 422
+    },
+    {
+      "name": "/sales-orders/cancel",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Count posts after the reservation is released",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Posting applies the variances to the current lots and creates the found lot",
+      "passed": true,
+      "detail": [
+        {
+          "lot_code": "CNT-A",
+          "quantity": 12,
+          "source_type": "PO",
+          "unit_cost": "10.00"
+        },
+        {
+          "lot_code": "CNT-B",
+          "quantity": 10,
+          "source_type": "PO",
+          "unit_cost": "10.00"
+        },
+        {
+          "lot_code": "CNT-FOUND",
+          "quantity": 2,
+          "source_type": "STOCK_COUNT",
+          "unit_cost": "10.00"
+        }
+      ]
+    },
+    {
+      "name": "Ledger delta per lot equals the approved variance",
+      "passed": true
+    },
+    {
+      "name": "Stock equals ledger and lots after the count",
+      "passed": true
+    },
+    {
+      "name": "Lot trace shows the count variance",
+      "passed": true
+    },
+    {
+      "name": "Stock movements export includes the count adjustment",
+      "passed": true
+    },
+    {
+      "name": "Count report lists the posted count",
+      "passed": true
+    },
+    {
+      "name": "Count report CSV has the variance lines with value",
+      "passed": true,
+      "detail": [
+        [
+          "6",
+          "2026-10-12 07:47:47",
+          "Gudang Pusat Cikarang",
+          "E2E1791791248938558000-COUNT",
+          "E2E1791791248938558000 count",
+          "CNT-A",
+          "",
+          "Snapshot",
+          "20",
+          "15",
+          "12",
+          "yes",
+          "-3",
+          "pcs",
+          "10.00",
+          "-30.00"
+        ],
+        [
+          "6",
+          "2026-10-12 07:47:47",
+          "Gudang Pusat Cikarang",
+          "E2E1791791248938558000-COUNT",
+          "E2E1791791248938558000 count",
+          "CNT-FOUND",
+          "",
+          "Found",
+          "0",
+          "0",
+          "2",
+          "no",
+          "2",
+          "pcs",
+          "10.00",
+          "20.00"
+        ]
+      ]
+    },
+    {
+      "name": "No count was approved by a counter",
+      "passed": true
+    },
+    {
+      "name": "Count page renders /stock-counts",
+      "passed": true
+    },
+    {
+      "name": "Count page renders /stock-counts/create",
+      "passed": true
+    },
+    {
+      "name": "Count page renders /stock-counts/show?id=6",
+      "passed": true
+    },
+    {
+      "name": "Count page renders /reports/stock-counts",
+      "passed": true
+    },
+    {
+      "name": "Count page renders /stock-counts?status=Posted&warehouse_id=1&mine=1",
+      "passed": true
+    },
+    {
+      "name": "Invalid count filter rejected",
+      "passed": true
+    },
+    {
+      "name": "sales2@example.test login",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "sales2@example.test dashboard",
+      "passed": true,
+      "detail": 200
+    },
+    {
+      "name": "Product for price lists",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Karton of 12 at 17.000 (cost 12.000)",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "PO 40 karton for the price-list product",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/purchase-orders/order",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Receive 40 karton",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Customer NPWP must have 15 or 16 digits",
+      "passed": true
+    },
+    {
+      "name": "Customer with NPWP (dots and dashes stripped)",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "NPWP stored as digits",
+      "passed": true
+    },
+    {
+      "name": "Price lists are Admin-only pages",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot create a price list",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Admin creates a price list",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "A tier below cost is refused when maintained",
+      "passed": true
+    },
+    {
+      "name": "Tier karton from 1 at 16500",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Tier karton from 10 at 16000",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Customer assigned to the price list",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Price list changes are audited by the service",
+      "passed": true
+    },
+    {
+      "name": "API resolves the tier below 10 and offers the next tier",
+      "passed": true,
+      "detail": {
+        "product_id": 511,
+        "unit_code": "karton",
+        "quantity": 9,
+        "source": "PRICE_LIST",
+        "price": "16500.00",
+        "master_price": "17000.00",
+        "price_list_id": 5,
+        "price_list_name": "E2E1791791248938558000 Grosir",
+        "min_quantity": 1,
+        "next_tier": {
+          "min_quantity": 10,
+          "price": "16000.00"
+        },
+        "label": "Price list E2E1791791248938558000 Grosir, from 1 karton"
+      }
+    },
+    {
+      "name": "Crossing the tier changes the price",
+      "passed": true
+    },
+    {
+      "name": "Price API: Warehouse 403, anonymous 401",
+      "passed": true
+    },
+    {
+      "name": "SO form resolves prices live",
+      "passed": true
+    },
+    {
+      "name": "SO line without a price takes the tier",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "SO line stores the resolved price and its source",
+      "passed": true
+    },
+    {
+      "name": "The master price now differs from the list price and needs a reason",
+      "passed": true
+    },
+    {
+      "name": "Sales cap is measured against the list price",
+      "passed": true
+    },
+    {
+      "name": "Cancel the price-list draft",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Quotation created with a QT number and redirected to its page",
+      "passed": true
+    },
+    {
+      "name": "Quotation access: other Sales 403, Warehouse 403, owner 200",
+      "passed": true
+    },
+    {
+      "name": "A draft quotation cannot be converted",
+      "passed": true
+    },
+    {
+      "name": "Quotation sent",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Customer accepted",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Printable quotation",
+      "passed": true
+    },
+    {
+      "name": "Conversion opens the new SO draft",
+      "passed": true
+    },
+    {
+      "name": "Converted SO carries the quote reference and the quoted price",
+      "passed": true
+    },
+    {
+      "name": "A quotation converts to one SO only",
+      "passed": true
+    },
+    {
+      "name": "/quotations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/quotations/send",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Customer rejected the quotation",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "/quotations",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Draft quotation cancelled",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Rejected and cancelled quotations keep their reason and stamps",
+      "passed": true
+    },
+    {
+      "name": "Other Sales does not list these quotations",
+      "passed": true
+    },
+    {
+      "name": "/sales-orders/submit",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Approve the converted SO",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Vehicle longer than 40 characters refused before any stock moves",
+      "passed": true
+    },
+    {
+      "name": "Ship 5 karton with vehicle and driver",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Ship the remaining 7 karton",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Each shipment has exactly one delivery note",
+      "passed": true,
+      "detail": [
+        {
+          "id": 677,
+          "delivery_number": "DO-2610-0055",
+          "shipment_number": 1,
+          "vehicle": "B 1234 UJI",
+          "driver": "Pak Budi",
+          "origin": "Issue"
+        },
+        {
+          "id": 678,
+          "delivery_number": "DO-2610-0056",
+          "shipment_number": 2,
+          "vehicle": null,
+          "driver": null,
+          "origin": "Issue"
+        }
+      ]
+    },
+    {
+      "name": "Every Issue ledger row of the order is on one delivery note",
+      "passed": true
+    },
+    {
+      "name": "Printable surat jalan with units, base, lots, vehicle and driver",
+      "passed": true
+    },
+    {
+      "name": "Delivery notes: owner Sales 200, other Sales 403; list filters",
+      "passed": true
+    },
+    {
+      "name": "Warehouse cannot invoice",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Sales cannot invoice",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Invoice created from the delivery note",
+      "passed": true
+    },
+    {
+      "name": "A delivery note is invoiced once",
+      "passed": true
+    },
+    {
+      "name": "5 karton x 16.000 = 80.000; DPP 73.333; PPN 8.800; total 88.800; settings and tax identity snapshotted",
+      "passed": true,
+      "detail": {
+        "subtotal": "80000.00",
+        "dpp_amount": "73333.00",
+        "vat_amount": "8800.00",
+        "total_amount": "88800.00",
+        "vat_rate_percent": 12,
+        "vat_dpp_numerator": 11,
+        "vat_dpp_denominator": 12,
+        "customer_npwp": "0123456789012345",
+        "customer_tax_name": "PT Uji Sejahtera",
+        "d": 1
+      }
+    },
+    {
+      "name": "Future payment date refused",
+      "passed": true
+    },
+    {
+      "name": "Overpayment refused",
+      "passed": true
+    },
+    {
+      "name": "Sales cannot record payments",
+      "passed": true,
+      "detail": 403
+    },
+    {
+      "name": "Partial payment",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Invoice shows PartiallyPaid and no void once paid",
+      "passed": true
+    },
+    {
+      "name": "An invoice with payments cannot be voided",
+      "passed": true
+    },
+    {
+      "name": "Final payment",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Paid in full: \u03a3 payments = total",
+      "passed": true
+    },
+    {
+      "name": "Invoice the second delivery note",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Void an unpaid invoice with a reason",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Void keeps stock and frees the delivery note",
+      "passed": true
+    },
+    {
+      "name": "Re-invoice the delivery note after the void",
+      "passed": true,
+      "detail": 302
+    },
+    {
+      "name": "Second invoice: 7 x 16.000 = 112.000 + PPN 12.320 = 124.320",
+      "passed": true
+    },
+    {
+      "name": "Printable invoice with NPWP and PPN",
+      "passed": true
+    },
+    {
+      "name": "Invoice access: owner Sales read-only, other Sales and Warehouse 403",
+      "passed": true
+    },
+    {
+      "name": "AR aging CSV lists the open invoice in the 0-30 bucket",
+      "passed": true,
+      "detail": [
+        [
+          "E2E1791791248938558000 Grosir Uji",
+          "124320.00",
+          "0.00",
+          "0.00",
+          "0.00",
+          "124320.00",
+          "0.00",
+          "1"
+        ]
+      ]
+    },
+    {
+      "name": "Sales by customer counts net, PPN and total of non-void invoices",
+      "passed": true,
+      "detail": [
+        [
+          "E2E1791791248938558000 Grosir Uji",
+          "2",
+          "192000.00",
+          "21120.00",
+          "213120.00",
+          "88800.00",
+          "2026-10-12",
+          "2026-10-12"
+        ]
+      ]
+    },
+    {
+      "name": "Reports are Admin-only",
+      "passed": true
+    },
+    {
+      "name": "Admin dashboard shows outstanding receivables",
+      "passed": true
+    },
+    {
+      "name": "Every D-19 invariant holds after the workflow",
+      "passed": true,
+      "detail": {
+        "issue_rows_without_delivery_note": 0,
+        "delivery_note_line_mismatches": 0,
+        "delivery_note_issue_mismatches": 0,
+        "invoice_line_mismatches": 0,
+        "invoice_total_mismatches": 0,
+        "invoice_payment_mismatches": 0,
+        "quotation_conversion_mismatches": 0,
+        "price_source_mismatches": 0
+      }
+    }
+  ],
+  "fixtures": {
+    "product_id": 506,
+    "warehouse_id": 1,
+    "destination_id": 2,
+    "current_quantity": 4,
+    "pending_operation": 60,
+    "posted_operation": 49,
+    "po_id": 405,
+    "so_id": 613,
+    "receipt_ledger_id": 7992,
+    "issue_ledger_id": 7997
+  }
+}

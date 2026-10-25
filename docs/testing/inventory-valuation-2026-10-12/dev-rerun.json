@@ -1,0 +1,52 @@
+{
+    "migration": "20261012-inventory-valuation",
+    "destructive": false,
+    "status": "ready",
+    "already_applied": true,
+    "rows_backfilled": 0,
+    "checks": {
+        "ledger_cost_missing": 0,
+        "ledger_cost_without_lot": 0,
+        "ledger_cost_lot_mismatches": 0,
+        "ledger_cost_amount_mismatches": 0,
+        "lot_value_rollforward_mismatches": 0,
+        "pair_value_mismatches": 0,
+        "transit_cost_mismatches": 0,
+        "transit_value_mismatches": 0,
+        "cogs_delivery_note_mismatches": 0,
+        "cogs_order_mismatches": 0,
+        "lot_aggregate_mismatches": 0,
+        "lot_ledger_mismatches": 0,
+        "ledger_rows_without_lot": 0,
+        "ledger_mismatches": 0
+    },
+    "statistics": {
+        "valuation_watermark": 6421,
+        "ledger_rows_valued": 6,
+        "ledger_rows_before_valuation_start": 6421,
+        "on_hand_value_cents": 3736104703137,
+        "opening_value_cents": 3736231602720,
+        "ledger_cost_cents": -126899583,
+        "in_transit_value_cents": 0,
+        "cogs_cents": 131997498,
+        "receipt_cost_cents": 5097915,
+        "distinct_cost_layers": 500,
+        "products_with_several_costs": 0
+    },
+    "final_checks": {
+        "ledger_cost_missing": 0,
+        "ledger_cost_without_lot": 0,
+        "ledger_cost_lot_mismatches": 0,
+        "ledger_cost_amount_mismatches": 0,
+        "lot_value_rollforward_mismatches": 0,
+        "pair_value_mismatches": 0,
+        "transit_cost_mismatches": 0,
+        "transit_value_mismatches": 0,
+        "cogs_delivery_note_mismatches": 0,
+        "cogs_order_mismatches": 0,
+        "lot_aggregate_mismatches": 0,
+        "lot_ledger_mismatches": 0,
+        "ledger_rows_without_lot": 0,
+        "ledger_mismatches": 0
+    }
+}

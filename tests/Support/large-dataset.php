@@ -26,8 +26,8 @@ foreach ((new App\Repository\MySql\MySqlSupplierRepository($pdo))->all() as $sup
 $customers = [];
 foreach ((new App\Repository\MySql\MySqlCustomerRepository($pdo))->all() as $customer) $customers[$customer->id()] = $customer;
 $purchaseRepository = new App\Repository\MySql\MySqlPurchaseOrderRepository($pdo);
-$po = new App\Service\PurchaseOrderService($purchaseRepository, $products, $suppliers, $warehouses, $stock);
-$so = new App\Service\SalesOrderService(new App\Repository\MySql\MySqlSalesOrderRepository($pdo), $products, $customers, $warehouses, $stock);
+$po = new App\Service\PurchaseOrderService($purchaseRepository, new \App\Repository\MySql\MySqlDocumentSequenceRepository($pdo), $products, $suppliers, $warehouses, $stock);
+$so = new App\Service\SalesOrderService(new App\Repository\MySql\MySqlSalesOrderRepository($pdo), new \App\Repository\MySql\MySqlDocumentSequenceRepository($pdo), $products, $customers, $warehouses, $stock);
 $start = microtime(true);
 $ids = [];
 for ($i = 0; $i < $productsCount; $i++) {
@@ -38,7 +38,7 @@ for ($i = 0; $i < $productsCount; $i++) {
 for ($i = 0; $i < $ordersCount; $i++) {
     $first = $ids[($i * 2) % $productsCount];
     $second = $ids[($i * 2 + 1) % $productsCount];
-    $order = $po->createDraft($actor, sprintf('CAPACITY-PO-%06d', $i), 1, 1, [
+    $order = $po->createDraft($actor, 1, 1, [
         ['product_id' => $first, 'quantity' => 10, 'purchase_price' => 10.0],
         ['product_id' => $second, 'quantity' => 10, 'purchase_price' => 10.0],
     ]);
@@ -48,7 +48,7 @@ for ($i = 0; $i < $ordersCount; $i++) {
     $receipt = [];
     foreach ($current->items() as $item) $receipt[$item->id()] = 10;
     $po->receive($actor, $order->id(), $receipt);
-    $sale = $so->createDraft($actor, sprintf('CAPACITY-SO-%06d', $i), 1, 1, [
+    $sale = $so->createDraft($actor, 1, 1, [
         ['product_id' => $first, 'quantity' => 4, 'selling_price' => 15.0],
         ['product_id' => $second, 'quantity' => 4, 'selling_price' => 15.0],
     ]);

@@ -1,0 +1,418 @@
+ Container inventory-operations-test-db-1 Running 
+ Container inventory-operations-test-db-1 Waiting 
+ Container inventory-operations-test-db-1 Healthy 
+ Container inventory-operations-test-db-1 Running 
+ Image inventory-operations-test Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 626B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.61kB 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/php:8.3-cli
+#3 DONE 0.0s
+
+#4 [auth] library/node:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/composer:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#6 DONE 1.7s
+
+#7 [internal] load metadata for docker.io/library/composer:2
+#7 DONE 1.7s
+
+#8 [internal] load .dockerignore
+#8 transferring context: 225B done
+#8 DONE 0.0s
+
+#9 [node-runtime 1/1] FROM docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#9 resolve docker.io/library/node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 0.0s done
+#9 DONE 0.0s
+
+#10 FROM docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac
+#10 resolve docker.io/library/composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac 0.0s done
+#10 DONE 0.0s
+
+#11 [runtime  1/13] FROM docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319
+#11 resolve docker.io/library/php:8.3-cli@sha256:aafe21201943a8a6e497ddfb471e2ce68ada76adede38c7d61fede8918b24319 0.0s done
+#11 DONE 0.0s
+
+#12 [internal] load build context
+#12 transferring context: 159.69kB 0.0s done
+#12 DONE 0.0s
+
+#13 [runtime  3/13] COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+#13 CACHED
+
+#14 [runtime  4/13] WORKDIR /var/www/html
+#14 CACHED
+
+#15 [runtime  2/13] RUN apt-get update     && apt-get install -y --no-install-recommends unzip autoconf 		dpkg-dev 		file 		g++ 		gcc 		libc-dev 		make 		pkg-config 		re2c     && docker-php-ext-install pdo_mysql     && pecl install pcov xdebug     && docker-php-ext-enable pcov xdebug     && {         echo 'pcov.enabled=1';         echo 'pcov.directory=/var/www/html/app';     } > /usr/local/etc/php/conf.d/pcov.ini     && {         echo 'xdebug.mode=off';         echo 'xdebug.discover_client_host=1';         echo 'xdebug.client_host=host.docker.internal';     } > /usr/local/etc/php/conf.d/xdebug-custom.ini
+#15 CACHED
+
+#16 [runtime  5/13] COPY composer.json composer.lock ./
+#16 CACHED
+
+#17 [runtime  7/13] COPY app ./app
+#17 CACHED
+
+#18 [runtime 12/13] COPY database/migrations ./database/migrations
+#18 CACHED
+
+#19 [runtime 10/13] COPY scripts ./scripts
+#19 CACHED
+
+#20 [runtime 13/13] RUN mkdir -p /var/www/html/var/log /var/www/html/var/sessions     && chown -R www-data:www-data /var/www/html
+#20 CACHED
+
+#21 [runtime 11/13] COPY views ./views
+#21 CACHED
+
+#22 [runtime  9/13] COPY public ./public
+#22 CACHED
+
+#23 [runtime  8/13] COPY config ./config
+#23 CACHED
+
+#24 [runtime  6/13] RUN composer install --no-interaction --prefer-dist
+#24 CACHED
+
+#25 [test 1/5] COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
+#25 CACHED
+
+#26 [test 2/5] COPY tests ./tests
+#26 DONE 0.1s
+
+#27 [test 3/5] COPY database ./database
+#27 DONE 0.0s
+
+#28 [test 4/5] COPY phpunit.xml phpstan.neon ./
+#28 DONE 0.0s
+
+#29 [test 5/5] RUN chown -R www-data:www-data /var/www/html
+#29 DONE 3.5s
+
+#30 exporting to image
+#30 exporting layers
+#30 exporting layers 0.4s done
+#30 exporting manifest sha256:e93f526ef87f89a4c12f3b3c536f21e6a8478abcc031fc2bb40f41984fcfc987 done
+#30 exporting config sha256:e65bbb251910c602e96f3dd6537962763f107bf7e48e0cceeb8e257f96ba20b5 done
+#30 exporting attestation manifest sha256:4440a170fd6ccf970a67f1d34b000c278d70d5ddf9a91c381cc14828a3e56e16 done
+#30 exporting manifest list sha256:840dde90ba951bb5b243d90f287c1c5a361c94bc8771e085cc8ce3a9e3e0842b done
+#30 naming to docker.io/library/inventory-operations-test:latest done
+#30 unpacking to docker.io/library/inventory-operations-test:latest 0.1s done
+#30 DONE 0.6s
+
+#31 resolving provenance for metadata file
+#31 DONE 0.1s
+ Image inventory-operations-test Built 
+ Container inventory-operations-test-db-1 Waiting 
+ Container inventory-operations-test-db-1 Healthy 
+ Container inventory-operations-test-run-fe9ef699a508 Creating 
+ Container inventory-operations-test-run-fe9ef699a508 Created 
+{
+    "quotations": 74,
+    "quotations_converted": 43,
+    "so_from_quotation": 43,
+    "invoices": 592,
+    "invoices_voided": 1,
+    "payments": 534,
+    "po": 400,
+    "so": 600,
+    "approve_short": 7,
+    "issue_skipped": 0,
+    "so_shipments": 664,
+    "so_split_orders": 126,
+    "so_remainder_closed": 18,
+    "receipt_lines_split": 656,
+    "issue_blocked_expired": 1,
+    "write_offs_proposed": 9,
+    "write_offs_posted": 9,
+    "write_offs_refused": 0,
+    "written_off_lots": 158,
+    "counts_created": 4,
+    "counts_posted": 3,
+    "count_post_refused": 0,
+    "count_lines_with_variance": 36,
+    "transfers": 37,
+    "transfer_skipped": 3,
+    "transfer_dispatched": 36,
+    "transfer_dispatch_refused": 0,
+    "transfer_received": 34,
+    "transfer_received_with_damage": 6,
+    "transfer_received_short": 5,
+    "price_override_without_reason": 0,
+    "reorder_overrides": 15,
+    "rows": {
+        "price_lists": 4,
+        "price_list_items": 2577,
+        "quotations": 74,
+        "quotation_items": 323,
+        "delivery_notes": 664,
+        "delivery_note_lines": 3447,
+        "delivery_note_lots": 3532,
+        "invoices": 592,
+        "invoice_lines": 3101,
+        "invoice_payments": 534,
+        "stock_counts": 4,
+        "stock_count_lines": 378,
+        "stock_lots": 4090,
+        "inventory_operation_lots": 123,
+        "users": 17,
+        "warehouses": 3,
+        "categories": 12,
+        "suppliers": 15,
+        "customers": 66,
+        "products": 500,
+        "product_units": 1351,
+        "product_stocks": 1500,
+        "purchase_orders": 400,
+        "purchase_order_items": 3298,
+        "sales_orders": 603,
+        "sales_order_items": 3321,
+        "stock_ledger": 7958,
+        "audit_logs": 7366,
+        "purchase_order_closures": 11,
+        "sales_order_rejections": 33,
+        "sales_order_closures": 18,
+        "document_sequences": 35,
+        "inventory_operations": 46,
+        "inventory_operation_items": 268
+    },
+    "status": {
+        "purchase_orders": {
+            "Draft": 5,
+            "Ordered": 9,
+            "PartiallyReceived": 24,
+            "Received": 335,
+            "Cancelled": 27
+        },
+        "sales_orders": {
+            "Draft": 3,
+            "PendingApproval": 17,
+            "Approved": 8,
+            "PartiallyFulfilled": 21,
+            "Fulfilled": 498,
+            "Cancelled": 56
+        },
+        "inventory_operations": {
+            "Approved": 1,
+            "Posted": 9,
+            "Dispatched": 2,
+            "Received": 34
+        },
+        "stock_counts": {
+            "Counting": 1,
+            "Posted": 3
+        }
+    },
+    "ledger_mismatches": 0,
+    "negative_stock": 0,
+    "low_stock_pairs": 40,
+    "low_stock_pairs_physical_quantity": 19,
+    "low_stock_pairs_product_default_only": 20,
+    "issued_ledger_mismatches": 0,
+    "fulfilment_status_mismatches": 0,
+    "closure_mismatches": 0,
+    "transfer_dispatch_ledger_mismatches": 0,
+    "transfer_receipt_ledger_mismatches": 0,
+    "transfer_status_mismatches": 0,
+    "in_transit_equation_mismatch": 0,
+    "transfer_discrepancy_without_reason": 0,
+    "in_transit_units": 11988,
+    "transfer_written_off_units": 478,
+    "so_lines_partially_issued": 98,
+    "so_with_multiple_shipments": 112,
+    "so_remainders_closed": 18,
+    "reservation_mismatches": 0,
+    "reserved_above_quantity": 0,
+    "reserved_pairs": 65,
+    "reserved_units": 24612,
+    "order_numbers_off_pattern": 0,
+    "order_number_duplicates": 0,
+    "sequence_mismatches": 0,
+    "document_number_mismatches": 0,
+    "document_sequences": {
+        "DO-2604": 16,
+        "DO-2605": 90,
+        "DO-2606": 112,
+        "DO-2607": 127,
+        "DO-2608": 140,
+        "DO-2609": 137,
+        "DO-2610": 42,
+        "INV-2604": 12,
+        "INV-2605": 83,
+        "INV-2606": 99,
+        "INV-2607": 110,
+        "INV-2608": 126,
+        "INV-2609": 126,
+        "INV-2610": 36,
+        "PO-2604": 61,
+        "PO-2605": 57,
+        "PO-2606": 65,
+        "PO-2607": 63,
+        "PO-2608": 81,
+        "PO-2609": 55,
+        "PO-2610": 18,
+        "QT-2604": 4,
+        "QT-2605": 11,
+        "QT-2606": 13,
+        "QT-2607": 14,
+        "QT-2608": 15,
+        "QT-2609": 11,
+        "QT-2610": 6,
+        "SO-2604": 25,
+        "SO-2605": 79,
+        "SO-2606": 104,
+        "SO-2607": 105,
+        "SO-2608": 128,
+        "SO-2609": 123,
+        "SO-2610": 39
+    },
+    "price_overrides": {
+        "purchase_order_items": 12,
+        "sales_order_items": 16
+    },
+    "price_overrides_above_master": {
+        "purchase_order_items": 0,
+        "sales_order_items": 1
+    },
+    "so_lines_below_purchase_price": 0,
+    "line_unit_mismatches": 0,
+    "whole_unit_mismatches": 0,
+    "base_unit_mismatches": 0,
+    "lot_aggregate_mismatches": 0,
+    "lot_ledger_mismatches": 0,
+    "lot_count_mismatches": 0,
+    "ledger_rows_without_lot": 0,
+    "issue_from_expired_lot": 0,
+    "fefo_violations": 0,
+    "transfer_lot_mismatches": 0,
+    "lot_statistics": {
+        "lots": 4090,
+        "lots_with_stock": 3800,
+        "legacy_lots": 0,
+        "expired_lots_with_stock": 44,
+        "expired_units": 80097,
+        "tracked_products": 360,
+        "tracked_lots_without_expiry": 0,
+        "over_reserved_pairs": 1,
+        "issue_rows_multi_lot_lines": 83,
+        "transfer_lot_rows": 123,
+        "near_expiry_lots_at_today": 155,
+        "expired_lots_at_today": 51
+    },
+    "count_posted_delta_mismatches": 0,
+    "count_below_reserved": 0,
+    "count_approved_by_counter": 0,
+    "count_expected_mismatches": 0,
+    "count_open_overlaps": 0,
+    "count_statistics": {
+        "counts_by_status": {
+            "Counting": 1,
+            "Posted": 3
+        },
+        "count_lines": 378,
+        "posted_variance_lines": 31,
+        "recounted_lines": 1,
+        "found_lots_created": 1,
+        "count_ledger_rows": 31,
+        "net_posted_units": -4,
+        "net_posted_value": "17354.50"
+    },
+    "line_list_price_mismatches": 0,
+    "price_list_price_mismatches": 0,
+    "price_list_not_applied": 0,
+    "issue_rows_without_delivery_note": 0,
+    "delivery_note_line_mismatches": 0,
+    "delivery_note_issue_mismatches": 0,
+    "invoice_line_mismatches": 0,
+    "invoice_total_mismatches": 0,
+    "invoice_payment_mismatches": 0,
+    "quotation_conversion_mismatches": 0,
+    "price_source_mismatches": 0,
+    "sales_document_statistics": {
+        "price_lists": 4,
+        "price_list_items": 2577,
+        "customers_with_price_list": 63,
+        "so_lines_from_price_list": 1621,
+        "quotations": 74,
+        "quotations_by_status": {
+            "Accepted": 49,
+            "Cancelled": 5,
+            "Draft": 1,
+            "Expired": 10,
+            "Rejected": 7,
+            "Sent": 2
+        },
+        "quotations_converted": 43,
+        "delivery_notes": 664,
+        "delivery_notes_by_origin": {
+            "Issue": 664
+        },
+        "delivery_notes_with_vehicle": 664,
+        "invoices": 592,
+        "invoices_by_status": {
+            "Paid": 498,
+            "PartiallyPaid": 14,
+            "Unpaid": 79,
+            "Void": 1
+        },
+        "invoices_overdue": 14,
+        "delivery_notes_not_invoiced": 73,
+        "payments": 534,
+        "receivables_outstanding": "1166707976.00",
+        "invoiced_total": "7828331226.00",
+        "invoiced_vat": "775780576.00"
+    },
+    "product_units": {
+        "bal": 15,
+        "box": 319,
+        "galon": 2,
+        "jeriken": 3,
+        "karton": 470,
+        "pak": 15,
+        "pcs": 470,
+        "renceng": 47,
+        "sak": 10
+    },
+    "barcodes": 1351,
+    "barcode_check_digit_errors": 0,
+    "lines_by_unit": {
+        "purchase_order_items": {
+            "bal": 117,
+            "galon": 13,
+            "jeriken": 17,
+            "karton": 3083,
+            "sak": 68
+        },
+        "sales_order_items": {
+            "bal": 51,
+            "box": 785,
+            "galon": 10,
+            "jeriken": 18,
+            "karton": 1358,
+            "pak": 69,
+            "pcs": 858,
+            "renceng": 114,
+            "sak": 58
+        },
+        "inventory_operation_items": {
+            "karton": 107,
+            "pcs": 158,
+            "sak": 3
+        }
+    },
+    "sales_discount_above_cap": 0,
+    "date_range": [
+        "2026-04-10",
+        "2026-10-08"
+    ]
+}
+Wrote database/schema-and-seed.sql (6776 KiB)
+python3 scripts/build-fmcg-seed.py  0.40s user 0.46s system 2% cpu 40.731 total

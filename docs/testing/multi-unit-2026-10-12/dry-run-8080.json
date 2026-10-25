@@ -1,0 +1,124 @@
+{
+    "migration": "20261012-multi-unit",
+    "destructive": false,
+    "mode": "dry-run",
+    "already_applied": false,
+    "products_total": 501,
+    "products_to_convert": 485,
+    "products_by_factor": {
+        "2": 7,
+        "4": 10,
+        "6": 19,
+        "8": 7,
+        "12": 55,
+        "20": 6,
+        "24": 169,
+        "30": 15,
+        "36": 37,
+        "40": 40,
+        "48": 45,
+        "50": 2,
+        "60": 26,
+        "72": 24,
+        "100": 5,
+        "120": 18
+    },
+    "products_kept_as_base": 16,
+    "kept_as_base": [
+        "MIN-0002 (galon) Pilihan Hemat Air Mineral Galon 19L",
+        "MIN-0041 (galon) Tirta Alam Air Mineral Galon 19L",
+        "SBK-0005 (sak) Pandan Lestari Beras Medium 25kg",
+        "SBK-0006 (sak) Pandan Lestari Beras Medium 5kg",
+        "SBK-0007 (sak) Pandan Lestari Beras Pandan Wangi 5kg",
+        "SBK-0008 (sak) Pilihan Hemat Beras Medium 25kg",
+        "SBK-0009 (sak) Pilihan Hemat Beras Pandan Wangi 25kg",
+        "SBK-0010 (sak) Pilihan Hemat Beras Premium 25kg",
+        "SBK-0017 (jeriken) Pilihan Hemat Minyak Goreng Curah 18L",
+        "SBK-0019 (sak) Rasa Nusantara Beras Pandan Wangi 25kg",
+        "SBK-0020 (sak) Rasa Nusantara Beras Pandan Wangi 5kg",
+        "SBK-0021 (sak) Rasa Nusantara Beras Premium 25kg",
+        "SBK-0022 (sak) Rasa Nusantara Beras Premium 5kg",
+        "SBK-0030 (jeriken) Rasa Nusantara Minyak Goreng Curah 18L",
+        "SBK-0035 (jeriken) Sawit Emas Minyak Goreng Curah 18L",
+        "KES-9999 (Karton) Asri Balsem"
+    ],
+    "conversion_samples": [
+        {
+            "sku": "BIS-0001",
+            "from": "1 karton = 24 pcs",
+            "stock": "461 karton -> 11064 pcs",
+            "reorder_point": "12 -> 288",
+            "purchase_price": "244700.00 per karton (kept on the unit) -> 10195.83 per pcs",
+            "selling_price": "293600.00 per karton (kept on the unit) -> 12233.33 per pcs"
+        },
+        {
+            "sku": "BIS-0002",
+            "from": "1 karton = 60 pcs",
+            "stock": "429 karton -> 25740 pcs",
+            "reorder_point": "26 -> 1560",
+            "purchase_price": "168500.00 per karton (kept on the unit) -> 2808.33 per pcs",
+            "selling_price": "192100.00 per karton (kept on the unit) -> 3201.67 per pcs"
+        },
+        {
+            "sku": "BIS-0003",
+            "from": "1 karton = 48 pcs",
+            "stock": "362 karton -> 17376 pcs",
+            "reorder_point": "14 -> 672",
+            "purchase_price": "249700.00 per karton (kept on the unit) -> 5202.08 per pcs",
+            "selling_price": "292100.00 per karton (kept on the unit) -> 6085.42 per pcs"
+        },
+        {
+            "sku": "BIS-0004",
+            "from": "1 karton = 48 pcs",
+            "stock": "481 karton -> 23088 pcs",
+            "reorder_point": "16 -> 768",
+            "purchase_price": "247200.00 per karton (kept on the unit) -> 5150.00 per pcs",
+            "selling_price": "269400.00 per karton (kept on the unit) -> 5612.50 per pcs"
+        },
+        {
+            "sku": "BIS-0005",
+            "from": "1 karton = 24 pcs",
+            "stock": "619 karton -> 14856 pcs",
+            "reorder_point": "23 -> 552",
+            "purchase_price": "266100.00 per karton (kept on the unit) -> 11087.50 per pcs",
+            "selling_price": "292700.00 per karton (kept on the unit) -> 12195.83 per pcs"
+        }
+    ],
+    "rows_to_multiply": {
+        "product_stocks": 1455,
+        "stock_ledger": 6254,
+        "purchase_order_items": 3272,
+        "sales_order_items": 3179,
+        "inventory_operation_items": 3,
+        "inventory_return_totals": 0,
+        "sales_order_closures_recomputed": 0,
+        "products_reorder_points": 485,
+        "reorder_point_overrides": 0
+    },
+    "unit_rows_to_insert": 986,
+    "quantity_overflow_rows": 0,
+    "invariants_before": {
+        "ledger_mismatches": 0,
+        "reserved_above_quantity": 0,
+        "reservation_mismatches": 0,
+        "sequence_mismatches": 0,
+        "issued_ledger_mismatches": 0,
+        "fulfilment_status_mismatches": 0,
+        "closure_mismatches": 0,
+        "transfer_dispatch_ledger_mismatches": 0,
+        "transfer_receipt_ledger_mismatches": 0,
+        "transfer_status_mismatches": 0,
+        "in_transit_equation_mismatch": 0,
+        "transfer_discrepancy_without_reason": 0
+    },
+    "stock_value": {
+        "before": 37362314400,
+        "projected_after": 37362316027.2,
+        "difference": 1627.2,
+        "rounding_bound": 29976.78
+    },
+    "line_totals": {
+        "purchase_orders": 50052533000,
+        "sales_orders": 11150352040
+    }
+}

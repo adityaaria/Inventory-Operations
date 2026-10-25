@@ -37,7 +37,18 @@ final class SalesOrderController
         private readonly AuthGuard $guard,
         private readonly ?\App\Service\OrderExceptionService $exceptions = null,
         private readonly ?\App\Repository\Contract\StockLedgerRepositoryInterface $ledger = null,
+        private readonly ?\App\Service\ProductUnitCatalog $units = null,
+        private readonly ?\App\Service\DeliveryNoteService $deliveryNotes = null,
+        private readonly ?\App\Repository\Contract\PriceListRepositoryInterface $priceLists = null,
+        private readonly ?\App\Repository\Contract\QuotationRepositoryInterface $quotations = null,
+        private readonly ?\App\Service\InventoryValuationService $valuation = null,
     ) {
+    }
+
+    /** Units per product (D-16, ADR-022) for the order form and quantity display; base unit only without a catalog. */
+    private function unitCatalog(): \App\Service\ProductUnitCatalog
+    {
+        return $this->units ?? new \App\Service\ProductUnitCatalog($this->products);
     }
 
     public function index(Request $request): Response
@@ -78,6 +89,8 @@ final class SalesOrderController
             'warehouses' => $this->warehouses,
             'products' => $this->activeProducts(),
             'error' => '',
+            'maxDiscountPercent' => $this->salesOrders->salesMaxDiscountPercent(),
+            'priceResolution' => $this->priceLists !== null,
         ]);
     }
 
@@ -87,9 +100,9 @@ final class SalesOrderController
         $post = $request->post();
 
         try {
+            // Any client-sent order_number is ignored: the service assigns it (D-11, ADR-017).
             $this->salesOrders->createDraft(
                 $actor,
-                InputValidator::optionalString('order_number', $post['order_number'] ?? '', 255),
                 InputValidator::positiveInt('customer_id', $post['customer_id'] ?? ''),
                 InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? ''),
                 \App\Validation\OrderItemsInput::sales($post),
@@ -101,6 +114,8 @@ final class SalesOrderController
                 'warehouses' => $this->warehouses,
                 'products' => $this->activeProducts(),
                 'error' => $exception->getMessage(),
+                'maxDiscountPercent' => $this->salesOrders->salesMaxDiscountPercent(),
+                'priceResolution' => $this->priceLists !== null,
             ], 422);
         }
 
@@ -116,14 +131,27 @@ final class SalesOrderController
 
     public function approve(Request $request): Response
     {
-        $this->salesOrders->approve($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
+        $actor = $this->guard->requireAuth();
+        $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
+        try {
+            // Approval reserves the lines at the source warehouse (D-12, ADR-018); a shortage is a 422 on the detail page.
+            $this->salesOrders->approve($actor, $id);
+        } catch (InvalidArgumentException $exception) {
+            return $this->renderShow($this->findOrder($id), $actor, $exception->getMessage(), 422);
+        }
 
         return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
 
     public function cancel(Request $request): Response
     {
-        $this->salesOrders->rejectOrCancel($this->guard->requireAuth(), InputValidator::positiveInt('id', $request->post()['id'] ?? ''));
+        $actor = $this->guard->requireAuth();
+        $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
+        try {
+            $this->salesOrders->rejectOrCancel($actor, $id);
+        } catch (InvalidArgumentException $exception) {
+            return $this->renderShow($this->findOrder($id), $actor, $exception->getMessage(), 422);
+        }
 
         return new Response('', 302, ['Location' => self::INDEX_PATH]);
     }
@@ -134,12 +162,52 @@ final class SalesOrderController
         $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
         $order = $this->findOrder($id);
         try {
-            $this->salesOrders->issue($actor, $id, \App\Service\OperationIdempotency::validateKey($request->post()['operation_key'] ?? null));
+            $post = $request->post();
+            // Per-line shipment quantities (D-14, ADR-020); a post without `quantities` issues every remaining unit.
+            // Vehicle and driver go on the delivery note created with the shipment (D-19, ADR-025).
+            $this->salesOrders->issue($actor, $id, \App\Service\OperationIdempotency::validateKey($post['operation_key'] ?? null), self::issueQuantities($post),
+                ['vehicle' => $post['vehicle'] ?? null, 'driver' => $post['driver'] ?? null]);
         } catch (InvalidArgumentException $exception) {
             return $this->renderShow($order, $actor, $exception->getMessage(), 422);
         }
 
         return new Response('', 302, ['Location' => '/sales-orders/show?id=' . $id]);
+    }
+
+    /** Admin closes the unshipped remainder of a PartiallyFulfilled order with a reason (D-14, ADR-020). */
+    public function closeRemaining(Request $request): Response
+    {
+        $actor = $this->guard->requireAuth();
+        $id = InputValidator::positiveInt('id', $request->post()['id'] ?? '');
+        $reason = $request->post()['reason'] ?? null;
+        try {
+            $this->salesOrders->closeRemaining($actor, $id, $reason);
+        } catch (InvalidArgumentException $exception) {
+            return $this->renderShow($this->findOrder($id), $actor, $exception->getMessage(), 422, [], ['open' => true, 'reason' => is_string($reason) ? $reason : '', 'error' => $exception->getMessage()]);
+        }
+
+        return new Response('', 302, ['Location' => '/sales-orders/show?id=' . $id]);
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     * @return array<int, int>|null item id => quantity, or null when the form sent no per-line quantities
+     */
+    private static function issueQuantities(array $post): ?array
+    {
+        if (!array_key_exists('quantities', $post)) {
+            return null;
+        }
+        if (!is_array($post['quantities'])) {
+            throw new \App\Exception\ValidationException('Issue quantities are invalid.');
+        }
+        $quantities = [];
+        foreach ($post['quantities'] as $itemId => $value) {
+            $item = InputValidator::positiveInt('item', (string) $itemId);
+            $quantities[$item] = $value === '' || $value === null ? 0 : \App\Service\BusinessOperationInput::quantity($value, true);
+        }
+
+        return $quantities;
     }
 
     public function reject(Request $request): Response
@@ -165,11 +233,16 @@ final class SalesOrderController
         return $this->repository->findById($id) ?? throw new HttpException(404, 'Sales order not found.');
     }
 
-    /** @param array{open?: bool, reason?: string, error?: string} $rejectDialog */
-    private function renderShow(SalesOrder $order, \App\Security\AuthContext $actor, string $error = '', int $status = 200, array $rejectDialog = []): Response
+    /**
+     * @param array{open?: bool, reason?: string, error?: string} $rejectDialog
+     * @param array{open?: bool, reason?: string, error?: string} $closeDialog
+     */
+    private function renderShow(SalesOrder $order, \App\Security\AuthContext $actor, string $error = '', int $status = 200, array $rejectDialog = [], array $closeDialog = []): Response
     {
         return $this->render('sales-orders/show.php', [
             'rejectDialog' => $rejectDialog,
+            'closeDialog' => $closeDialog,
+            'closure' => $this->salesOrders->remainderClosure($order->id()),
             'order' => $order,
             'availability' => $this->salesOrders->sourceAvailability($actor, $order),
             'customers' => $this->customers,
@@ -209,6 +282,24 @@ final class SalesOrderController
     private function render(string $view, array $data = [], int $statusCode = 200): Response
     {
         if(isset($data['order']) && $data['order'] instanceof SalesOrder){$data['rejection']=$this->exceptions?->rejection($data['order']->id());$data['movements']=$this->ledger?->forReference('SO',$data['order']->id())??[];$data['productLabels']=$this->productLabels($data['order']->items());}
+        if (isset($data['order']) && $data['order'] instanceof SalesOrder) {
+            // D-19 / ADR-025: delivery notes of the shipments (with their invoices), price sources and the source quotation.
+            $data['deliveryNotes'] = $this->deliveryNotes === null ? [] : $this->deliveryNotes->forOrder($this->guard->requireAuth(), $data['order']);
+            $data['priceListNames'] = [];
+            foreach ($this->priceLists?->all() ?? [] as $list) {
+                $data['priceListNames'][$list['id']] = $list['name'];
+            }
+            $data['quotation'] = $data['order']->quotationId() === null ? null : $this->quotations?->find($data['order']->quotationId());
+            // D-20 / ADR-026: COGS of the shipped lots and margin of the invoiced shipments, Admin only.
+            $viewer = $this->guard->requireAuth();
+            $data['costing'] = $viewer->role() === User::ROLE_ADMIN ? $this->valuation?->orderCosting($viewer, $data['order']->id()) : null;
+        }
+        if (isset($data['order']) && is_object($data['order']) && method_exists($data['order'], 'items')) {
+            $data['unitSets'] = $this->unitCatalog()->forProductIds(array_map(static fn ($item): int => $item->productId(), $data['order']->items()));
+        }
+        if (isset($data['products']) && is_array($data['products'])) {
+            $data['unitSets'] = $this->unitCatalog()->forProducts($data['products']);
+        }
         extract($data, EXTR_SKIP);
         ob_start();
         require dirname(__DIR__, 2) . '/views/' . $view;

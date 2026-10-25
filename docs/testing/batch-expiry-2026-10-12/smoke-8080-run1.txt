@@ -1,0 +1,24 @@
+login 302
+product 1 pcs
+PO create 403
+PO order 403
+PO detail has lot form False
+receipt without expiry 422
+receipt 2 lots 422
+lots LEGACY	NULL	4776	10195.83
+SO create 302
+submit 302 approve 302 issue 302
+issued lots LEGACY	3
+/products/show?id=1 200 True True
+/reports/expiry?status=near 200 False True
+/reports/expiry.csv?status=all 200 True True
+/lots?q=SMOKE 200 False True
+/lots/show?id= 422 False True
+/sales-orders/show?id=607 200 False True
+/purchase-orders/show?id=407 200 False True
+/dashboard 200 True True
+/timeline?kind=SO&id=607 200 False True
+/inventory-operations/create 200 True True
+api 200 11061 None
+documents PO-2610-0019 SO-2610-0041 lot 
+checks 0	0

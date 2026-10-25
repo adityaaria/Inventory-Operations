@@ -70,8 +70,8 @@ class EncryptedBackupTest(unittest.TestCase):
             with self.assertRaises(ValueError): secure.unseal(archive,self.keys/'recipient.pem',self.keys/'recipient.key',self.root/'plain')
             runner.assert_not_called()
     def test_existing_replica_never_overwritten(self):
-        sealed=self.seal(); original=Path(sealed['replica']).read_bytes()
-        with self.assertRaises(ValueError): secure.publish_pair(sealed['archive'],secure.verify(sealed['archive']),self.root/'replica')
+        sealed=self.seal(); original=Path(sealed['replica']).read_bytes(); metadata=secure.verify(sealed['archive'])
+        with self.assertRaises(ValueError): secure.publish_pair(sealed['archive'],metadata,self.root/'replica')
         self.assertEqual(original,Path(sealed['replica']).read_bytes())
     def test_nonempty_decryption_target_refused(self):
         sealed=self.seal(); plain=self.root/'plain'; plain.mkdir(mode=0o700); (plain/'existing').write_text('preserve')

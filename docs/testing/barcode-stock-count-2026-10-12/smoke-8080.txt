@@ -1,0 +1,26 @@
+PASS login admin@example.test
+PASS login warehouse1@example.test
+PASS login hendra.wijaya@sumberniaga.test
+PASS login sales1@example.test
+PASS Admin sets demo barcode 2000000001012 on the pcs unit of product #1
+PASS Barcode API resolves product #1 pcs factor 1
+PASS Barcode API 403 Sales / 404 unknown / 422 bad check digit / 401 anonymous
+PASS PO 379 detail shows scan to receive
+PASS SO 574 detail shows scan to pick
+PASS Admin creates count
+PASS Admin starts count #1
+PASS Counter sheet blind with scan panel
+PASS Reviewer sees expected
+PASS Counter saves exact counts (2 lines)
+PASS Counter submits
+PASS Work queue lists the count to review
+PASS Admin (did not count) approves
+PASS Warehouse posts
+PASS Count Posted with zero variance: no ledger change
+PASS Admin GET /stock-counts
+PASS Admin GET /stock-counts/create
+PASS Admin GET /reports/stock-counts
+PASS Admin GET /reports/stock-counts.csv
+PASS Admin GET /work-queue
+PASS Sales 403 on /stock-counts
+{"count_id": "1", "po": "379", "so": "574", "passed": 25, "failed": 0}

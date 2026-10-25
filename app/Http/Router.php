@@ -49,6 +49,25 @@ final class Router
                 );
             }
 
+            // Other parameterized routes: one placeholder per path segment, e.g. /api/barcodes/{code} (D-18, ADR-024).
+            foreach ($this->routes as $routeKey => $handler) {
+                [$method, $pattern] = explode(' ', $routeKey, 2);
+                if ($method !== strtoupper($request->method()) || !str_contains($pattern, '{')) {
+                    continue;
+                }
+                $regex = '#^' . preg_replace('#\\\\\{([a-z_]+)\\\\\}#', '(?P<$1>[^/]+)', preg_quote($pattern, '#')) . '$#D';
+                if (preg_match($regex, $request->path(), $match) === 1) {
+                    $query = $request->query();
+                    foreach ($match as $name => $value) {
+                        if (is_string($name)) {
+                            $query[$name] = rawurldecode($value);
+                        }
+                    }
+
+                    return $handler(new Request($request->method(), $request->path(), $query, $request->post(), $request->server()));
+                }
+            }
+
             throw new HttpException(404, 'Route not found.');
         }
 

@@ -1,0 +1,38 @@
+{
+  "total": 0,
+  "facets": [
+    {
+      "property": "languages",
+      "values": []
+    },
+    {
+      "property": "impactSeverities",
+      "values": [
+        {
+          "val": "HIGH",
+          "count": 0
+        },
+        {
+          "val": "MEDIUM",
+          "count": 0
+        },
+        {
+          "val": "LOW",
+          "count": 0
+        },
+        {
+          "val": "INFO",
+          "count": 0
+        },
+        {
+          "val": "BLOCKER",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "property": "rules",
+      "values": []
+    }
+  ]
+}

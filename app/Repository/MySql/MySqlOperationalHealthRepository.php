@@ -14,15 +14,34 @@ final class MySqlOperationalHealthRepository implements OperationalHealthReposit
         if ($statement->fetchColumn() === false) { throw new PersistenceException('Schema not initialized.'); }
         // Resolve critical table/column names without scanning business rows.
         $this->pdo->query('SELECT id FROM users LIMIT 0');
-        $this->pdo->query('SELECT product_id, warehouse_id, quantity FROM product_stocks LIMIT 0');
+        $this->pdo->query('SELECT product_id, warehouse_id, quantity, reserved_quantity, reorder_point_override FROM product_stocks LIMIT 0');
         $this->pdo->query('SELECT id FROM stock_ledger LIMIT 0');
         $this->pdo->query('SELECT actor_id, request_key, payload_hash, completed FROM operation_requests LIMIT 0');
         $this->pdo->query('SELECT quantity_delta FROM stock_ledger LIMIT 0');
         $this->pdo->query('SELECT purchase_order_id FROM purchase_order_closures LIMIT 0');
         $this->pdo->query('SELECT sales_order_id FROM sales_order_rejections LIMIT 0');
-        $this->pdo->query('SELECT id, condition_confirmed FROM inventory_operations LIMIT 0');
-        $this->pdo->query('SELECT source_ledger_id, baseline FROM inventory_operation_items LIMIT 0');
+        $this->pdo->query('SELECT id, condition_confirmed, dispatched_by, dispatched_at, received_by, received_at, receipt_reason FROM inventory_operations LIMIT 0');
+        $this->pdo->query('SELECT source_ledger_id, baseline, dispatched_quantity, received_quantity, damaged_quantity, short_quantity FROM inventory_operation_items LIMIT 0');
         $this->pdo->query('SELECT returned_quantity FROM inventory_return_totals LIMIT 0');
+        $this->pdo->query('SELECT prefix, period, last_number FROM document_sequences LIMIT 0');
+        $this->pdo->query('SELECT list_price, price_reason FROM purchase_order_items LIMIT 0');
+        $this->pdo->query('SELECT list_price, price_reason FROM sales_order_items LIMIT 0');
+        $this->pdo->query('SELECT issued_quantity FROM sales_order_items LIMIT 0');
+        $this->pdo->query('SELECT sales_order_id, closed_units FROM sales_order_closures LIMIT 0');
+        // D-16 / ADR-022: units of measure.
+        $this->pdo->query('SELECT id, product_id, unit_code, factor_to_base, barcode, is_base FROM product_units LIMIT 0');
+        $this->pdo->query('SELECT unit_code, unit_factor, unit_quantity FROM purchase_order_items LIMIT 0');
+        $this->pdo->query('SELECT unit_code, unit_factor, unit_quantity FROM sales_order_items LIMIT 0');
+        $this->pdo->query('SELECT unit_code, unit_factor, unit_quantity FROM inventory_operation_items LIMIT 0');
+        // D-19 / ADR-025: price lists, quotations, delivery notes and invoices.
+        $this->pdo->query('SELECT price_list_id, npwp, nik, tax_name, tax_address FROM customers LIMIT 0');
+        $this->pdo->query('SELECT price_source, price_list_id, quotation_item_id FROM sales_order_items LIMIT 0');
+        $this->pdo->query('SELECT quotation_id FROM sales_orders LIMIT 0');
+        $this->pdo->query('SELECT id FROM price_list_items LIMIT 0');
+        $this->pdo->query('SELECT id FROM quotation_items LIMIT 0');
+        $this->pdo->query('SELECT ledger_id FROM delivery_note_lots LIMIT 0');
+        $this->pdo->query('SELECT active_delivery_note_id, paid_amount FROM invoices LIMIT 0');
+        $this->pdo->query('SELECT id FROM invoice_payments LIMIT 0');
     }
     public function fingerprint(): array
     {

@@ -26,6 +26,7 @@ final class OrderExceptionService
         $reason=BusinessOperationInput::reason($reason);
         $this->stock->transaction(function() use($actor,$id,$reason): void {
             $order=$this->sales->lockById($id)??throw new HttpException(404,'Sales order not found.');
+            // Only PendingApproval can be rejected, and it holds no reservation (reserved at approval, D-12/ADR-018).
             if ($order->status()!=='PendingApproval') { throw new ValidationException('Only PendingApproval SO can be rejected.'); }
             $this->exceptions->reject($id,$actor->userId(),$reason); $this->sales->cancel($id);
             $this->audit->append($actor->userId(),'sales-orders.reject','SO',$id,'success',RequestOrigin::none(),['reason'=>$reason]);

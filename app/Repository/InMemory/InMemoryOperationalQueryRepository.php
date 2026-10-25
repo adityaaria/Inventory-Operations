@@ -31,7 +31,7 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
 
     public function lowStockRows(): array
     {
-        return [['sku' => 'SKU-001', 'product_name' => 'Widget A', 'warehouse_name' => 'Main Warehouse', 'quantity' => 2, 'reorder_point' => 5]];
+        return [['sku' => 'SKU-001', 'product_name' => 'Widget A', 'warehouse_name' => 'Main Warehouse', 'quantity' => 2, 'reserved_quantity' => 0, 'available_quantity' => 2, 'reorder_point' => 5, 'product_reorder_point' => 5, 'reorder_point_override' => null]];
     }
 
     public function stockLedgerRows(?string $from, ?string $to): array
@@ -115,6 +115,6 @@ final class InMemoryOperationalQueryRepository implements OperationalQueryReposi
             return null;
         }
 
-        return ['sku' => 'SKU-001', 'name' => 'Widget A', 'total_quantity' => 7, 'warehouses' => [['warehouse' => 'Main Warehouse', 'quantity' => 7]]];
+        return ['sku' => 'SKU-001', 'name' => 'Widget A', 'total_quantity' => 7, 'total_reserved' => 2, 'total_available' => 5, 'warehouses' => [['warehouse' => 'Main Warehouse', 'quantity' => 7, 'reserved_quantity' => 2, 'available_quantity' => 5]], 'base_unit' => 'pcs', 'units' => [['unit' => 'pcs', 'factor_to_base' => 1, 'barcode' => null, 'is_base' => true, 'is_purchase_default' => false, 'is_sales_default' => false]]];
     }
 }

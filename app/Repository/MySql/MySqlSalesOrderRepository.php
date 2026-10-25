@@ -24,7 +24,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
     public function all(): array
     {
         $statement = $this->pdo->query(
-            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at
+            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at, quotation_id
              FROM sales_orders ORDER BY order_date DESC, id DESC'
         );
         if ($statement === false) {
@@ -40,7 +40,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
         $sort = self::SORT_COLUMNS[$criteria->sortBy()] ?? self::SORT_COLUMNS['order_date'];
         $direction = $criteria->direction() === 'asc' ? 'ASC' : 'DESC';
         $statement = $this->pdo->prepare(
-            "SELECT so.id, so.order_number, so.customer_id, so.source_warehouse_id, so.status, so.order_date, so.created_by, so.approved_by, so.approved_at
+            "SELECT so.id, so.order_number, so.customer_id, so.source_warehouse_id, so.status, so.order_date, so.created_by, so.approved_by, so.approved_at, so.quotation_id
              FROM sales_orders so INNER JOIN customers c ON c.id = so.customer_id
              INNER JOIN warehouses w ON w.id = so.source_warehouse_id
              {$where}
@@ -61,7 +61,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
     public function forCreator(int $createdBy): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at
+            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at, quotation_id
              FROM sales_orders WHERE created_by = :created_by ORDER BY order_date DESC, id DESC'
         );
         $statement->execute(['created_by' => $createdBy]);
@@ -72,7 +72,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
     public function findById(int $id): ?SalesOrder
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at
+            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at, quotation_id
              FROM sales_orders WHERE id = :id'
         );
         $statement->execute(['id' => $id]);
@@ -87,7 +87,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
             throw new PersistenceException('Source order locks require a transaction.');
         }
         $statement = $this->pdo->prepare(
-            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at
+            'SELECT id, order_number, customer_id, source_warehouse_id, status, order_date, created_by, approved_by, approved_at, quotation_id
              FROM sales_orders WHERE id = :id FOR UPDATE'
         );
         $statement->execute(['id' => $id]);
@@ -96,14 +96,14 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
         return is_array($row) ? $this->hydrate($row) : null;
     }
 
-    public function createDraft(string $orderNumber, int $customerId, int $warehouseId, int $createdBy, array $items): SalesOrder
+    public function createDraft(string $orderNumber, int $customerId, int $warehouseId, int $createdBy, array $items, ?int $quotationId = null): SalesOrder
     {
-        return PersistenceErrors::write(function () use ($orderNumber, $customerId, $warehouseId, $createdBy, $items): SalesOrder {
-            $this->pdo->beginTransaction();
-            try {
+        return PersistenceErrors::write(function () use ($orderNumber, $customerId, $warehouseId, $createdBy, $items, $quotationId): SalesOrder {
+            // Joins the caller's transaction (the service claims the order number in it); owns one otherwise.
+            return (new MySqlTransactionManager($this->pdo))->run(function () use ($orderNumber, $customerId, $warehouseId, $createdBy, $items, $quotationId): SalesOrder {
                 $statement = $this->pdo->prepare(
-                    'INSERT INTO sales_orders (order_number, customer_id, source_warehouse_id, status, order_date, created_by)
-                     VALUES (:order_number, :customer_id, :warehouse_id, :status, CURRENT_DATE, :created_by)'
+                    'INSERT INTO sales_orders (order_number, customer_id, source_warehouse_id, status, order_date, created_by, quotation_id)
+                     VALUES (:order_number, :customer_id, :warehouse_id, :status, CURRENT_DATE, :created_by, :quotation_id)'
                 );
                 $statement->execute([
                     'order_number' => $orderNumber,
@@ -111,12 +111,15 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
                     'warehouse_id' => $warehouseId,
                     'status' => SalesOrder::STATUS_DRAFT,
                     'created_by' => $createdBy,
+                    'quotation_id' => $quotationId,
                 ]);
                 $orderId = (int) $this->pdo->lastInsertId();
 
                 $itemStatement = $this->pdo->prepare(
-                    'INSERT INTO sales_order_items (sales_order_id, product_id, quantity, selling_price)
-                     VALUES (:sales_order_id, :product_id, :quantity, :selling_price)'
+                    // Unit snapshot (D-16, ADR-022): quantity is base = unit_quantity × unit_factor (CHECK).
+                    'INSERT INTO sales_order_items (sales_order_id, product_id, quantity, selling_price, list_price, price_reason, unit_code, unit_factor, unit_quantity, price_source, price_list_id, quotation_item_id)
+                     VALUES (:sales_order_id, :product_id, :quantity, :selling_price, :list_price, :price_reason,
+                             COALESCE(:unit_code, (SELECT p.unit FROM products p WHERE p.id = :unit_product_id), \'\'), :unit_factor, :unit_quantity, :price_source, :price_list_id, :quotation_item_id)'
                 );
                 foreach ($items as $item) {
                     $itemStatement->execute([
@@ -124,17 +127,20 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
                         'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
                         'selling_price' => $item['selling_price'],
+                        'list_price' => $item['list_price'] ?? $item['selling_price'],
+                        'price_reason' => $item['price_reason'] ?? null,
+                        'unit_code' => $item['unit_code'] ?? null,
+                        'unit_product_id' => $item['product_id'],
+                        'unit_factor' => $item['unit_factor'] ?? 1,
+                        'unit_quantity' => $item['unit_quantity'] ?? intdiv($item['quantity'], $item['unit_factor'] ?? 1),
+                        'price_source' => $item['price_source'] ?? SalesOrderItem::SOURCE_MASTER,
+                        'price_list_id' => $item['price_list_id'] ?? null,
+                        'quotation_item_id' => $item['quotation_item_id'] ?? null,
                     ]);
                 }
 
-                $this->pdo->commit();
                 return $this->findRequired($orderId);
-            } catch (\Throwable $exception) {
-                if ($this->pdo->inTransaction()) {
-                    $this->pdo->rollBack();
-                }
-                throw $exception;
-            }
+            });
 
         });
     }
@@ -159,8 +165,30 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
 
     public function markFulfilled(int $id): void
     {
-        $statement = $this->pdo->prepare("UPDATE sales_orders SET status = :status WHERE id = :id AND status = 'Approved'");
+        $statement = $this->pdo->prepare("UPDATE sales_orders SET status = :status WHERE id = :id AND status IN ('Approved','PartiallyFulfilled')");
         $statement->execute(['id' => $id, 'status' => SalesOrder::STATUS_FULFILLED]);
+        if ($statement->rowCount() > 0) {
+            $this->pdo->prepare('UPDATE sales_order_items SET issued_quantity = quantity WHERE sales_order_id = :id')->execute(['id' => $id]);
+        }
+    }
+
+    public function recordIssue(int $id, array $issuedQuantitiesByItemId, string $status): void
+    {
+        if (!in_array($status, [SalesOrder::STATUS_PARTIALLY_FULFILLED, SalesOrder::STATUS_FULFILLED], true)) {
+            throw new PersistenceException('Invalid status after issue.');
+        }
+        $item = $this->pdo->prepare(
+            'UPDATE sales_order_items SET issued_quantity = issued_quantity + :quantity
+             WHERE id = :id AND sales_order_id = :sales_order_id AND issued_quantity + :check_quantity <= quantity'
+        );
+        foreach ($issuedQuantitiesByItemId as $itemId => $quantity) {
+            $item->execute(['id' => $itemId, 'sales_order_id' => $id, 'quantity' => $quantity, 'check_quantity' => $quantity]);
+            if ($item->rowCount() !== 1) {
+                throw new PersistenceException('Sales order line could not record the issued quantity.');
+            }
+        }
+        $order = $this->pdo->prepare("UPDATE sales_orders SET status = :status WHERE id = :id AND status IN ('Approved','PartiallyFulfilled')");
+        $order->execute(['id' => $id, 'status' => $status]);
     }
 
     /** @param array<string, mixed> $row @param list<SalesOrderItem>|null $items */
@@ -179,6 +207,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
             $row['approved_by'] === null ? null : (int) $row['approved_by'],
             $row['approved_at'] === null ? null : (string) $row['approved_at'],
             $items ?? $this->itemsForOrder($orderId),
+            isset($row['quotation_id']) ? (int) $row['quotation_id'] : null,
         );
     }
 
@@ -188,11 +217,11 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
         if ($rows === []) { return []; }
         $ids = array_map(static fn (array $row): int => (int) $row['id'], $rows);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $statement = $this->pdo->prepare("SELECT id, sales_order_id, product_id, quantity, selling_price FROM sales_order_items WHERE sales_order_id IN ({$placeholders}) ORDER BY id ASC");
+        $statement = $this->pdo->prepare("SELECT id, sales_order_id, product_id, quantity, selling_price, list_price, price_reason, issued_quantity, unit_code, unit_factor, price_source, price_list_id, quotation_item_id FROM sales_order_items WHERE sales_order_id IN ({$placeholders}) ORDER BY id ASC");
         $statement->execute($ids);
         $items = [];
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $items[(int) $row['sales_order_id']][] = new SalesOrderItem((int) $row['id'], (int) $row['sales_order_id'], (int) $row['product_id'], (int) $row['quantity'], (float) $row['selling_price']);
+            $items[(int) $row['sales_order_id']][] = new SalesOrderItem((int) $row['id'], (int) $row['sales_order_id'], (int) $row['product_id'], (int) $row['quantity'], (float) $row['selling_price'], (float) $row['list_price'], $row['price_reason'] === null ? null : (string) $row['price_reason'], (int) $row['issued_quantity'], (string) $row['unit_code'], (int) $row['unit_factor'], (string) $row['price_source'], $row['price_list_id'] === null ? null : (int) $row['price_list_id'], $row['quotation_item_id'] === null ? null : (int) $row['quotation_item_id']);
         }
         return array_map(fn (array $row): SalesOrder => $this->hydrate($row, $items[(int) $row['id']] ?? []), $rows);
     }
@@ -201,7 +230,7 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
     private function itemsForOrder(int $orderId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, sales_order_id, product_id, quantity, selling_price
+            'SELECT id, sales_order_id, product_id, quantity, selling_price, list_price, price_reason, issued_quantity, unit_code, unit_factor, price_source, price_list_id, quotation_item_id
              FROM sales_order_items WHERE sales_order_id = :sales_order_id ORDER BY id ASC'
         );
         $statement->execute(['sales_order_id' => $orderId]);
@@ -212,6 +241,14 @@ final class MySqlSalesOrderRepository implements SalesOrderRepositoryInterface
             (int) $row['product_id'],
             (int) $row['quantity'],
             (float) $row['selling_price'],
+            (float) $row['list_price'],
+            $row['price_reason'] === null ? null : (string) $row['price_reason'],
+            (int) $row['issued_quantity'],
+            (string) $row['unit_code'],
+            (int) $row['unit_factor'],
+            (string) $row['price_source'],
+            $row['price_list_id'] === null ? null : (int) $row['price_list_id'],
+            $row['quotation_item_id'] === null ? null : (int) $row['quotation_item_id'],
         ), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
 

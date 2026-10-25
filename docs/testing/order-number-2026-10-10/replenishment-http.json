@@ -1,0 +1,21 @@
+{
+ "passed": true,
+ "checks": 15,
+ "results": [
+  "Sales cannot open replenishment or prefilled PO",
+  "warehouse1 selection hidden until one warehouse is chosen",
+  "warehouse1 warehouse filter enables multi-select",
+  "warehouse1 invalid warehouse filter rejected",
+  "warehouse1 selection prefills reviewable lines",
+  "warehouse1 duplicate selection rejected",
+  "warehouse1 one draft PO saved with reviewed items",
+  "warehouse1 duplicate items rejected with lines retained",
+  "admin selection hidden until one warehouse is chosen",
+  "admin warehouse filter enables multi-select",
+  "admin invalid warehouse filter rejected",
+  "admin selection prefills reviewable lines",
+  "admin duplicate selection rejected",
+  "admin one draft PO saved with reviewed items",
+  "admin duplicate items rejected with lines retained"
+ ]
+}

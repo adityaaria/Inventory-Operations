@@ -86,7 +86,8 @@ final class PurchaseOrderWorkflowControllerCoverageTest extends TestCase
         self::assertStringContainsString('status-warning status-partial', $body);
         self::assertStringContainsString('action="/purchase-orders/receive"', $body);
         self::assertStringContainsString('max="3"', $body);
-        self::assertStringContainsString('Receipt #1 · quantity 2', $body);
+        self::assertStringContainsString('<td>#1</td><td>SKU-001 — Widget A</td>', $body); // D-17: receipts are listed as lots received
+        self::assertStringContainsString('<td>2 pcs</td>', $body);
         self::assertStringContainsString('source_ledger_id=1', $body);
     }
 
@@ -259,7 +260,7 @@ final class PurchaseOrderWorkflowControllerCoverageTest extends TestCase
         $session = new SessionManager();
         $session->login($actor);
         $stock = new StockService($this->stock, $this->ledger);
-        $service = new PurchaseOrderService($this->orders, $this->products, $this->suppliers, $this->warehouses, $stock, new OperationIdempotency(new InMemoryOperationRequestRepository()), $this->exceptions);
+        $service = new PurchaseOrderService($this->orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(), $this->products, $this->suppliers, $this->warehouses, $stock, new OperationIdempotency(new InMemoryOperationRequestRepository()), $this->exceptions);
         $exceptions = $withExceptions
             ? new OrderExceptionService($this->exceptions, $this->orders, new InMemorySalesOrderRepository(), $stock, new InMemoryAuditLogRepository())
             : null;

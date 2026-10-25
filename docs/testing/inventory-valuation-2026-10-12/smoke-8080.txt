@@ -1,0 +1,27 @@
+PASS login admin@example.test :: 302
+PASS login sales1@example.test :: 302
+PASS login warehouse1@example.test :: 302
+PASS Valuation = Σ lot quantity × unit cost = LEGACY opening value + later movements :: [3736104703137, 3736231602720, -126899583]
+PASS Schema version inventory-valuation-1 recorded and CHECK present
+PASS Every valuation invariant is 0 on 8080 :: {'ledger_cost_missing': 0, 'ledger_cost_without_lot': 0, 'ledger_cost_lot_mismatches': 0, 'ledger_cost_amount_mismatches': 0, 'lot_value_rollforward_mismatches': 0, 'pair_value_mismatches': 0, 'transit_cost_mismatches': 0, 'transit_value_mismatches': 0, 'cogs_delivery_note_mismatches': 0, 'cogs_orde
+PASS Every lot invariant is 0 on 8080 :: {'lot_aggregate_mismatches': 0, 'lot_ledger_mismatches': 0, 'lot_count_mismatches': 0, 'ledger_rows_without_lot': 0, 'issue_from_expired_lot': 0, 'fefo_violations': 0, 'transfer_lot_mismatches': 0}
+PASS Every sales-document invariant is 0 on 8080 :: {'issue_rows_without_delivery_note': 0, 'delivery_note_line_mismatches': 0, 'delivery_note_issue_mismatches': 0, 'invoice_line_mismatches': 0, 'invoice_total_mismatches': 0, 'invoice_payment_mismatches': 0, 'quotation_conversion_mismatches': 0, 'price_source_mismatches': 0}
+PASS Dashboard Inventory Value = lots at cost + in transit, master figure kept as reference :: 3736104703137
+PASS Valuation page renders the total and the valuation start
+PASS Valuation by category renders :: 200
+PASS Valuation by product renders :: 200
+PASS Valuation by lot renders :: 200
+PASS Valuation CSV total equals the SQL value :: [['TOTAL inventory', '', '', '', '37361047031.37', '2026-10-12 (current)']]
+PASS As-of date before the valuation start is refused with 422 :: 422
+PASS As-of today renders
+PASS Reconciliation of October balances to the cent (opening taken at the valuation start) :: 200
+PASS Reconciliation CSV: every difference is 0.00 :: ['0.00', '0.00', '0.00', '0.00', '0.00']
+PASS Gross margin page renders
+PASS Margin CSV revenue and COGS equal SQL :: [135528400, 125880000, 1]
+PASS Losses page renders
+PASS Valuation, margin and losses: Sales 403 and Warehouse 403
+PASS Admin SO page shows the COGS of its valued shipment :: {'id': 607, 'cogs': '3058749'}
+PASS Warehouse SO page shows no cost
+PASS Admin delivery note shows COGS (not printed)
+PASS A migrated (pre-valuation) shipment says it has no cost
+{"checks": 26, "passed": 26, "failed": 0}

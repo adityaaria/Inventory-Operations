@@ -22,8 +22,8 @@ final class BusinessEnhancementIntegrationTest extends TestCase
         $product=(new ProductService($this->products,new \App\Service\MasterDataAuthorizationService(),$this->stock))->create($this->creator,new ProductInput('BUSINESS-TEST','Business test','pcs',10.0,20.0,15,1))->id();
         if($quantity>0)$this->stock->receive(1,[new StockMovement($product,$quantity)],1,'TEST',1);return $product;
     }
-    private function purchase(): PurchaseOrderService {return new PurchaseOrderService(new MySqlPurchaseOrderRepository($this->pdo),$this->products,[1=>new Supplier(1,'Supplier','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock,new OperationIdempotency(new MySqlOperationRequestRepository($this->pdo)),$this->exceptions);}
-    private function sales(): SalesOrderService {return new SalesOrderService(new MySqlSalesOrderRepository($this->pdo),$this->products,[1=>new Customer(1,'Customer','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock);}
+    private function purchase(): PurchaseOrderService {return new PurchaseOrderService(new MySqlPurchaseOrderRepository($this->pdo), new \App\Repository\MySql\MySqlDocumentSequenceRepository($this->pdo),$this->products,[1=>new Supplier(1,'Supplier','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock,new OperationIdempotency(new MySqlOperationRequestRepository($this->pdo)),$this->exceptions);}
+    private function sales(): SalesOrderService {return new SalesOrderService(new MySqlSalesOrderRepository($this->pdo), new \App\Repository\MySql\MySqlDocumentSequenceRepository($this->pdo),$this->products,[1=>new Customer(1,'Customer','','','',true)],[1=>new Warehouse(1,'Warehouse','',true)],$this->stock);}
     private function orderExceptions(): OrderExceptionService {return new OrderExceptionService($this->exceptions,new MySqlPurchaseOrderRepository($this->pdo),new MySqlSalesOrderRepository($this->pdo),$this->stock,$this->audit);}
     /** Ledger rows of the products created by a test; the seed has its own history for other products. */
     private function ledgerRows(int ...$products): int {$statement=$this->pdo->prepare('SELECT COUNT(*) FROM stock_ledger WHERE product_id IN ('.implode(',',array_fill(0,count($products),'?')).')');$statement->execute($products);return (int)$statement->fetchColumn();}
@@ -41,6 +41,10 @@ final class BusinessEnhancementIntegrationTest extends TestCase
         }
         $good=$this->service->propose($this->creator,'Transfer',1,2,'Multiple products',[['product_id'=>$first,'quantity'=>3],['product_id'=>$second,'quantity'=>4]]);
         $this->service->decide($this->reviewer,$good,'Approved','Reviewed');$this->service->post($this->creator,$good);$this->service->post($this->creator,$good);
+        // D-15 / ADR-021: posting dispatches both lines once (in transit); the receipt brings them in.
+        self::assertSame([7,0,6,0],[$this->balances->quantity($first,1),$this->balances->quantity($first,2),$this->balances->quantity($second,1),$this->balances->quantity($second,2)]);
+        self::assertSame(4,$this->ledgerRows($first,$second));
+        $this->service->receive($this->creator,$good);$this->service->receive($this->creator,$good);
         self::assertSame(7,$this->balances->quantity($first,1));self::assertSame(3,$this->balances->quantity($first,2));
         self::assertSame(6,$this->balances->quantity($second,1));self::assertSame(4,$this->balances->quantity($second,2));
         self::assertSame(6,$this->ledgerRows($first,$second));
@@ -58,7 +62,7 @@ final class BusinessEnhancementIntegrationTest extends TestCase
     }
     public function testCloseRemainderPreservesReceiptAndChangesInboundRecommendation(): void
     {
-        $product=$this->product(0);$purchase=$this->purchase();$order=$purchase->createDraft($this->creator,'PO-CLOSE',1,1,[['product_id'=>$product,'quantity'=>10,'purchase_price'=>10.0]]);$purchase->markOrdered($this->creator,$order->id());$item=$order->items()[0]->id();$key=str_repeat('c',32);$purchase->receive($this->creator,$order->id(),[$item=>3],$key);
+        $product=$this->product(0);$purchase=$this->purchase();$order=$purchase->createDraft($this->creator,1,1,[['product_id'=>$product,'quantity'=>10,'purchase_price'=>10.0]]);$purchase->markOrdered($this->creator,$order->id());$item=$order->items()[0]->id();$key=str_repeat('c',32);$purchase->receive($this->creator,$order->id(),[$item=>3],$key);
         $before=$this->repository->recommendations('BUSINESS-TEST',10,0);$source=array_values(array_filter($before,static fn(array $r):bool=>(int)$r['warehouse_id']===1))[0];self::assertSame(7,(int)$source['inbound']);self::assertSame(5,(int)$source['suggested']);
         $this->orderExceptions()->close($this->creator,$order->id(),'Supplier cannot deliver remaining goods');$purchase->receive($this->creator,$order->id(),[$item=>3],$key);
         try{$purchase->receive($this->creator,$order->id(),[$item=>1],str_repeat('d',32));self::fail('Closed PO received again');}catch(\InvalidArgumentException){self::assertSame(3,$this->balances->quantity($product,1));}
@@ -67,15 +71,18 @@ final class BusinessEnhancementIntegrationTest extends TestCase
     }
     public function testRejectPendingSalesOrderRequiresReasonAndKeepsOfficialStatus(): void
     {
-        $product=$this->product();$sales=$this->sales();$order=$sales->createDraft($this->creator,'SO-REJECT',1,1,[['product_id'=>$product,'quantity'=>1,'selling_price'=>20.0]]);$sales->submit($this->creator,$order->id());
+        $product=$this->product();$sales=$this->sales();$order=$sales->createDraft($this->creator,1,1,[['product_id'=>$product,'quantity'=>1,'selling_price'=>20.0]]);$sales->submit($this->creator,$order->id());
         try{$this->orderExceptions()->reject($this->creator,$order->id(),'');self::fail('Empty reason accepted');}catch(\InvalidArgumentException){self::assertSame('PendingApproval',(new MySqlSalesOrderRepository($this->pdo))->findById($order->id())->status());}
         $this->orderExceptions()->reject($this->reviewer,$order->id(),'Customer credit needs review');self::assertSame('Cancelled',(new MySqlSalesOrderRepository($this->pdo))->findById($order->id())->status());self::assertSame('Customer credit needs review',$this->exceptions->rejection($order->id())['reason']);self::assertSame(10,$this->balances->quantity($product,1));
     }
     public function testAdjustmentSignedLedgerAndReportNet(): void
     {
+        // The demo seed holds transfer Adjustment rows (D-15, ADR-021): −dispatched at sources, +received at destinations, so its
+        // own net is −(in transit + written off). The new count is measured against that baseline.
+        $seeded=(new MySqlOperationalQueryRepository($this->pdo))->reportSummary('stock-ledger',null,null,null)['adjusted'];
         $product=$this->product();$id=$this->service->propose($this->creator,'Adjustment',1,null,'Counted less',[['product_id'=>$product,'quantity'=>7,'baseline'=>10]]);$this->service->decide($this->reviewer,$id,'Approved','Verified count');$this->service->post($this->creator,$id);$this->service->post($this->creator,$id);
         self::assertSame(7,$this->balances->quantity($product,1));$ledger=(new MySqlStockLedgerRepository($this->pdo))->forReference('ADJUSTMENT',$id);self::assertCount(1,$ledger);self::assertSame(-3,$ledger[0]->delta());self::assertSame(3,$ledger[0]->quantity());
-        $query=new MySqlOperationalQueryRepository($this->pdo);$summary=$query->reportSummary('stock-ledger',null,null,null);self::assertSame(-3,$summary['adjusted']);$rows=$query->stockLedgerRows(null,null);$adjustments=array_values(array_filter($rows,static fn(array $r):bool=>$r['Movement']==='Adjustment'));self::assertSame(-3,(int)$adjustments[0]['Quantity']);
+        $query=new MySqlOperationalQueryRepository($this->pdo);$summary=$query->reportSummary('stock-ledger',null,null,null);self::assertSame($seeded-3,$summary['adjusted']);$rows=$query->stockLedgerRows(null,null);$adjustments=array_values(array_filter($rows,static fn(array $r):bool=>$r['Movement']==='Adjustment'));self::assertSame(-3,(int)$adjustments[0]['Quantity']);
     }
     public function testTransferConservationAndAuditFailureRollsEverythingBack(): void
     {
@@ -83,11 +90,17 @@ final class BusinessEnhancementIntegrationTest extends TestCase
         $bad=new class implements \App\Repository\Contract\AuditLogRepositoryInterface {public function append(?int $actorId,string $action,string $entityType,?int $entityId,string $status, \App\Support\RequestOrigin $origin, array $metadata = []):void{throw new \RuntimeException('Forced audit failure');}};
         try{(new BusinessOperationService($this->repository,$this->stock($bad),$bad))->post($this->creator,$id);self::fail('Expected failure');}catch(\RuntimeException $error){self::assertSame('Forced audit failure',$error->getMessage());}
         self::assertSame(10,$this->balances->quantity($product,1));self::assertSame(0,$this->balances->quantity($product,2));self::assertSame('Approved',$this->repository->find($id)['status']);self::assertCount(0,(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id));
-        $this->service->post($this->creator,$id);self::assertSame(6,$this->balances->quantity($product,1));self::assertSame(4,$this->balances->quantity($product,2));$movements=(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id);self::assertCount(2,$movements);self::assertSame(0,array_sum(array_map(static fn($m):int=>$m->delta(),$movements)));
+        // D-15 / ADR-021: dispatch then receipt; each step commits stock, ledger, document and audit together.
+        try{(new BusinessOperationService($this->repository,$this->stock($bad),$bad))->dispatch($this->creator,$id);self::fail('Expected failure');}catch(\RuntimeException $error){self::assertSame('Forced audit failure',$error->getMessage());}
+        self::assertSame([10,'Approved',null],[$this->balances->quantity($product,1),$this->repository->find($id)['status'],$this->repository->find($id)['items'][0]['dispatched_quantity']]);
+        $this->service->post($this->creator,$id);self::assertSame(6,$this->balances->quantity($product,1));self::assertSame(0,$this->balances->quantity($product,2));
+        try{(new BusinessOperationService($this->repository,$this->stock($bad),$bad))->receive($this->creator,$id);self::fail('Expected failure');}catch(\RuntimeException $error){self::assertSame('Forced audit failure',$error->getMessage());}
+        self::assertSame([0,'Dispatched'],[$this->balances->quantity($product,2),$this->repository->find($id)['status']]);self::assertCount(1,(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id));
+        $this->service->receive($this->creator,$id);self::assertSame(6,$this->balances->quantity($product,1));self::assertSame(4,$this->balances->quantity($product,2));$movements=(new MySqlStockLedgerRepository($this->pdo))->forReference('TRANSFER',$id);self::assertCount(2,$movements);self::assertSame(0,array_sum(array_map(static fn($m):int=>$m->delta(),$movements)));
     }
     public function testSupplierReturnCannotExceedOriginalReceiptOrAvailableStock(): void
     {
-        $product=$this->product(0);$purchase=$this->purchase();$order=$purchase->createDraft($this->creator,'PO-RETURN',1,1,[['product_id'=>$product,'quantity'=>5,'purchase_price'=>10.0]]);$purchase->markOrdered($this->creator,$order->id());$purchase->receive($this->creator,$order->id(),[$order->items()[0]->id()=>5]);$source=(new MySqlStockLedgerRepository($this->pdo))->forReference('PO',$order->id())[0]->id();
+        $product=$this->product(0);$purchase=$this->purchase();$order=$purchase->createDraft($this->creator,1,1,[['product_id'=>$product,'quantity'=>5,'purchase_price'=>10.0]]);$purchase->markOrdered($this->creator,$order->id());$purchase->receive($this->creator,$order->id(),[$order->items()[0]->id()=>5]);$source=(new MySqlStockLedgerRepository($this->pdo))->forReference('PO',$order->id())[0]->id();
         $ids=[];foreach([3,3] as $quantity){$id=$this->service->propose($this->creator,'SupplierReturn',0,null,'Return to supplier',[['quantity'=>$quantity,'source_ledger_id'=>$source]]);$this->service->decide($this->reviewer,$id,'Approved','Checked');$ids[]=$id;}
         $this->service->post($this->creator,$ids[0]);$this->service->post($this->creator,$ids[0]);
         try{$this->service->post($this->creator,$ids[1]);self::fail('Over-return accepted');}catch(\InvalidArgumentException){self::assertSame(2,$this->balances->quantity($product,1));self::assertSame('Approved',$this->repository->find($ids[1])['status']);}
@@ -95,7 +108,7 @@ final class BusinessEnhancementIntegrationTest extends TestCase
     }
     public function testCustomerReturnRequiresFitConfirmationAndPreservesFulfilledOrder(): void
     {
-        $product=$this->product();$sales=$this->sales();$order=$sales->createDraft($this->creator,'SO-RETURN',1,1,[['product_id'=>$product,'quantity'=>4,'selling_price'=>20.0]]);$sales->submit($this->creator,$order->id());$sales->approve($this->creator,$order->id());$sales->issue($this->creator,$order->id());$source=(new MySqlStockLedgerRepository($this->pdo))->forReference('SO',$order->id())[0]->id();
+        $product=$this->product();$sales=$this->sales();$order=$sales->createDraft($this->creator,1,1,[['product_id'=>$product,'quantity'=>4,'selling_price'=>20.0]]);$sales->submit($this->creator,$order->id());$sales->approve($this->creator,$order->id());$sales->issue($this->creator,$order->id());$source=(new MySqlStockLedgerRepository($this->pdo))->forReference('SO',$order->id())[0]->id();
         try{$this->service->propose($this->creator,'CustomerReturn',0,null,'Customer return',[['quantity'=>2,'source_ledger_id'=>$source]]);self::fail('Unconfirmed condition accepted');}catch(\InvalidArgumentException){self::assertSame(6,$this->balances->quantity($product,1));}
         $id=$this->service->propose($this->creator,'CustomerReturn',0,null,'Customer return',[['quantity'=>2,'source_ledger_id'=>$source,'fit_for_stock'=>true]]);$this->service->decide($this->reviewer,$id,'Approved','Goods inspected');$this->service->post($this->creator,$id);self::assertSame(8,$this->balances->quantity($product,1));self::assertSame('Fulfilled',(new MySqlSalesOrderRepository($this->pdo))->findById($order->id())->status());
     }

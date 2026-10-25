@@ -1,0 +1,13 @@
+{
+ "passed": true,
+ "checks": 7,
+ "results": [
+  "unauthenticated check refused",
+  "admin role matrix matches create routes",
+  "admin malformed checks rejected with 422",
+  "warehouse1 role matrix matches create routes",
+  "warehouse1 malformed checks rejected with 422",
+  "sales1 role matrix matches create routes",
+  "sales1 malformed checks rejected with 422"
+ ]
+}

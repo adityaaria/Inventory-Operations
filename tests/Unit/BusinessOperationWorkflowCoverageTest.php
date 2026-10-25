@@ -40,12 +40,16 @@ final class BusinessOperationWorkflowCoverageTest extends TestCase
         $this->service->decide(new AuthContext(2,'reviewer@test','Admin'),$id,'Approved','Counted');
         $response=$this->controller($this->creator)->post(new Request('POST','/inventory-operations/post',[],['id'=>(string)$id],[]));
         self::assertSame(302,$response->statusCode());self::assertSame('/inventory-operations/show?id='.$id,$response->headers()['Location']);
-        self::assertSame('Posted',$this->service->show($this->creator,$id)['status']);
-        self::assertSame(3,$this->balances->quantity(1,1));self::assertSame(2,$this->balances->quantity(1,2));
-        self::assertCount(2,$this->ledger->entries());self::assertSame(0,array_sum(array_map(static fn($entry): int => $entry->delta(),$this->ledger->entries())));
-        // A repeated post is a no-op: no second ledger pair.
+        // D-15 / ADR-021: posting a transfer dispatches it; the goods are in transit until the destination receives them.
+        self::assertSame('Dispatched',$this->service->show($this->creator,$id)['status']);
+        self::assertSame(3,$this->balances->quantity(1,1));self::assertSame(0,$this->balances->quantity(1,2));
+        self::assertCount(1,$this->ledger->entries());
+        // A repeated post is a no-op: no second dispatch row.
         self::assertSame(302,$this->controller($this->creator)->post(new Request('POST','/inventory-operations/post',[],['id'=>(string)$id],[]))->statusCode());
-        self::assertCount(2,$this->ledger->entries());
+        self::assertCount(1,$this->ledger->entries());
+        self::assertSame(302,$this->controller($this->creator)->receive(new Request('POST','/inventory-operations/receive',[],['id'=>(string)$id],[]))->statusCode());
+        self::assertSame(['Received',2],[$this->service->show($this->creator,$id)['status'],$this->balances->quantity(1,2)]);
+        self::assertCount(2,$this->ledger->entries());self::assertSame(0,array_sum(array_map(static fn($entry): int => $entry->delta(),$this->ledger->entries())));
     }
     public function testPostingWithoutIndependentApprovalRenders422AndChangesNothing(): void
     {

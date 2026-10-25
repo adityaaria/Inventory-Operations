@@ -1,0 +1,125 @@
+{
+    "component": {
+        "key": "inventory-operations",
+        "name": "Inventory & Order Management",
+        "qualifier": "TRK",
+        "measures": [
+            {
+                "metric": "coverage",
+                "value": "80.0",
+                "bestValue": false
+            },
+            {
+                "metric": "reliability_rating",
+                "value": "1.0",
+                "bestValue": true
+            },
+            {
+                "metric": "code_smells",
+                "value": "0",
+                "bestValue": true
+            },
+            {
+                "metric": "duplicated_lines_density",
+                "value": "5.5",
+                "bestValue": false
+            },
+            {
+                "metric": "security_rating",
+                "value": "1.0",
+                "bestValue": true
+            },
+            {
+                "metric": "new_coverage",
+                "period": {
+                    "index": 1,
+                    "value": "81.1",
+                    "bestValue": false
+                }
+            },
+            {
+                "metric": "sqale_debt_ratio",
+                "value": "0.0",
+                "bestValue": true
+            },
+            {
+                "metric": "security_hotspots",
+                "value": "0",
+                "bestValue": true
+            },
+            {
+                "metric": "accepted_issues",
+                "value": "1",
+                "bestValue": false
+            },
+            {
+                "metric": "sqale_index",
+                "value": "0",
+                "bestValue": true
+            },
+            {
+                "metric": "sqale_rating",
+                "value": "1.0",
+                "bestValue": true
+            },
+            {
+                "metric": "alert_status",
+                "value": "OK"
+            },
+            {
+                "metric": "bugs",
+                "value": "0",
+                "bestValue": true
+            },
+            {
+                "metric": "tests",
+                "value": "430"
+            },
+            {
+                "metric": "new_violations",
+                "period": {
+                    "index": 1,
+                    "value": "0",
+                    "bestValue": true
+                }
+            },
+            {
+                "metric": "ncloc",
+                "value": "13097"
+            },
+            {
+                "metric": "vulnerabilities",
+                "value": "0",
+                "bestValue": true
+            },
+            {
+                "metric": "new_uncovered_lines",
+                "period": {
+                    "index": 1,
+                    "value": "452",
+                    "bestValue": false
+                }
+            },
+            {
+                "metric": "line_coverage",
+                "value": "80.0",
+                "bestValue": false
+            },
+            {
+                "metric": "new_lines_to_cover",
+                "period": {
+                    "index": 1,
+                    "value": "2393"
+                }
+            },
+            {
+                "metric": "new_duplicated_lines_density",
+                "period": {
+                    "index": 1,
+                    "value": "1.5142",
+                    "bestValue": false
+                }
+            }
+        ]
+    }
+}

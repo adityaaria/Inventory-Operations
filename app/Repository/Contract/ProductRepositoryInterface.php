@@ -24,4 +24,8 @@ interface ProductRepositoryInterface
     public function stocksForProduct(int $productId): array;
     /** @param list<int> $productIds @return array<int, list<ProductStock>> */
     public function stocksForProducts(array $productIds): array;
+    /** Locks one product/warehouse stock row (FOR UPDATE) inside the caller's transaction; null when the pair does not exist. */
+    public function lockStock(int $productId, int $warehouseId): ?ProductStock;
+    /** Sets (int) or clears (null) the per-warehouse reorder point override. Never changes quantity. */
+    public function setReorderPointOverride(int $productId, int $warehouseId, ?int $override): void;
 }

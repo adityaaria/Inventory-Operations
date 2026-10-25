@@ -59,11 +59,12 @@ Table products {
   category_id int [not null]
   sku varchar(80) [not null, unique]
   name varchar(160) [not null]
-  unit varchar(30) [not null]
-  purchase_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0']
-  selling_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0']
+  unit varchar(30) [not null, note: 'Base unit code (smallest unit) = product_units base row (D-16, ADR-022)']
+  purchase_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0; per base unit']
+  selling_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0; per base unit']
   price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0']
-  reorder_point int [not null, default: 0, note: 'CHECK >= 0']
+  reorder_point int [not null, default: 0, note: 'CHECK >= 0; base units']
+  tracks_expiry tinyint [not null, default: 0, note: 'D-17: every new lot needs an expiry date (LEGACY lots excepted)']
   is_active tinyint [not null, default: 1]
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
@@ -74,16 +75,73 @@ Table products {
   }
 }
 
+Table product_units {
+  id int [pk, increment]
+  product_id int [not null]
+  unit_code varchar(30) [not null, note: 'e.g. pcs, box, renceng, karton; UNIQUE(product_id, unit_code)']
+  factor_to_base int [not null, note: 'Base units per unit; CHECK base = 1, other units >= 2 (D-16, ADR-022)']
+  barcode varchar(64) [null, unique, note: 'EAN-13 check digit validated when 13 digits']
+  purchase_price decimal(14,2) [null, note: 'Own master price per unit; NULL = base price x factor; always NULL on the base']
+  selling_price decimal(14,2) [null, note: 'Own master price per unit; NULL = base price x factor; always NULL on the base']
+  is_base tinyint [not null, default: 0, note: 'Exactly one per product (UNIQUE on generated base_key)']
+  is_purchase_default tinyint [not null, default: 0, note: 'At most one per product (generated key)']
+  is_sales_default tinyint [not null, default: 0, note: 'At most one per product (generated key)']
+  is_active tinyint [not null, default: 1, note: 'Base always active; inactive units are never defaults']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (product_id, unit_code) [unique, name: 'uq_product_units_code']
+    barcode [unique, name: 'uq_product_units_barcode']
+  }
+}
+
 Table product_stocks {
   product_id int [not null]
   warehouse_id int [not null]
   quantity int [not null, default: 0, note: 'CHECK >= 0']
+  reserved_quantity int [not null, default: 0, note: 'Held for Approved sales orders; CHECK reserved_quantity <= quantity; available = quantity - reserved_quantity (ADR-018)']
+  reorder_point_override int [null, note: 'Per-warehouse reorder point; NULL = products.reorder_point; CHECK NULL or >= 0 (ADR-016)']
+  lot_count int [not null, default: 0, note: 'D-17: number of lots = highest stock_lots.lot_seq; lots are locked by point lookups (pair, 1..lot_count)']
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
   indexes {
     (product_id, warehouse_id) [pk]
     warehouse_id [name: 'idx_product_stocks_warehouse']
   }
+
+  Note: 'Aggregate and lock root (D-17): Σ stock_lots.quantity = quantity; available = quantity - expired lots - reserved_quantity.'
+}
+
+Table stock_lots {
+  id int [pk, increment]
+  product_id int [not null]
+  warehouse_id int [not null]
+  lot_seq int [not null, note: 'Lot number inside the pair; UNIQUE(product_id, warehouse_id, lot_seq); CHECK >= 1']
+  lot_code varchar(60) [not null, note: 'Supplier batch code; LEGACY = migrated stock without lot; CHECK non-blank']
+  expiry_date date [null, note: 'NULL = no expiry; expired when < today in APP_TIMEZONE (D-17, ADR-023)']
+  expiry_key date [note: 'Generated COALESCE(expiry_date, 9999-12-31) so the identity key treats NULL as one value']
+  received_at timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'First receipt; FEFO tie-break']
+  unit_cost decimal(14,2) [not null, note: 'Per base unit, whole cents; CHECK >= 0 (FIFO valuation stage)']
+  quantity int [not null, default: 0, note: 'Base units; = opening_quantity + Σ ledger rows of the lot']
+  opening_quantity int [not null, default: 0, note: 'Migrated LEGACY lots only (CHECK)']
+  source_type varchar(20) [not null, note: 'PO, TRANSFER, ADJUSTMENT, CUSTOMER_RETURN, LEGACY, RECEIPT, STOCK_COUNT (found lot, D-18)']
+  source_id int [null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (product_id, warehouse_id, lot_seq) [unique, name: 'uq_stock_lots_seq']
+    (product_id, warehouse_id, lot_code, expiry_key, unit_cost) [unique, name: 'uq_stock_lots_identity']
+    lot_code [name: 'idx_stock_lots_code']
+    expiry_date [name: 'idx_stock_lots_expiry']
+  }
+}
+
+Table stock_lot_watermark {
+  id tinyint [pk, note: 'CHECK id = 1']
+  legacy_ledger_max_id bigint [not null, note: 'Ledger rows up to this id predate the lot migration and may have lot_id NULL']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 }
 
 Table suppliers {
@@ -107,18 +165,24 @@ Table customers {
   email varchar(190) [not null, default: '']
   phone varchar(40) [not null, default: '']
   address varchar(255) [not null, default: '']
+  price_list_id int [null, note: 'Assigned customer price list (D-19, ADR-025)']
+  npwp varchar(16) [null, note: 'CHECK 15 or 16 digits; snapshotted on invoices']
+  nik varchar(16) [null, note: 'CHECK 16 digits']
+  tax_name varchar(120) [null]
+  tax_address varchar(255) [null]
   is_active tinyint [not null, default: 1]
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
   indexes {
     is_active [name: 'idx_customers_active']
+    price_list_id [name: 'idx_customers_price_list']
   }
 }
 
 Table purchase_orders {
   id int [pk, increment]
-  order_number varchar(50) [not null, unique]
+  order_number varchar(50) [not null, unique, note: 'Server-assigned PREFIX-YYMM-NNNN for new orders (ADR-017); legacy values unchanged']
   supplier_id int [not null]
   destination_warehouse_id int [not null]
   status varchar(20) [not null, default: 'Draft', note: 'ENUM(Draft, Ordered, PartiallyReceived, Received, Cancelled)']
@@ -138,9 +202,14 @@ Table purchase_order_items {
   id int [pk, increment]
   purchase_order_id int [not null]
   product_id int [not null]
-  quantity int [not null, note: 'CHECK > 0']
+  quantity int [not null, note: 'CHECK > 0; base units (D-16)']
   received_quantity int [not null, default: 0, note: 'CHECK 0 <= received_quantity <= quantity']
-  purchase_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0']
+  purchase_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0; effective line price (may differ from list_price with a reason, ADR-019)']
+  list_price decimal(14,2) [not null, note: 'Master price snapshot at draft creation, server-set; CHECK >= 0 (ADR-019)']
+  price_reason varchar(255) [null, note: 'Required (>= 3 chars) exactly when purchase_price <> list_price (CHECK, ADR-019)']
+  unit_code varchar(30) [not null, note: 'Unit snapshot as entered (D-16, ADR-022); prices are per this unit']
+  unit_factor int [not null, default: 1, note: 'Snapshot factor; CHECK quantity = unit_quantity x unit_factor, received whole units']
+  unit_quantity int [not null, note: 'Quantity as entered; line total = unit_quantity x purchase_price']
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
@@ -160,14 +229,19 @@ Table stock_ledger {
   reference_type varchar(20) [not null, note: 'PO, SO or stock operation reference']
   reference_id int [not null]
   performed_by int [not null]
+  lot_id int [null, note: 'D-17: lot moved; NULL only for rows up to stock_lot_watermark']
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  unit_cost decimal(14,2) [null, note: 'D-20/ADR-026: the lot unit cost per base unit; set exactly when lot_id is set']
+  cost_amount decimal(24,2) [null, note: 'D-20/ADR-026: signed quantity x unit_cost in whole cents (Receipt +, Issue -, Adjustment = sign of delta); CHECK chk_stock_ledger_cost']
 
   indexes {
     (product_id, warehouse_id) [name: 'idx_stock_ledger_product_warehouse']
     (reference_type, reference_id) [name: 'idx_stock_ledger_reference']
+    (lot_id, id) [name: 'idx_stock_ledger_lot']
+    created_at [name: 'idx_stock_ledger_created']
   }
 
-  Note: 'Append-only ledger under normal application operation.'
+  Note: 'Append-only ledger under normal application operation. D-20/ADR-026: FIFO-per-batch valuation; per lot, value = opening value + sum of cost_amount; rows before the valuation start (the lot watermark) carry no cost.'
 }
 
 Table audit_logs {
@@ -204,14 +278,15 @@ Table login_attempts {
 
 Table sales_orders {
   id int [pk, increment]
-  order_number varchar(50) [not null, unique]
+  order_number varchar(50) [not null, unique, note: 'Server-assigned PREFIX-YYMM-NNNN for new orders (ADR-017); legacy values unchanged']
   customer_id int [not null]
   source_warehouse_id int [not null]
-  status varchar(20) [not null, default: 'Draft', note: 'ENUM(Draft, PendingApproval, Approved, Fulfilled, Cancelled)']
+  status varchar(20) [not null, default: 'Draft', note: 'ENUM(Draft, PendingApproval, Approved, PartiallyFulfilled, Fulfilled, Cancelled); PartiallyFulfilled = D-14/ADR-020 user decision outside the brief']
   order_date date [not null]
   created_by int [not null]
   approved_by int [null]
   approved_at timestamp [null]
+  quotation_id int [null, unique, note: 'Accepted quotation this draft was converted from; UNIQUE = one SO per quotation (D-19, ADR-025)']
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
@@ -227,8 +302,17 @@ Table sales_order_items {
   id int [pk, increment]
   sales_order_id int [not null]
   product_id int [not null]
-  quantity int [not null, note: 'CHECK > 0']
-  selling_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0']
+  quantity int [not null, note: 'CHECK > 0; base units (D-16)']
+  selling_price decimal(14,2) [not null, default: 0.00, note: 'CHECK >= 0; effective line price (may differ from list_price with a reason, ADR-019)']
+  list_price decimal(14,2) [not null, note: 'Resolved list price snapshot at draft creation, server-set: customer price list tier, else master (ADR-019, D-19/ADR-025); CHECK >= 0']
+  price_reason varchar(255) [null, note: 'Required (>= 3 chars) exactly when selling_price <> list_price (CHECK, ADR-019)']
+  price_source varchar(10) [not null, default: 'MASTER', note: 'ENUM(MASTER, PRICE_LIST); price_list_id set exactly for PRICE_LIST (CHECK, D-19)']
+  price_list_id int [null]
+  quotation_item_id int [null, unique, note: 'Quotation line of a converted order (D-19)']
+  issued_quantity int [not null, default: 0, note: 'Units issued over all shipments; CHECK issued_quantity <= quantity (D-14, ADR-020)']
+  unit_code varchar(30) [not null, note: 'Unit snapshot as entered (D-16, ADR-022); prices are per this unit']
+  unit_factor int [not null, default: 1, note: 'Snapshot factor; CHECK quantity = unit_quantity x unit_factor, issued whole units']
+  unit_quantity int [not null, note: 'Quantity as entered; line total = unit_quantity x selling_price']
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
@@ -242,6 +326,7 @@ Table sales_order_items {
 
 Ref: products.category_id > categories.id
 
+Ref: product_units.product_id > products.id
 Ref: product_stocks.product_id > products.id
 Ref: product_stocks.warehouse_id > warehouses.id
 
@@ -285,7 +370,7 @@ Table sales_order_rejections {
 Table inventory_operations {
   id int [pk, increment]
   kind varchar(20) [not null, note: 'ENUM(Adjustment, Transfer, SupplierReturn, CustomerReturn)']
-  status varchar(20) [not null, default: 'PendingApproval', note: 'ENUM(PendingApproval, Approved, Rejected, Posted, Cancelled)']
+  status varchar(20) [not null, default: 'PendingApproval', note: 'ENUM(PendingApproval, Approved, Rejected, Posted, Cancelled, Dispatched, Received); Transfer: Approved -> Dispatched -> Received, never Posted (D-15/ADR-021)']
   warehouse_id int [not null]
   destination_id int [note: 'Required and different from warehouse_id only for Transfer']
   reason varchar(500) [not null]
@@ -297,6 +382,12 @@ Table inventory_operations {
   created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
   approved_at timestamp
   posted_at timestamp
+  dispatched_by int [note: 'D-15: set with status Dispatched/Received (chk_operation_transit_stamps)']
+  dispatched_at timestamp
+  received_by int [note: 'D-15: set with status Received']
+  received_at timestamp
+  receipt_reason varchar(500) [note: 'D-15: required when any unit is damaged or short']
+  purpose varchar(20) [not null, default: 'Standard', note: 'ENUM(Standard, ExpiredWriteOff); ExpiredWriteOff only for Adjustment (D-17)']
 
   indexes {
     (status, created_at) [name: 'idx_inventory_operations_status_time']
@@ -310,16 +401,60 @@ Table inventory_operation_items {
   quantity int [not null, note: 'Counted quantity for Adjustment, moved quantity otherwise']
   baseline int [note: 'Stock observed at count time; posting rejects a stale baseline']
   source_ledger_id bigint [note: 'Original receipt/issue for returns']
+  dispatched_quantity int [note: 'D-15 transfer: CHECK NULL or = quantity']
+  received_quantity int [note: 'D-15 transfer: good units into the destination']
+  damaged_quantity int [note: 'D-15 transfer: written off']
+  short_quantity int [note: 'D-15 transfer: written off; CHECK received + damaged + short = dispatched']
+  unit_code varchar(30) [not null, note: 'Unit snapshot (D-16); quantity/baseline/transit fields are base units']
+  unit_factor int [not null, default: 1]
+  unit_quantity int [not null, note: 'CHECK quantity = unit_quantity x unit_factor']
+  lot_id int [null, note: 'D-17: counted / written-off lot (baseline = lot quantity)']
+  lot_code varchar(60) [null, note: 'D-17: new lot found at a count; CHECK lot_id IS NULL OR lot_code IS NULL']
+  expiry_date date [null, note: 'D-17: expiry of the new lot']
+  lot_key int [note: 'Generated COALESCE(lot_id, 0)']
 
   indexes {
-    (operation_id, product_id) [unique, name: 'uq_operation_product']
+    (operation_id, product_id, lot_key) [unique, name: 'uq_operation_product_lot']
     source_ledger_id [name: 'idx_operation_source']
+  }
+}
+
+Table inventory_operation_lots {
+  id bigint [pk, increment]
+  operation_id int [not null]
+  operation_item_id bigint [not null]
+  product_id int [not null]
+  source_lot_id int [not null, note: 'Lot picked FEFO at dispatch (D-17)']
+  lot_code varchar(60) [not null]
+  expiry_date date [null]
+  unit_cost decimal(14,2) [not null]
+  dispatched_quantity int [not null, note: 'CHECK > 0']
+  received_quantity int [null]
+  damaged_quantity int [null]
+  short_quantity int [null, note: 'CHECK received + damaged + short = dispatched']
+  destination_lot_id int [null, note: 'Lot at the destination with the same code, expiry and unit cost']
+
+  indexes {
+    (operation_item_id, source_lot_id) [unique, name: 'uq_operation_lots_item_lot']
   }
 }
 
 Table inventory_return_totals {
   source_ledger_id bigint [pk, note: 'Locked per original movement to serialise concurrent returns']
   returned_quantity int [not null, default: 0]
+}
+
+Table document_sequences {
+  prefix varchar(10) [not null, note: 'PO, SO, QT, DO or INV (CHECK; QT/DO/INV since D-19, ADR-025)']
+  period char(4) [not null, note: 'YYMM of the DB session clock (UTC); CHECK four digits']
+  last_number int [not null, note: 'Last claimed NNNN; claimed with the draft insert in one transaction (ADR-017)']
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (prefix, period) [pk]
+  }
+
+  Note: 'Server-assigned order numbers PREFIX-YYMM-NNNN (D-11, ADR-017). No FK: orders keep their own unique order_number.'
 }
 
 Table operation_requests {
@@ -344,8 +479,370 @@ Ref: inventory_operations.destination_id > warehouses.id
 Ref: inventory_operations.created_by > users.id
 Ref: inventory_operations.approved_by > users.id
 Ref: inventory_operations.posted_by > users.id
+Ref: inventory_operations.dispatched_by > users.id
+Ref: inventory_operations.received_by > users.id
 Ref: inventory_operation_items.operation_id > inventory_operations.id
 Ref: inventory_operation_items.product_id > products.id
 Ref: inventory_operation_items.source_ledger_id > stock_ledger.id
 Ref: inventory_return_totals.source_ledger_id - stock_ledger.id
 Ref: operation_requests.actor_id > users.id
+Ref: stock_lots.(product_id, warehouse_id) > product_stocks.(product_id, warehouse_id)
+Ref: stock_ledger.lot_id > stock_lots.id
+Ref: inventory_operation_items.lot_id > stock_lots.id
+Ref: inventory_operation_lots.operation_id > inventory_operations.id
+Ref: inventory_operation_lots.operation_item_id > inventory_operation_items.id
+Ref: inventory_operation_lots.source_lot_id > stock_lots.id
+Ref: inventory_operation_lots.destination_lot_id > stock_lots.id
+
+// Visual grouping for dbdiagram.io (no effect on the schema).
+TableGroup master_data [color: #0E5A63] {
+  users
+  categories
+  products
+  warehouses
+  suppliers
+  customers
+}
+
+TableGroup stock [color: #276B3A] {
+  product_units
+  product_stocks
+  stock_ledger
+}
+
+TableGroup purchasing [color: #3B5BA5] {
+  purchase_orders
+  document_sequences
+  purchase_order_items
+  purchase_order_closures
+}
+
+TableGroup sales [color: #9A5B0B] {
+  sales_orders
+  sales_order_items
+  sales_order_rejections
+}
+
+TableGroup stock_operations [color: #6B4FA0] {
+  inventory_operations
+  inventory_operation_items
+  inventory_return_totals
+}
+
+TableGroup security_and_audit [color: #59625F] {
+  audit_logs
+  login_attempts
+  operation_requests
+  schema_versions
+}
+
+Table sales_order_closures {
+  sales_order_id int [pk, note: 'Closed remaining fulfilment of a PartiallyFulfilled SO (D-14, ADR-020)']
+  closed_by int [not null]
+  reason varchar(500) [not null]
+  closed_units int [not null, note: 'CHECK closed_units > 0; unshipped remainder released from the reservation']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Ref: sales_order_closures.sales_order_id - sales_orders.id
+Ref: sales_order_closures.closed_by > users.id
+
+// D-18 / ADR-024: stock count sessions (user decision, not trainer). Blind count, recount, independent approval;
+// posting applies variance = counted - (snapshot + ledger movements up to the count watermark) to the current lot.
+Table stock_counts {
+  id int [pk, increment]
+  warehouse_id int [not null]
+  scope enum('All','Category','Products') [not null, note: 'CHECK (scope = Category) = (category_id IS NOT NULL)']
+  category_id int [null]
+  status enum('Draft','Counting','Submitted','RecountRequested','Approved','Posted','Cancelled') [not null, default: 'Draft', note: 'Count document statuses; not PO/SO statuses']
+  reason varchar(500) [not null]
+  created_by int [not null]
+  created_at timestamp [not null]
+  started_by int [null]
+  started_at timestamp [null]
+  snapshot_ledger_id bigint [null, note: 'Ledger watermark at the snapshot; required once started (CHECK)']
+  submitted_by int [null]
+  submitted_at timestamp [null]
+  recount_reason varchar(500) [null]
+  recount_requested_by int [null]
+  recount_requested_at timestamp [null]
+  recount_round tinyint [not null, default: 0]
+  approved_by int [null, note: 'Admin who counted no line (service + StockCountChecks)']
+  approved_at timestamp [null]
+  approval_note varchar(500) [null]
+  posted_by int [null]
+  posted_at timestamp [null]
+  cancelled_by int [null]
+  cancelled_at timestamp [null]
+  cancel_reason varchar(500) [null]
+}
+
+Table stock_count_products {
+  count_id int [pk]
+  product_id int [pk, note: 'Scope selection / materialized scope; open counts of a warehouse never share a product']
+}
+
+Table stock_count_counters {
+  count_id int [pk]
+  user_id int [pk, note: 'Assigned counter (Admin or WarehouseStaff)']
+  assigned_by int [not null]
+  assigned_at timestamp [not null]
+}
+
+Table stock_count_lines {
+  id bigint [pk, increment]
+  count_id int [not null]
+  product_id int [not null]
+  lot_id int [null, note: 'NULL only for a found lot unknown to the system (created at posting)']
+  lot_code varchar(60) [not null]
+  expiry_date date [null]
+  origin enum('Snapshot','Found') [not null]
+  line_key varchar(100) [note: 'Generated; UNIQUE(count_id, product_id, line_key)']
+  snapshot_quantity int [not null, note: 'Base units at snapshot_ledger_id']
+  counted_quantity int [null, note: 'Base units; entered unit and quantity kept in counted_unit_*']
+  counted_by int [null]
+  counted_at timestamp [null]
+  count_ledger_id bigint [null, note: 'Ledger watermark read under the pair lock']
+  expected_quantity bigint [null, note: 'snapshot + Σ ledger (snapshot_ledger_id, count_ledger_id]']
+  recount_requested tinyint [not null, default: 0, note: 'Recount round that flagged the line']
+  recounted_quantity int [null, note: 'CHECK recounted_by <> counted_by']
+  recounted_by int [null]
+  recount_ledger_id bigint [null]
+  recount_expected_quantity bigint [null]
+  variance bigint [note: 'Generated: COALESCE(recount, count) - COALESCE(recount expected, expected)']
+  approved_variance bigint [null, note: 'CHECK = variance']
+  posted_lot_id int [null]
+  posted_delta bigint [null, note: 'CHECK = approved_variance; = Σ STOCK_COUNT ledger rows of the lot']
+  posted_unit_cost decimal(14,2) [null]
+  pair_quantity_after int [null, note: 'CHECK >= pair_reserved_at_post']
+  pair_reserved_at_post int [null]
+}
+
+Ref: stock_counts.warehouse_id > warehouses.id
+Ref: stock_counts.category_id > categories.id
+Ref: stock_counts.created_by > users.id
+Ref: stock_counts.approved_by > users.id
+Ref: stock_count_products.count_id > stock_counts.id
+Ref: stock_count_products.product_id > products.id
+Ref: stock_count_counters.count_id > stock_counts.id
+Ref: stock_count_counters.user_id > users.id
+Ref: stock_count_lines.count_id > stock_counts.id
+Ref: stock_count_lines.product_id > products.id
+Ref: stock_count_lines.lot_id > stock_lots.id
+Ref: stock_count_lines.posted_lot_id > stock_lots.id
+Ref: stock_count_lines.counted_by > users.id
+Ref: stock_count_lines.recounted_by > users.id
+
+TableGroup stock_counts_group [color: #7A4E2D] {
+  stock_counts
+  stock_count_products
+  stock_count_counters
+  stock_count_lines
+}
+
+// ---------- D-19 / ADR-025: price lists, quotations, delivery notes, invoices with PPN ----------
+
+Table price_lists {
+  id int [pk, increment]
+  name varchar(120) [not null, unique]
+  description varchar(255) [not null, default: '']
+  is_active tinyint [not null, default: 1]
+  valid_from date [null, note: 'NULL = open; CHECK valid_to >= valid_from']
+  valid_to date [null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table price_list_items {
+  id int [pk, increment]
+  price_list_id int [not null]
+  product_id int [not null]
+  unit_code varchar(30) [not null, note: 'Tier unit; matched exactly against the line unit']
+  min_quantity int [not null, default: 1, note: 'CHECK >= 1, in that unit; highest tier <= line quantity applies']
+  unit_price decimal(14,2) [not null, note: 'Excl. PPN; never below cost per unit when maintained (service)']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (price_list_id, product_id, unit_code, min_quantity) [unique, name: 'uq_price_list_items_tier']
+    (product_id, unit_code) [name: 'idx_price_list_items_product']
+  }
+}
+
+Table quotations {
+  id int [pk, increment]
+  quotation_number varchar(50) [not null, unique, note: 'QT-YYMM-NNNN']
+  customer_id int [not null]
+  source_warehouse_id int [not null]
+  status varchar(10) [not null, default: 'Draft', note: 'ENUM(Draft, Sent, Accepted, Rejected, Cancelled); Expired computed from valid_until at read time']
+  quote_date date [not null]
+  valid_until date [not null, note: 'CHECK >= quote_date']
+  notes varchar(500) [not null, default: '']
+  created_by int [not null]
+  sent_at timestamp [null]
+  decided_by int [null]
+  decided_at timestamp [null]
+  rejection_reason varchar(500) [null, note: 'Set exactly when Rejected (CHECK)']
+  cancelled_by int [null]
+  cancelled_at timestamp [null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table quotation_items {
+  id int [pk, increment]
+  quotation_id int [not null]
+  product_id int [not null]
+  quantity int [not null, note: 'Base units = unit_quantity x unit_factor (CHECK)']
+  unit_code varchar(30) [not null]
+  unit_factor int [not null, default: 1]
+  unit_quantity int [not null]
+  unit_price decimal(14,2) [not null, note: 'Quoted price per unit']
+  list_price decimal(14,2) [not null, note: 'Resolved list price; reason required when unit_price differs (CHECK)']
+  price_reason varchar(255) [null]
+  price_source varchar(10) [not null, default: 'MASTER']
+  price_list_id int [null]
+
+  indexes {
+    (quotation_id, product_id) [unique, name: 'uq_quotation_items_product']
+  }
+}
+
+Table delivery_notes {
+  id int [pk, increment]
+  delivery_number varchar(50) [not null, unique, note: 'DO-YYMM-NNNN; created in the same transaction as the shipment']
+  sales_order_id int [not null]
+  shipment_number int [not null, note: 'n-th shipment of the order; UNIQUE (sales_order_id, shipment_number)']
+  warehouse_id int [not null]
+  customer_id int [not null]
+  ship_to_name varchar(120) [not null, note: 'Snapshot at shipment']
+  ship_to_address varchar(255) [not null, default: '']
+  vehicle varchar(40) [null]
+  driver varchar(80) [null]
+  prepared_by int [not null]
+  shipped_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  origin varchar(10) [not null, default: 'Issue', note: 'ENUM(Issue, Migration)']
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table delivery_note_lines {
+  id int [pk, increment]
+  delivery_note_id int [not null]
+  sales_order_item_id int [not null]
+  product_id int [not null]
+  unit_code varchar(30) [not null]
+  unit_factor int [not null, default: 1]
+  unit_quantity int [not null]
+  quantity int [not null, note: 'Base = unit_quantity x unit_factor (CHECK) = Σ its lot rows']
+
+  indexes {
+    (delivery_note_id, sales_order_item_id) [unique, name: 'uq_delivery_note_lines_item']
+  }
+}
+
+Table delivery_note_lots {
+  id bigint [pk, increment]
+  delivery_note_id int [not null]
+  delivery_note_line_id int [not null]
+  ledger_id bigint [not null, unique, note: 'The Issue ledger row; UNIQUE = every shipment row on exactly one note']
+  lot_id int [null, note: 'NULL only for pre-lot ledger rows (migration)']
+  lot_code varchar(60) [null]
+  expiry_date date [null]
+  quantity int [not null, note: 'CHECK > 0']
+}
+
+Table invoices {
+  id int [pk, increment]
+  invoice_number varchar(50) [not null, unique, note: 'INV-YYMM-NNNN']
+  delivery_note_id int [not null]
+  sales_order_id int [not null]
+  customer_id int [not null]
+  invoice_date date [not null]
+  due_date date [not null, note: 'invoice_date + INVOICE_PAYMENT_TERMS_DAYS']
+  customer_name varchar(120) [not null]
+  customer_address varchar(255) [not null, default: '']
+  customer_npwp varchar(16) [null]
+  customer_nik varchar(16) [null]
+  customer_tax_name varchar(120) [null]
+  customer_tax_address varchar(255) [null]
+  subtotal decimal(16,2) [not null, note: 'Σ lines, excl. PPN']
+  dpp_amount decimal(16,2) [not null, note: 'CHECK = round_half_up(subtotal x num / den) whole Rupiah']
+  vat_amount decimal(16,2) [not null, note: 'CHECK = round_half_up(DPP x rate / 100) whole Rupiah']
+  total_amount decimal(16,2) [not null, note: 'CHECK = subtotal + vat_amount']
+  vat_rate_percent int [not null, note: 'Snapshot of VAT_RATE_PERCENT']
+  vat_dpp_numerator int [not null]
+  vat_dpp_denominator int [not null]
+  paid_amount decimal(16,2) [not null, default: 0.00, note: 'CHECK 0 <= paid <= total; = Σ payments']
+  created_by int [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  voided_by int [null]
+  voided_at timestamp [null]
+  void_reason varchar(500) [null, note: 'Void only without payment (CHECK)']
+  active_delivery_note_id int [unique, note: 'Generated: delivery_note_id while not void; one live invoice per note']
+}
+
+Table invoice_lines {
+  id int [pk, increment]
+  invoice_id int [not null]
+  delivery_note_line_id int [not null]
+  sales_order_item_id int [not null]
+  product_id int [not null]
+  unit_code varchar(30) [not null]
+  unit_quantity int [not null, note: 'Shipped quantity in the line unit']
+  unit_price decimal(14,2) [not null, note: 'SO line effective price']
+  amount decimal(16,2) [not null, note: 'CHECK = unit_quantity x unit_price']
+}
+
+Table invoice_payments {
+  id int [pk, increment]
+  invoice_id int [not null]
+  paid_on date [not null]
+  amount decimal(16,2) [not null, note: 'CHECK > 0']
+  method varchar(10) [not null, note: 'ENUM(Transfer, Cash, Giro, Other)']
+  reference varchar(100) [not null, default: '']
+  recorded_by int [not null]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Ref: customers.price_list_id > price_lists.id
+Ref: price_list_items.price_list_id > price_lists.id
+Ref: price_list_items.product_id > products.id
+Ref: quotations.customer_id > customers.id
+Ref: quotations.source_warehouse_id > warehouses.id
+Ref: quotations.created_by > users.id
+Ref: quotation_items.quotation_id > quotations.id
+Ref: quotation_items.product_id > products.id
+Ref: quotation_items.price_list_id > price_lists.id
+Ref: sales_orders.quotation_id - quotations.id
+Ref: sales_order_items.price_list_id > price_lists.id
+Ref: sales_order_items.quotation_item_id - quotation_items.id
+Ref: delivery_notes.sales_order_id > sales_orders.id
+Ref: delivery_notes.warehouse_id > warehouses.id
+Ref: delivery_notes.customer_id > customers.id
+Ref: delivery_notes.prepared_by > users.id
+Ref: delivery_note_lines.delivery_note_id > delivery_notes.id
+Ref: delivery_note_lines.sales_order_item_id > sales_order_items.id
+Ref: delivery_note_lots.delivery_note_line_id > delivery_note_lines.id
+Ref: delivery_note_lots.ledger_id - stock_ledger.id
+Ref: delivery_note_lots.lot_id > stock_lots.id
+Ref: invoices.delivery_note_id > delivery_notes.id
+Ref: invoices.sales_order_id > sales_orders.id
+Ref: invoices.customer_id > customers.id
+Ref: invoices.created_by > users.id
+Ref: invoice_lines.invoice_id > invoices.id
+Ref: invoice_lines.delivery_note_line_id > delivery_note_lines.id
+Ref: invoice_payments.invoice_id > invoices.id
+Ref: invoice_payments.recorded_by > users.id
+
+TableGroup sales_documents_group [color: #2D6A4F] {
+  price_lists
+  price_list_items
+  quotations
+  quotation_items
+  delivery_notes
+  delivery_note_lines
+  delivery_note_lots
+  invoices
+  invoice_lines
+  invoice_payments
+}

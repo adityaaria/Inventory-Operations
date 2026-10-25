@@ -88,8 +88,8 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
     public function createDraft(string $orderNumber, int $supplierId, int $warehouseId, int $createdBy, array $items): PurchaseOrder
     {
         return PersistenceErrors::write(function () use ($orderNumber, $supplierId, $warehouseId, $createdBy, $items): PurchaseOrder {
-            $this->pdo->beginTransaction();
-            try {
+            // Joins the caller's transaction (the service claims the order number in it); owns one otherwise.
+            return (new MySqlTransactionManager($this->pdo))->run(function () use ($orderNumber, $supplierId, $warehouseId, $createdBy, $items): PurchaseOrder {
                 $statement = $this->pdo->prepare(
                     'INSERT INTO purchase_orders (order_number, supplier_id, destination_warehouse_id, status, order_date, created_by)
                      VALUES (:order_number, :supplier_id, :warehouse_id, :status, CURRENT_DATE, :created_by)'
@@ -104,8 +104,11 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
                 $orderId = (int) $this->pdo->lastInsertId();
 
                 $itemStatement = $this->pdo->prepare(
-                    'INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, received_quantity, purchase_price)
-                     VALUES (:purchase_order_id, :product_id, :quantity, 0, :purchase_price)'
+                    // Unit snapshot (D-16, ADR-022): quantity is base = unit_quantity × unit_factor (CHECK); without a unit the
+                    // line is in the product's base unit (factor 1).
+                    'INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, received_quantity, purchase_price, list_price, price_reason, unit_code, unit_factor, unit_quantity)
+                     VALUES (:purchase_order_id, :product_id, :quantity, 0, :purchase_price, :list_price, :price_reason,
+                             COALESCE(:unit_code, (SELECT p.unit FROM products p WHERE p.id = :unit_product_id), \'\'), :unit_factor, :unit_quantity)'
                 );
                 foreach ($items as $item) {
                     $itemStatement->execute([
@@ -113,17 +116,17 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
                         'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
                         'purchase_price' => $item['purchase_price'],
+                        'list_price' => $item['list_price'] ?? $item['purchase_price'],
+                        'price_reason' => $item['price_reason'] ?? null,
+                        'unit_code' => $item['unit_code'] ?? null,
+                        'unit_product_id' => $item['product_id'],
+                        'unit_factor' => $item['unit_factor'] ?? 1,
+                        'unit_quantity' => $item['unit_quantity'] ?? intdiv($item['quantity'], $item['unit_factor'] ?? 1),
                     ]);
                 }
 
-                $this->pdo->commit();
                 return $this->findRequired($orderId);
-            } catch (\Throwable $exception) {
-                if ($this->pdo->inTransaction()) {
-                    $this->pdo->rollBack();
-                }
-                throw $exception;
-            }
+            });
 
         });
     }
@@ -178,11 +181,11 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
         if ($rows === []) { return []; }
         $ids = array_map(static fn (array $row): int => (int) $row['id'], $rows);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $statement = $this->pdo->prepare("SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price FROM purchase_order_items WHERE purchase_order_id IN ({$placeholders}) ORDER BY id ASC");
+        $statement = $this->pdo->prepare("SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price, list_price, price_reason, unit_code, unit_factor FROM purchase_order_items WHERE purchase_order_id IN ({$placeholders}) ORDER BY id ASC");
         $statement->execute($ids);
         $items = [];
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $items[(int) $row['purchase_order_id']][] = new PurchaseOrderItem((int) $row['id'], (int) $row['purchase_order_id'], (int) $row['product_id'], (int) $row['quantity'], (int) $row['received_quantity'], (float) $row['purchase_price']);
+            $items[(int) $row['purchase_order_id']][] = new PurchaseOrderItem((int) $row['id'], (int) $row['purchase_order_id'], (int) $row['product_id'], (int) $row['quantity'], (int) $row['received_quantity'], (float) $row['purchase_price'], (float) $row['list_price'], $row['price_reason'] === null ? null : (string) $row['price_reason'], (string) $row['unit_code'], (int) $row['unit_factor']);
         }
         return array_map(fn (array $row): PurchaseOrder => $this->hydrate($row, $items[(int) $row['id']] ?? []), $rows);
     }
@@ -191,7 +194,7 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
     private function itemsForOrder(int $orderId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price
+            'SELECT id, purchase_order_id, product_id, quantity, received_quantity, purchase_price, list_price, price_reason, unit_code, unit_factor
              FROM purchase_order_items WHERE purchase_order_id = :purchase_order_id ORDER BY id ASC'
         );
         $statement->execute(['purchase_order_id' => $orderId]);
@@ -203,6 +206,10 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryInter
             (int) $row['quantity'],
             (int) $row['received_quantity'],
             (float) $row['purchase_price'],
+            (float) $row['list_price'],
+            $row['price_reason'] === null ? null : (string) $row['price_reason'],
+            (string) $row['unit_code'],
+            (int) $row['unit_factor'],
         ), $statement->fetchAll(PDO::FETCH_ASSOC));
     }
 

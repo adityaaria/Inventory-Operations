@@ -81,8 +81,9 @@ final class SalesOrderSourceAvailabilityTest extends TestCase
 
         self::assertStringContainsString('Available at Source', $body);
         self::assertStringContainsString('1 line exceeds the stock currently available at the source warehouse', $body);
-        self::assertStringContainsString('<td>83 <span class="status-badge status-warning">Short 17</span></td>', $body);
-        self::assertStringContainsString('<td>40</td>', $body, 'Covered line has no shortage badge');
+        // Quantities carry their base unit (D-16, ADR-022).
+        self::assertMatchesRegularExpression('/<td>83 [^<\s]+ <span class="status-badge status-warning">Short 17 [^<\s]+<\/span><\/td>/', $body);
+        self::assertMatchesRegularExpression('/<td>40 [^<\s]+<\/td>/', $body, 'Covered line has no shortage badge');
     }
 
     public function testDetailHasNoWarningWhenStockIsSufficient(): void
@@ -119,7 +120,7 @@ final class SalesOrderSourceAvailabilityTest extends TestCase
     private function service(): SalesOrderService
     {
         return new SalesOrderService(
-            $this->orders,
+            $this->orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(),
             $this->products,
             [1 => new Customer(1, 'Demo Customer', '', '', '', true)],
             [1 => new Warehouse(1, 'Gudang Surabaya', 'Surabaya', true), 2 => new Warehouse(2, 'Gudang Cikarang', 'Cikarang', true)],

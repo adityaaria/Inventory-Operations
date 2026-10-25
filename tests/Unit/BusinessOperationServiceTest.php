@@ -19,11 +19,14 @@ final class BusinessOperationServiceTest extends TestCase
         $this->service=new BusinessOperationService(new InMemoryBusinessOperationRepository(['1:1'=>['quantity'=>5],'1:2'=>['quantity'=>2]]),new StockService($this->balances,$this->ledger,$audit),$audit);
         $this->creator=new AuthContext(1,'creator@example.test','Admin');$this->reviewer=new AuthContext(2,'reviewer@example.test','Admin');
     }
+    /** D-15 / ADR-021: posting a transfer dispatches it (goods in transit); the receipt completes it and conserves stock. */
     public function testTransferConservesStockAndPostingReplayDoesNothing(): void
     {
         $id=$this->service->propose($this->creator,'Transfer',1,2,'Balance warehouses',[['product_id'=>1,'quantity'=>3]]);
         $this->service->decide($this->reviewer,$id,'Approved','Checked');$this->service->post($this->creator,$id);$this->service->post($this->creator,$id);
-        self::assertSame(2,$this->balances->quantity(1,1));self::assertSame(5,$this->balances->quantity(1,2));self::assertCount(2,$this->ledger->entries());self::assertSame(-3,$this->ledger->entries()[0]->delta());self::assertSame(3,$this->ledger->entries()[1]->delta());
+        self::assertSame(2,$this->balances->quantity(1,1));self::assertSame(2,$this->balances->quantity(1,2));self::assertCount(1,$this->ledger->entries());self::assertSame(-3,$this->ledger->entries()[0]->delta());
+        $this->service->receive($this->creator,$id);$this->service->receive($this->creator,$id);
+        self::assertSame(5,$this->balances->quantity(1,2));self::assertCount(2,$this->ledger->entries());self::assertSame(3,$this->ledger->entries()[1]->delta());
     }
     public function testCreatorCannotApproveOwnProposal(): void
     {

@@ -52,6 +52,7 @@ final class CustomerController
                 InputValidator::optionalString('email', $post['email'] ?? '', 190),
                 InputValidator::optionalString('phone', $post['phone'] ?? '', 255),
                 InputValidator::optionalString('address', $post['address'] ?? '', 1000),
+                self::taxInput($post),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('customers/create.php', ['old' => $post, 'error' => $exception->getMessage()], 422);
@@ -107,6 +108,7 @@ final class CustomerController
                 InputValidator::optionalString('email', $post['email'] ?? '', 190),
                 InputValidator::optionalString('phone', $post['phone'] ?? '', 255),
                 InputValidator::optionalString('address', $post['address'] ?? '', 1000),
+                self::taxInput($post),
             );
         } catch (InvalidArgumentException $exception) {
             return $this->render('customers/edit.php', [
@@ -146,6 +148,19 @@ final class CustomerController
             'paginationQuery' => $request->query(),
             'error' => $error,
         ], $status);
+    }
+
+    /**
+     * Tax fields (D-19, ADR-025) only when the form sent them, so older clients and the CSV import leave them unchanged.
+     *
+     * @param array<string, mixed> $post
+     * @return array<string, mixed>|null
+     */
+    private static function taxInput(array $post): ?array
+    {
+        $keys = ['npwp', 'nik', 'tax_name', 'tax_address'];
+
+        return array_intersect_key($post, array_flip($keys)) === [] ? null : array_intersect_key($post, array_flip($keys));
     }
 
     /** @param array<string, mixed> $data */

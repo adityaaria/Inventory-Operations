@@ -164,8 +164,11 @@ final class MySqlMasterDataCoverageIntegrationTest extends TestCase
         $repository = new MySqlProductRepository($this->pdo);
         $product = $repository->findById(1);
         self::assertNotNull($product);
-        $updated = $repository->update(1, new ProductInput('BIS-0001X', 'Renamed Biscuit', 'box', 1500.5, 2500.25, 33, 2));
-        self::assertSame(['BIS-0001X', 'Renamed Biscuit', 'box', 1500.5, 2500.25, 33, 2], [
+        // D-16/ADR-022: products.unit is the base unit code; renaming it renames the base unit row ("box" is already a unit
+        // of this seed product, so the rename uses a free code).
+        $updated = $repository->update(1, new ProductInput('BIS-0001X', 'Renamed Biscuit', 'dus', 1500.5, 2500.25, 33, 2));
+        self::assertSame('dus', (string) $this->pdo->query('SELECT unit_code FROM product_units WHERE product_id = 1 AND is_base = 1')->fetchColumn());
+        self::assertSame(['BIS-0001X', 'Renamed Biscuit', 'dus', 1500.5, 2500.25, 33, 2], [
             $updated->sku(), $updated->name(), $updated->unit(), $updated->purchasePrice(), $updated->sellingPrice(), $updated->reorderPoint(), $updated->categoryId(),
         ]);
         self::assertSame('2500.25', (string) $this->pdo->query('SELECT price FROM products WHERE id = 1')->fetchColumn());
@@ -196,18 +199,27 @@ final class MySqlMasterDataCoverageIntegrationTest extends TestCase
             self::assertSame($category, $product->categoryId());
         }
 
-        $totals = 'SELECT p.id, p.reorder_point, COALESCE(SUM(ps.quantity), 0) AS qty FROM products p LEFT JOIN product_stocks ps ON ps.product_id = p.id WHERE p.is_active = 1 GROUP BY p.id, p.reorder_point';
-        $low = (int) $this->pdo->query("SELECT COUNT(*) FROM ({$totals}) t WHERE qty <= reorder_point")->fetchColumn();
-        $normal = (int) $this->pdo->query("SELECT COUNT(*) FROM ({$totals}) t WHERE qty > reorder_point")->fetchColumn();
+        // D-10: low = below the effective reorder point in at least one active warehouse; normal = low in none.
+        $lowIds = 'SELECT DISTINCT ps.product_id FROM product_stocks ps JOIN products p ON p.id = ps.product_id JOIN warehouses w ON w.id = ps.warehouse_id
+            WHERE p.is_active = 1 AND w.is_active = 1 AND CAST(ps.quantity AS SIGNED) - CAST(ps.reserved_quantity AS SIGNED) - (SELECT COALESCE(SUM(l.quantity), 0) FROM stock_lots l WHERE l.product_id = ps.product_id AND l.warehouse_id = ps.warehouse_id AND l.expiry_date < \'' . \App\Support\BusinessDate::today() . '\') < COALESCE(ps.reorder_point_override, p.reorder_point)';
+        $low = (int) $this->pdo->query("SELECT COUNT(*) FROM ({$lowIds}) t")->fetchColumn();
+        $normal = (int) $this->pdo->query("SELECT COUNT(*) FROM products WHERE is_active = 1 AND id NOT IN ({$lowIds})")->fetchColumn();
+        self::assertGreaterThan(0, $low);
         self::assertGreaterThan(0, $normal);
-        self::assertSame($low, $repository->search(ProductSearchCriteria::fromArray(['stock_status' => 'low']))->total());
+        $lowResult = $repository->search(ProductSearchCriteria::fromArray(['stock_status' => 'low']));
+        self::assertSame($low, $lowResult->total());
         $normalResult = $repository->search(ProductSearchCriteria::fromArray(['stock_status' => 'normal', 'sort' => 'quantity', 'direction' => 'desc']));
         self::assertSame($normal, $normalResult->total());
         $active = (int) $this->pdo->query('SELECT COUNT(*) FROM products WHERE is_active = 1')->fetchColumn();
         self::assertSame($active, $low + $normal);
+        foreach ($lowResult->items() as $product) {
+            $lowPairs = array_filter($repository->stocksForProduct($product->id()), static fn ($s): bool => $s->isLowStock());
+            self::assertNotEmpty($lowPairs, 'Every low product has a low warehouse badge.');
+        }
         foreach ($normalResult->items() as $product) {
-            $sum = array_sum(array_map(static fn ($s): int => $s->quantity(), $repository->stocksForProduct($product->id())));
-            self::assertGreaterThan($product->reorderPoint(), $sum);
+            foreach ($repository->stocksForProduct($product->id()) as $stock) {
+                self::assertFalse($stock->isLowStock(), 'A normal product has no low warehouse badge.');
+            }
         }
     }
 

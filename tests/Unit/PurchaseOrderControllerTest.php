@@ -57,10 +57,13 @@ final class PurchaseOrderControllerTest extends TestCase
         self::assertMatchesRegularExpression('/name="product_id"[^>]*>\s*<option value="10" data-price="1000.00" selected/', $response->body());
         self::assertMatchesRegularExpression('/name="items\[1\]\[product_id\]".*?<option value="11" data-price="250.00" selected/s', $response->body());
         self::assertStringContainsString('name="items[1][quantity]" type="number" min="1" required value="3"', $response->body());
-        // Prices are display-only and come from the product master (250.00 for product 11), never from the form.
-        self::assertStringNotContainsString('purchase_price"', $response->body());
-        self::assertMatchesRegularExpression('/name="items\[1\]\[quantity\]".*?data-order-price type="text" readonly value="Rp 250,00"/s', $response->body());
+        // Replenishment prefill still uses the master price (250.00 for product 11) in the now editable price field (D-13, ADR-019).
+        self::assertMatchesRegularExpression('/name="items\[1\]\[quantity\]".*?name="items\[1\]\[purchase_price\]" type="number" min="0" step="0.01" inputmode="decimal" value="250.00"/s', $response->body());
+        self::assertMatchesRegularExpression('/name="items\[1\]\[purchase_price\]".*?Master price: <span data-order-master>Rp 250,00<\/span>/s', $response->body());
+        self::assertStringNotContainsString('readonly', $response->body(), 'The line price is no longer read-only.');
         self::assertStringContainsString('<option value="11" data-price="250.00"', $response->body());
+        self::assertStringNotContainsString('name="order_number"', $response->body(), 'The order number is assigned by the server.');
+        self::assertStringContainsString('Order number is assigned when the draft is saved', $response->body());
         self::assertCount(0, $orders->all(), 'Selection only prefills; it never creates a draft.');
         self::assertSame(1, substr_count($response->body(), 'name="product_id"'), 'The clone template must not add a second product field.');
     }
@@ -93,14 +96,16 @@ final class PurchaseOrderControllerTest extends TestCase
         $response = $this->controller($this->admin(), $orders)->store(new Request('POST', '/purchase-orders', [], [
             'order_number' => 'PO-MULTI', 'supplier_id' => '1', 'warehouse_id' => '1',
             'product_id' => '10', 'quantity' => '5', 'purchase_price' => '1000',
-            'items' => [4 => ['product_id' => '11', 'quantity' => '3', 'purchase_price' => '250.50']],
+            'items' => [4 => ['product_id' => '11', 'quantity' => '3', 'purchase_price' => '250.50', 'price_reason' => 'Harga promo principal']],
         ], []));
 
         self::assertSame(302, $response->statusCode());
         $created = array_values($orders->all())[0];
-        self::assertSame('PO-MULTI', $created->orderNumber());
-        // Posted prices (1000, 250.50) are ignored: each line uses the product master purchase price.
-        self::assertSame([[10, 5, 1000.0], [11, 3, 250.0]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->purchasePrice()], $created->items()));
+        // The posted order_number is ignored (D-11, ADR-017): the server assigns PO-YYMM-NNNN.
+        self::assertMatchesRegularExpression('/^PO-\d{4}-0001$/', $created->orderNumber());
+        // D-13 / ADR-019: 1000 equals the master (no reason kept); 250.50 is a negotiated price with its reason, and the
+        // server snapshots the master 250.00 as list price.
+        self::assertSame([[10, 5, 1000.0, 1000.0, null], [11, 3, 250.5, 250.0, 'Harga promo principal']], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->purchasePrice(), $item->listPrice(), $item->priceReason()], $created->items()));
     }
 
     public function testStoreWithoutAnyPriceFieldUsesMasterPrices(): void
@@ -176,7 +181,7 @@ final class PurchaseOrderControllerTest extends TestCase
 
         return new PurchaseOrderController(
             new PurchaseOrderService(
-                $orders,
+                $orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(),
                 $products,
                 $suppliers,
                 $warehouses,

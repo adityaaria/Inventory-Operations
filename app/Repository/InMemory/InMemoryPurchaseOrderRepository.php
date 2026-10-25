@@ -60,6 +60,10 @@ final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepositoryIn
                 $item['quantity'],
                 0,
                 $item['purchase_price'],
+                $item['list_price'] ?? $item['purchase_price'],
+                $item['price_reason'] ?? null,
+                $item['unit_code'] ?? null,
+                $item['unit_factor'] ?? 1,
             );
         }
 

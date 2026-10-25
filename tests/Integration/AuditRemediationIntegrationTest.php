@@ -21,7 +21,7 @@ final class AuditRemediationIntegrationTest extends TestCase
     public function testInterleavedDuplicateIssueCommitsOnlyOneMovement(): void
     {
         [$service, $repo, $stock, $ledger, $actor] = $this->sales();
-        $order = $service->createDraft($actor, 'SO-RACE', 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
+        $order = $service->createDraft($actor, 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
         $service->submit($actor, $order->id()); $service->approve($actor, $order->id());
         $before = $stock->quantity(1, 1);
         $stock->beforeBegin = fn () => $service->issue($actor, $order->id());
@@ -38,12 +38,13 @@ final class AuditRemediationIntegrationTest extends TestCase
         $stock = new InterleavingStock(new MySqlStockRepository($this->pdo));
         $repo = new MySqlPurchaseOrderRepository($this->pdo);
         $ledger = new MySqlStockLedgerRepository($this->pdo);
-        $service = new PurchaseOrderService($repo, new MySqlProductRepository($this->pdo), [1 => new Supplier(1, 'Supplier', '', '', '', true)], [1 => new Warehouse(1, 'Warehouse', '', true)], new StockService($stock, $ledger, new MySqlAuditLogRepository($this->pdo)));
+        $service = new PurchaseOrderService($repo, new \App\Repository\MySql\MySqlDocumentSequenceRepository($this->pdo), new MySqlProductRepository($this->pdo), [1 => new Supplier(1, 'Supplier', '', '', '', true)], [1 => new Warehouse(1, 'Warehouse', '', true)], new StockService($stock, $ledger, new MySqlAuditLogRepository($this->pdo)));
         $actor = new AuthContext(1, 'admin@test', User::ROLE_ADMIN);
-        $order = $service->createDraft($actor, 'PO-RACE', 1, 1, [['product_id' => 1, 'quantity' => 10, 'purchase_price' => 100.0]]);
+        $order = $service->createDraft($actor, 1, 1, [['product_id' => 1, 'quantity' => 10, 'purchase_price' => 100.0]]);
         $service->markOrdered($actor, $order->id()); $item = $order->items()[0]->id();
-        $stock->beforeBegin = fn () => $service->receive($actor, $order->id(), [$item => 5]);
-        $service->receive($actor, $order->id(), [$item => 5]);
+        // D-17 / ADR-023: the seed product tracks expiry, so each receipt names its lot.
+        $stock->beforeBegin = fn () => $service->receive($actor, $order->id(), [$item => 5], null, [$item => [['lot_code' => 'IT-A', 'expiry_date' => '2027-12-31', 'quantity' => 5]]]);
+        $service->receive($actor, $order->id(), [$item => 5], null, [$item => [['lot_code' => 'IT-B', 'expiry_date' => '2027-12-31', 'quantity' => 5]]]);
         self::assertSame('Received', $repo->findById($order->id())->status());
         self::assertSame(10, $repo->findById($order->id())->items()[0]->receivedQuantity());
         self::assertCount(2, $ledger->forReference('PO', $order->id()));
@@ -52,13 +53,16 @@ final class AuditRemediationIntegrationTest extends TestCase
     public function testCancellationBeforeIssuePreventsStockMutation(): void
     {
         [$service, $repo, $stock, $ledger, $actor] = $this->sales();
-        $order = $service->createDraft($actor, 'SO-CANCEL-RACE', 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
+        $order = $service->createDraft($actor, 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
+        $reservedBefore = $stock->reservedQuantity(1, 1);
         $service->submit($actor, $order->id()); $service->approve($actor, $order->id());
+        self::assertSame($reservedBefore + 1, $stock->reservedQuantity(1, 1), 'Approval reserves the line.');
         $before = $stock->quantity(1, 1);
         $stock->beforeBegin = fn () => $service->rejectOrCancel($actor, $order->id());
         try { $service->issue($actor, $order->id()); self::fail('Cancelled issue must fail.'); }
         catch (InvalidArgumentException) {}
         self::assertSame($before, $stock->quantity(1, 1));
+        self::assertSame($reservedBefore, $stock->reservedQuantity(1, 1), 'The interleaved cancellation released the reservation exactly once.');
         self::assertSame('Cancelled', $repo->findById($order->id())->status());
         self::assertCount(0, $ledger->forReference('SO', $order->id()));
     }
@@ -66,14 +70,19 @@ final class AuditRemediationIntegrationTest extends TestCase
     public function testAuditFailureRollsBackOrderStockAndLedger(): void
     {
         $audit = new class implements AuditLogRepositoryInterface {
-            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, \App\Support\RequestOrigin $origin, array $metadata = []): void { throw new \RuntimeException('Forced audit failure'); }
+            // Approval is audited strictly too since D-12 (it reserves stock), so only the issue audit is forced to fail here.
+            public function append(?int $actorId, string $action, string $entityType, ?int $entityId, string $status, \App\Support\RequestOrigin $origin, array $metadata = []): void { if ($action === 'sales-orders.issue') { throw new \RuntimeException('Forced audit failure'); } }
         };
         [$service, $repo, $stock, $ledger, $actor] = $this->sales($audit);
-        $order = $service->createDraft($actor, 'SO-AUDIT-ROLLBACK', 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
+        $order = $service->createDraft($actor, 1, 1, [['product_id' => 1, 'quantity' => 1, 'selling_price' => 100.0]]);
         $service->submit($actor, $order->id()); $service->approve($actor, $order->id()); $before = $stock->quantity(1, 1);
         try { $service->issue($actor, $order->id()); self::fail('Audit failure must abort transaction.'); }
         catch (\RuntimeException $exception) { self::assertSame('Forced audit failure', $exception->getMessage()); }
+        $reserved = $stock->reservedQuantity(1, 1);
+        try { $service->issue($actor, $order->id()); self::fail('Audit failure must abort transaction.'); }
+        catch (\RuntimeException) {}
         self::assertSame($before, $stock->quantity(1, 1)); self::assertCount(0, $ledger->forReference('SO', $order->id()));
+        self::assertSame($reserved, $stock->reservedQuantity(1, 1), 'The rolled-back issue keeps the reservation.');
         self::assertSame('Approved', $repo->findById($order->id())->status());
     }
 
@@ -118,7 +127,7 @@ final class AuditRemediationIntegrationTest extends TestCase
     private function sales(?AuditLogRepositoryInterface $audit = null): array
     {
         $stock = new InterleavingStock(new MySqlStockRepository($this->pdo)); $ledger = new MySqlStockLedgerRepository($this->pdo); $repo = new MySqlSalesOrderRepository($this->pdo);
-        return [new SalesOrderService($repo, new MySqlProductRepository($this->pdo), [1 => new Customer(1, 'Customer', '', '', '', true)], [1 => new Warehouse(1, 'Warehouse', '', true)], new StockService($stock, $ledger, $audit ?? new MySqlAuditLogRepository($this->pdo))), $repo, $stock, $ledger, new AuthContext(1, 'admin@test', User::ROLE_ADMIN)];
+        return [new SalesOrderService($repo, new \App\Repository\MySql\MySqlDocumentSequenceRepository($this->pdo), new MySqlProductRepository($this->pdo), [1 => new Customer(1, 'Customer', '', '', '', true)], [1 => new Warehouse(1, 'Warehouse', '', true)], new StockService($stock, $ledger, $audit ?? new MySqlAuditLogRepository($this->pdo))), $repo, $stock, $ledger, new AuthContext(1, 'admin@test', User::ROLE_ADMIN)];
     }
 }
 
@@ -133,4 +142,17 @@ final class InterleavingStock implements StockRepositoryInterface
     public function increment(int $productId, int $warehouseId, int $quantity): void { $this->inner->increment($productId, $warehouseId, $quantity); }
     public function decrement(int $productId, int $warehouseId, int $quantity): void { $this->inner->decrement($productId, $warehouseId, $quantity); }
     public function quantity(int $productId, int $warehouseId): int { return $this->inner->quantity($productId, $warehouseId); }
+    public function reservedQuantity(int $productId, int $warehouseId): int { return $this->inner->reservedQuantity($productId, $warehouseId); }
+    public function reserve(int $productId, int $warehouseId, int $quantity): void { $this->inner->reserve($productId, $warehouseId, $quantity); }
+    public function release(int $productId, int $warehouseId, int $quantity): void { $this->inner->release($productId, $warehouseId, $quantity); }
+    public function issueReserved(int $productId, int $warehouseId, int $quantity): void { $this->inner->issueReserved($productId, $warehouseId, $quantity); }
+    // Lots (D-17, ADR-023): delegated unchanged.
+    public function expiredQuantity(int $productId, int $warehouseId): int { return $this->inner->expiredQuantity($productId, $warehouseId); }
+    public function lockLots(int $productId, int $warehouseId): array { return $this->inner->lockLots($productId, $warehouseId); }
+    public function createLot(int $productId, int $warehouseId, string $code, ?string $expiryDate, string $unitCost, string $sourceType, ?int $sourceId): \App\Entity\StockLot { return $this->inner->createLot($productId, $warehouseId, $code, $expiryDate, $unitCost, $sourceType, $sourceId); }
+    public function changeLotQuantity(int $lotId, int $delta): void { $this->inner->changeLotQuantity($lotId, $delta); }
+    public function findLot(int $lotId): ?\App\Entity\StockLot { return $this->inner->findLot($lotId); }
+    public function today(): string { return $this->inner->today(); }
+    public function tracksExpiry(int $productId): bool { return $this->inner->tracksExpiry($productId); }
+    public function purchaseCost(int $productId): string { return $this->inner->purchaseCost($productId); }
 }

@@ -37,7 +37,7 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
         $value = (float) $this->pdo->query('SELECT SUM(ps.quantity * p.purchase_price) FROM product_stocks ps JOIN products p ON p.id = ps.product_id')->fetchColumn();
         self::assertGreaterThan(0, $value);
         self::assertEqualsWithDelta($value, $dashboard['inventory_value'], 0.001);
-        $low = (int) $this->pdo->query('SELECT COUNT(*) FROM product_stocks ps JOIN products p ON p.id = ps.product_id JOIN warehouses w ON w.id = ps.warehouse_id WHERE ps.quantity < p.reorder_point AND p.is_active = 1 AND w.is_active = 1')->fetchColumn();
+        $low = (int) $this->pdo->query('SELECT COUNT(*) FROM product_stocks ps JOIN products p ON p.id = ps.product_id JOIN warehouses w ON w.id = ps.warehouse_id WHERE CAST(ps.quantity AS SIGNED) - CAST(ps.reserved_quantity AS SIGNED) - (SELECT COALESCE(SUM(l.quantity), 0) FROM stock_lots l WHERE l.product_id = ps.product_id AND l.warehouse_id = ps.warehouse_id AND l.expiry_date < ' . self::today() . ') < COALESCE(ps.reorder_point_override, p.reorder_point) AND p.is_active = 1 AND w.is_active = 1')->fetchColumn();
         self::assertSame($low, $dashboard['low_stock_count']);
         self::assertSame($this->statusCounts('purchase_orders'), $this->sorted($dashboard['purchase_orders_by_status']));
         self::assertSame($this->statusCounts('sales_orders'), $this->sorted($dashboard['sales_orders_by_status']));
@@ -57,7 +57,7 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
             $expected[(string) $row['status']] = (int) $row['total'];
         }
         self::assertSame($this->sorted($expected), $this->sorted($dashboard['sales_orders_by_status']));
-        $statement = $this->pdo->prepare('SELECT SUM(i.quantity * i.selling_price) FROM sales_order_items i JOIN sales_orders so ON so.id = i.sales_order_id WHERE so.created_by = :creator');
+        $statement = $this->pdo->prepare('SELECT SUM(i.unit_quantity * i.selling_price) FROM sales_order_items i JOIN sales_orders so ON so.id = i.sales_order_id WHERE so.created_by = :creator');
         $statement->execute(['creator' => $creator]);
         self::assertEqualsWithDelta((float) $statement->fetchColumn(), $dashboard['sales_order_value'], 0.001);
 
@@ -71,13 +71,15 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
         $dashboard = (new MySqlOperationalQueryRepository($this->pdo))->warehouseDashboard();
 
         self::assertSame((int) $this->pdo->query("SELECT COUNT(*) FROM purchase_orders po LEFT JOIN purchase_order_closures c ON c.purchase_order_id = po.id WHERE po.status IN ('Ordered','PartiallyReceived') AND c.purchase_order_id IS NULL")->fetchColumn(), $dashboard['po_receipt_queue']);
-        self::assertSame((int) $this->pdo->query("SELECT COUNT(*) FROM sales_orders WHERE status = 'Approved'")->fetchColumn(), $dashboard['so_issue_queue']);
+        // D-14/ADR-020: PartiallyFulfilled orders with an open remainder still await issue.
+        self::assertSame((int) $this->pdo->query("SELECT COUNT(*) FROM sales_orders so LEFT JOIN sales_order_closures c ON c.sales_order_id = so.id WHERE so.status IN ('Approved','PartiallyFulfilled') AND c.sales_order_id IS NULL")->fetchColumn(), $dashboard['so_issue_queue']);
+        self::assertGreaterThan((int) $this->pdo->query("SELECT COUNT(*) FROM sales_orders WHERE status = 'Approved'")->fetchColumn(), $dashboard['so_issue_queue']);
         $rows = $dashboard['low_stock_rows'];
-        $expected = (int) $this->pdo->query('SELECT COUNT(*) FROM product_stocks ps JOIN products p ON p.id = ps.product_id JOIN warehouses w ON w.id = ps.warehouse_id WHERE ps.quantity < p.reorder_point AND p.is_active = 1 AND w.is_active = 1')->fetchColumn();
+        $expected = (int) $this->pdo->query('SELECT COUNT(*) FROM product_stocks ps JOIN products p ON p.id = ps.product_id JOIN warehouses w ON w.id = ps.warehouse_id WHERE CAST(ps.quantity AS SIGNED) - CAST(ps.reserved_quantity AS SIGNED) - (SELECT COALESCE(SUM(l.quantity), 0) FROM stock_lots l WHERE l.product_id = ps.product_id AND l.warehouse_id = ps.warehouse_id AND l.expiry_date < ' . self::today() . ') < COALESCE(ps.reorder_point_override, p.reorder_point) AND p.is_active = 1 AND w.is_active = 1')->fetchColumn();
         self::assertGreaterThan(0, $expected);
         self::assertCount($expected, $rows);
         foreach ($rows as $row) {
-            self::assertLessThan((int) $row['reorder_point'], (int) $row['quantity']);
+            self::assertLessThan((int) $row['reorder_point'], (int) $row['available_quantity']); // available rule (ADR-018)
         }
         $keys = array_map(static fn (array $r): string => $r['sku'] . '|' . $r['warehouse_name'], $rows);
         $sorted = $keys;
@@ -116,15 +118,22 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
     public function testStockOperationListFiltersByKindStatusAndEscapedReason(): void
     {
         $repository = new MySqlBusinessOperationRepository($this->pdo);
+        // The demo seed holds transfers (D-15, ADR-021); counts below are relative to it.
+        $seeded = $repository->count([]);
+        $seededApproved = $repository->count(['status' => 'Approved']);
+        $seededApprovedTransfers = $repository->count(['status' => 'Approved', 'kind' => 'Transfer']);
+        // D-17 / ADR-023: the seed also holds expired-stock write-offs (Adjustment documents).
+        $seededAdjustments = $repository->count(['kind' => 'Adjustment']);
+        $seededPendingAdjustments100 = $repository->count(['kind' => 'Adjustment', 'status' => 'PendingApproval', 'q' => '100%']);
         $adjust = $repository->create(['kind' => 'Adjustment', 'warehouse_id' => 1, 'destination_id' => null, 'reason' => 'Cycle count 100% verified', 'created_by' => 1, 'condition_confirmed' => 0], [['product_id' => 1, 'quantity' => 4, 'baseline' => 10]]);
         $transfer = $repository->create(['kind' => 'Transfer', 'warehouse_id' => 1, 'destination_id' => 2, 'reason' => 'Cycle count 1000 rebalance', 'created_by' => 1, 'condition_confirmed' => 0], [['product_id' => 2, 'quantity' => 3]]);
         $repository->create(['kind' => 'Adjustment', 'warehouse_id' => 2, 'destination_id' => null, 'reason' => 'Damaged_goods', 'created_by' => 1, 'condition_confirmed' => 0], [['product_id' => 3, 'quantity' => 1]]);
         $repository->decide($transfer, 'Approved', 2, 'ok');
 
-        self::assertSame(3, $repository->count([]));
-        self::assertSame(2, $repository->count(['kind' => 'Adjustment']));
-        self::assertSame(1, $repository->count(['status' => 'Approved']));
-        self::assertSame(1, $repository->count(['kind' => 'Adjustment', 'status' => 'PendingApproval', 'q' => '100%']));
+        self::assertSame($seeded + 3, $repository->count([]));
+        self::assertSame($seededAdjustments + 2, $repository->count(['kind' => 'Adjustment']));
+        self::assertSame($seededApproved + 1, $repository->count(['status' => 'Approved']));
+        self::assertSame($seededPendingAdjustments100 + 1, $repository->count(['kind' => 'Adjustment', 'status' => 'PendingApproval', 'q' => '100%']));
         self::assertSame(2, $repository->count(['q' => 'Cycle count 100']));
         self::assertSame(1, $repository->count(['q' => 'd_g']));
         self::assertSame(0, $repository->count(['q' => 'Damaged%goods']));
@@ -137,8 +146,9 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
         self::assertSame('admin@example.test', $page[0]['creator_email']);
         self::assertSame([$adjust], array_map(static fn (array $r): int => (int) $r['id'], $repository->page(['q' => 'cycle count'], 1, 1)));
         $approved = $repository->page(['status' => 'Approved', 'kind' => 'Transfer'], 10, 0);
-        self::assertCount(1, $approved);
-        self::assertSame('Approved', $approved[0]['status']);
+        self::assertCount($seededApprovedTransfers + 1, $approved);
+        self::assertSame($transfer, (int) $approved[0]['id']);
+        self::assertSame(['Approved'], array_values(array_unique(array_column($approved, 'status'))));
     }
 
     public function testOperationDocumentLinksPointToSourceOrders(): void
@@ -196,5 +206,11 @@ final class MySqlOperationalQueryCoverageIntegrationTest extends TestCase
         ksort($counts, SORT_STRING);
 
         return $counts;
+    }
+
+    /** D-17 / ADR-023: available excludes expired lots (expiry before the business date), quoted for SQL. */
+    private static function today(): string
+    {
+        return "'" . \App\Support\BusinessDate::today() . "'";
     }
 }

@@ -14,6 +14,15 @@ services:
       SESSION_ABSOLUTE_SECONDS: "${SESSION_ABSOLUTE_SECONDS:-28800}"
       SESSION_ROTATION_SECONDS: "${SESSION_ROTATION_SECONDS:-900}"
       SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-auto}"
+      SALES_MAX_DISCOUNT_PERCENT: "${SALES_MAX_DISCOUNT_PERCENT:-10}"
+      APP_TIMEZONE: "${APP_TIMEZONE:-Asia/Jakarta}"
+      NEAR_EXPIRY_DAYS: "${NEAR_EXPIRY_DAYS:-30}"
+      COUNT_RECOUNT_TOLERANCE_PERCENT: "${COUNT_RECOUNT_TOLERANCE_PERCENT:-2}"
+      COUNT_RECOUNT_TOLERANCE_UNITS: "${COUNT_RECOUNT_TOLERANCE_UNITS:-0}"
+      VAT_RATE_PERCENT: "${VAT_RATE_PERCENT:-12}"
+      VAT_DPP_NUMERATOR: "${VAT_DPP_NUMERATOR:-11}"
+      VAT_DPP_DENOMINATOR: "${VAT_DPP_DENOMINATOR:-12}"
+      INVOICE_PAYMENT_TERMS_DAYS: "${INVOICE_PAYMENT_TERMS_DAYS:-30}"
       SESSION_SAVE_PATH: /var/www/html/var/sessions
       DB_HOST: db
       DB_PORT: 3306
@@ -67,6 +76,9 @@ services:
       MYSQL_USER: inventory_test
       MYSQL_PASSWORD: local_disposable_test_only
       MYSQL_ROOT_PASSWORD: local_disposable_root_only
+    # Disposable test database on tmpfs (RAM): no binary log, which otherwise grows with every TestDatabase::reset()
+    # until the container is OOM-killed (exit 137) during the full integration suite.
+    command: ["--skip-log-bin"]
     tmpfs:
       - /var/lib/mysql
     healthcheck:

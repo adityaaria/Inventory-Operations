@@ -1,0 +1,31 @@
+{
+ "sales2_login": 302,
+ "form_status": 200,
+ "form_price_editable": true,
+ "form_reason_field": true,
+ "form_reset": true,
+ "form_cap_hint": "10",
+ "form_readonly_count": 0,
+ "missing_reason_status": 422,
+ "missing_reason_message": [
+  "A reason of 3–255 characters is required when the price of BIS-0001 differs from the master price."
+ ],
+ "cap_status": 422,
+ "cap_message": [
+  "Selling price for BIS-0001 (Rp 146.800,00) is below its current purchase price (Rp 244.700,00); below-cost sales are not allowed."
+ ],
+ "create_status": 302,
+ "so_id": 606,
+ "so_number": "SO-2610-0040",
+ "detail_has_reason": true,
+ "detail_diff": "-5,00% · -Rp 14.680,00 per unit · -Rp 29.360,00 line",
+ "detail_master_col": true,
+ "submit_status": 302,
+ "admin_notice": "1 line priced away from master; total difference -Rp 29.360,00. Check the reasons above before approving.",
+ "notice_before_approve": true,
+ "timeline_detail": true,
+ "sales1_other_detail_status": 403,
+ "master": 293600.0,
+ "price": 278920.0,
+ "product_id": "1"
+}

@@ -34,6 +34,9 @@ final class OperationsPagesCoverageIntegrationTest extends TestCase
         $this->operations->decide($reviewer,$rejected,'Rejected','Recount');
         $posted=$this->operations->propose($admin,'Transfer',1,2,'Pages posted transfer',[['product_id'=>1,'quantity'=>2]]);
         $this->operations->decide($reviewer,$posted,'Approved','Ok');$this->operations->post($admin,$posted);
+        // D-15 / ADR-021: posting a transfer dispatches it; a received transfer shows as completed.
+        $received=$this->operations->propose($admin,'Transfer',1,2,'Pages received transfer',[['product_id'=>1,'quantity'=>1]]);
+        $this->operations->decide($reviewer,$received,'Approved','Ok');$this->operations->dispatch($admin,$received);$this->operations->receive($admin,$received);
         $controller=$this->operationsController($admin);
 
         $response=$controller->index(new Request('GET','/inventory-operations',['q'=>'Pages'],[],[]));
@@ -42,7 +45,7 @@ final class OperationsPagesCoverageIntegrationTest extends TestCase
         self::assertStringContainsString('href="/inventory-operations/show?id='.$pending.'"',$body);
         self::assertStringContainsString(' → ',$body);
         self::assertStringContainsString('admin@example.test',$body);
-        self::assertMatchesRegularExpression('/status-success">Posted</',$body);self::assertMatchesRegularExpression('/status-danger">Rejected</',$body);self::assertMatchesRegularExpression('/status-pending">PendingApproval</',$body);
+        self::assertMatchesRegularExpression('/status-in-transit">Dispatched</',$body);self::assertMatchesRegularExpression('/status-success">Received</',$body);self::assertMatchesRegularExpression('/status-danger">Rejected</',$body);self::assertMatchesRegularExpression('/status-pending">PendingApproval</',$body);
 
         $filtered=$controller->index(new Request('GET','/inventory-operations',['q'=>'Pages','kind'=>'Adjustment','status'=>'Rejected'],[],[]))->body();
         self::assertStringContainsString('<option value="Adjustment" selected>',$filtered);self::assertStringContainsString('<option value="Rejected" selected>',$filtered);
@@ -62,11 +65,13 @@ final class OperationsPagesCoverageIntegrationTest extends TestCase
         self::assertStringContainsString('Choose one warehouse to select several recommendations',$all->body());
         self::assertStringContainsString('Review PO</a>',$all->body());self::assertStringNotContainsString('name="pick[]"',$all->body());
 
-        $selecting=$controller->recommendations(new Request('GET','/replenishment',['warehouse_id'=>'1'],[],[]))->body();
+        // A warehouse that has a suggestion in the seed (taken from the first "Review PO" link).
+        self::assertSame(1,preg_match('/warehouse_id=(\d+)/',$all->body(),$match));$warehouse=$match[1];
+        $selecting=$controller->recommendations(new Request('GET','/replenishment',['warehouse_id'=>$warehouse],[],[]))->body();
         self::assertStringContainsString('<th scope="col" data-no-sort>Select</th>',$selecting);
-        self::assertMatchesRegularExpression('/name="pick\[\]" value="\d+:\d+"/',$selecting);
+        self::assertMatchesRegularExpression('/name="pick\[\]" value="\d+:\d+(?::[^":]+)?"/',$selecting); // D-16: whole purchase units (+ unit)
         self::assertStringContainsString('Review PO for selected',$selecting);
-        self::assertMatchesRegularExpression('/<option value="1" selected>/',$selecting);
+        self::assertMatchesRegularExpression('/<option value="'.$warehouse.'" selected>/',$selecting);
 
         $empty=$controller->recommendations(new Request('GET','/replenishment',['q'=>'zz-no-product-zz','warehouse_id'=>'1'],[],[]))->body();
         self::assertStringContainsString('No products need additional supply.',$empty);self::assertStringContainsString('colspan="8"',$empty);self::assertStringNotContainsString('Review PO for selected',$empty);

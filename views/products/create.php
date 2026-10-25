@@ -29,9 +29,10 @@
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
             <label class="field"><span class="field-label">SKU</span><input name="sku" required value="<?= htmlspecialchars($formState->value('sku', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <label class="field"><span class="field-label">Name</span><input name="name" required value="<?= htmlspecialchars($formState->value('name', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
-            <label class="field"><span class="field-label">Unit</span><input name="unit" required value="<?= htmlspecialchars($formState->value('unit', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
-            <label class="field"><span class="field-label">Purchase Price</span><input name="purchase_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('purchase_price', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
-            <label class="field"><span class="field-label">Selling Price</span><input name="selling_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('selling_price', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Base Unit (smallest unit, e.g. pcs)</span><input name="unit" maxlength="30" required value="<?= htmlspecialchars($formState->value('unit', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span><input type="checkbox" name="tracks_expiry" value="1"<?= $formState->value('tracks_expiry', '') === '1' ? ' checked' : '' ?>> Tracks expiry (every received lot needs an expiry date; FEFO issue)</span></label>
+            <label class="field"><span class="field-label">Purchase Price per Base Unit</span><input name="purchase_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('purchase_price', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <label class="field"><span class="field-label">Selling Price per Base Unit</span><input name="selling_price" type="number" min="0" step="0.01" required value="<?= htmlspecialchars($formState->value('selling_price', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <label class="field"><span class="field-label">Reorder Point</span><input name="reorder_point" type="number" min="0" required value="<?= htmlspecialchars($formState->value('reorder_point', ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
             <label class="field">
                 <span class="field-label">Category</span>

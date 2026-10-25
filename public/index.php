@@ -80,6 +80,9 @@ $userRepository = new MySqlUserRepository($pdo);
 $categoryRepository = new MySqlCategoryRepository($pdo);
 $warehouseRepository = new MySqlWarehouseRepository($pdo);
 $productRepository = new MySqlProductRepository($pdo);
+// Units of measure (D-16, ADR-022): stock stays in base units; conversion only at input and display.
+$productUnitRepository = new \App\Repository\MySql\MySqlProductUnitRepository($pdo);
+$productUnits = new \App\Service\ProductUnitCatalog($productRepository, $productUnitRepository);
 $supplierRepository = new MySqlSupplierRepository($pdo);
 $customerRepository = new MySqlCustomerRepository($pdo);
 $purchaseOrderRepository = new MySqlPurchaseOrderRepository($pdo);
@@ -88,7 +91,11 @@ $stockRepository = new MySqlStockRepository($pdo);
 $stockLedgerRepository = new MySqlStockLedgerRepository($pdo);
 $auditLogRepository = new MySqlAuditLogRepository($pdo);
 $loginAttemptRepository = new MySqlLoginAttemptRepository($pdo);
-$operationalQueries = new MySqlOperationalQueryRepository($pdo);
+$operationalQueries = new MySqlOperationalQueryRepository($pdo, $config->int('NEAR_EXPIRY_DAYS'));
+// Batch/lot expiry read models (D-17, ADR-023).
+$lotService = new \App\Service\LotService(new \App\Repository\MySql\MySqlLotQueryRepository($pdo), $config->int('NEAR_EXPIRY_DAYS'));
+// Inventory valuation FIFO per batch, COGS and gross margin (D-20, ADR-026): Admin-only read models.
+$valuationService = new \App\Service\InventoryValuationService(new \App\Repository\MySql\MySqlInventoryValuationRepository($pdo));
 $authGuard = new AuthGuard($session, $userRepository);
 // Refresh presentation role from the same authoritative guard used by controllers.
 try {
@@ -103,6 +110,7 @@ try {
     $GLOBALS['workspace_draft_owner'] = '';
 }
 $GLOBALS['csrf_token'] = $session->csrfToken();
+$GLOBALS['app_name'] = $config->string('APP_NAME');
 $auditLogger = new AuditLogger($auditLogRepository);
 $requestAuditRecorder = new RequestAuditRecorder($auditLogger);
 $authController = new AuthController(new AuthService($userRepository, $session, $auditLogger, new LoginRateLimiter($loginAttemptRepository)));
@@ -111,8 +119,8 @@ $orderExceptionsRepository = new \App\Repository\MySql\MySqlOrderExceptionReposi
 $operationIdempotency = new \App\Service\OperationIdempotency(new \App\Repository\MySql\MySqlOperationRequestRepository($pdo));
 $stockService = new StockService($stockRepository, $stockLedgerRepository, $auditLogRepository, new \App\Repository\MySql\MySqlStockCatalogRepository($pdo), $transactions);
 $orderExceptions = new \App\Service\OrderExceptionService($orderExceptionsRepository, $purchaseOrderRepository, $salesOrderRepository, $stockService, $auditLogRepository);
-$businessOperations = new \App\Service\BusinessOperationService(new \App\Repository\MySql\MySqlBusinessOperationRepository($pdo), $stockService, $auditLogRepository);
-$businessController = new \App\Controller\BusinessOperationController($businessOperations, $authGuard, $productRepository, $warehouseRepository);
+$businessOperations = new \App\Service\BusinessOperationService(new \App\Repository\MySql\MySqlBusinessOperationRepository($pdo), $stockService, $auditLogRepository, $productUnits, $productRepository);
+$businessController = new \App\Controller\BusinessOperationController($businessOperations, $authGuard, $productRepository, $warehouseRepository, $productUnits);
 $csvImports = new \App\Service\CsvImportService($transactions);
 $userController = new UserController(new UserService($userRepository), $userRepository, $authGuard, $csvImports);
 $masterDataAuthorization = new MasterDataAuthorizationService();
@@ -134,6 +142,10 @@ $productController = new ProductController(
     $categoryRepository,
     $authGuard,
     $csvImports,
+    new \App\Service\ReorderPointService($productRepository, $masterDataAuthorization, $auditLogRepository, $transactions),
+    new \App\Service\ProductUnitService($productRepository, $productUnitRepository, $masterDataAuthorization, $auditLogRepository, $transactions),
+    $productUnits,
+    $lotService,
 );
 $supplierController = new SupplierController(
     new SupplierService($supplierRepository, $masterDataAuthorization),
@@ -150,9 +162,10 @@ $customerController = new CustomerController(
 $loginPath = '/login';
 $purchaseOrdersPath = '/purchase-orders';
 $salesOrdersPath = '/sales-orders';
-// Party and warehouse names are only loaded for the order pages that display them.
+// Party and warehouse names are only loaded for the order pages that display them. Quotation conversion creates an SO
+// draft (D-19, ADR-025), so the quotation routes need the customer and warehouse entities too.
 $onPurchaseOrders = str_starts_with($request->path(), $purchaseOrdersPath);
-$onSalesOrders = str_starts_with($request->path(), $salesOrdersPath);
+$onSalesOrders = str_starts_with($request->path(), $salesOrdersPath) || str_starts_with($request->path(), '/quotations');
 $suppliersById = [];
 foreach ($onPurchaseOrders ? $supplierRepository->all() : [] as $supplier) {
     $suppliersById[$supplier->id()] = $supplier;
@@ -165,15 +178,22 @@ $customersById = [];
 foreach ($onSalesOrders ? $customerRepository->all() : [] as $customer) {
     $customersById[$customer->id()] = $customer;
 }
+// Server-assigned PO/SO numbers (D-11, ADR-017).
+$documentSequences = new \App\Repository\MySql\MySqlDocumentSequenceRepository($pdo);
+// Negotiated line prices (D-13, ADR-019): master price by default, deviations need a reason; Sales discount cap.
+$orderLinePricing = new \App\Service\OrderLinePricing($config->int('SALES_MAX_DISCOUNT_PERCENT'));
 $purchaseOrderController = new PurchaseOrderController(
     new PurchaseOrderService(
         $purchaseOrderRepository,
+        $documentSequences,
         $productRepository,
         $suppliersById,
         $warehousesById,
         $stockService,
         $operationIdempotency,
         $orderExceptionsRepository,
+        $orderLinePricing,
+        $productUnits,
     ),
     $purchaseOrderRepository,
     $productRepository,
@@ -182,16 +202,31 @@ $purchaseOrderController = new PurchaseOrderController(
     $authGuard,
     $orderExceptions,
     $stockLedgerRepository,
+    $productUnits,
+);
+// D-19 / ADR-025: customer price lists, quotations, delivery notes and invoices with PPN (settings validated at boot).
+$taxSettings = \App\Support\TaxSettings::fromConfig($config);
+$priceListRepository = new \App\Repository\MySql\MySqlPriceListRepository($pdo);
+$priceResolver = new \App\Service\PriceResolver($priceListRepository, $productRepository, $productUnits);
+$deliveryNoteRepository = new \App\Repository\MySql\MySqlDeliveryNoteRepository($pdo);
+$deliveryNotes = new \App\Service\DeliveryNoteService($deliveryNoteRepository, $documentSequences, $customerRepository, $auditLogRepository);
+$quotationRepository = new \App\Repository\MySql\MySqlQuotationRepository($pdo);
+$salesOrderService = new SalesOrderService(
+    $salesOrderRepository,
+    $documentSequences,
+    $productRepository,
+    $customersById,
+    $warehousesById,
+    $stockService,
+    $operationIdempotency,
+    $orderLinePricing,
+    $orderExceptionsRepository,
+    $productUnits,
+    $priceResolver,
+    $deliveryNotes,
 );
 $salesOrderController = new SalesOrderController(
-    new SalesOrderService(
-        $salesOrderRepository,
-        $productRepository,
-        $customersById,
-        $warehousesById,
-        $stockService,
-        $operationIdempotency,
-    ),
+    $salesOrderService,
     $salesOrderRepository,
     $productRepository,
     $customersById,
@@ -199,8 +234,21 @@ $salesOrderController = new SalesOrderController(
     $authGuard,
     $orderExceptions,
     $stockLedgerRepository,
+    $productUnits,
+    $deliveryNotes,
+    $priceListRepository,
+    $quotationRepository,
+    $valuationService,
 );
-$dashboardController = new DashboardController(new DashboardService($operationalQueries), $authGuard);
+$invoiceService = new \App\Service\InvoiceService(new \App\Repository\MySql\MySqlInvoiceRepository($pdo), $deliveryNoteRepository, $salesOrderRepository, $customerRepository, $documentSequences, $transactions, $taxSettings, $auditLogRepository);
+$quotationService = new \App\Service\QuotationService($quotationRepository, $documentSequences, $productRepository, $customerRepository, $warehouseRepository, $salesOrderService, $transactions, $productUnits, $orderLinePricing, $priceResolver, $auditLogRepository);
+$priceListController = new \App\Controller\PriceListController(new \App\Service\PriceListService($priceListRepository, $customerRepository, $productRepository, $productUnits, $transactions, $auditLogRepository), $authGuard, $customerRepository, $productRepository);
+$quotationController = new \App\Controller\QuotationController($quotationService, $authGuard, $customerRepository, $warehouseRepository, $productRepository, $productUnits);
+$deliveryNoteController = new \App\Controller\DeliveryNoteController($deliveryNotes, $authGuard, $customerRepository, $valuationService);
+$invoiceController = new \App\Controller\InvoiceController($invoiceService, $authGuard, $valuationService);
+$valuationController = new \App\Controller\ValuationController($valuationService, $authGuard, $warehouseRepository, $categoryRepository, $customerRepository);
+$priceResolutionController = new \App\Controller\Api\PriceResolutionController($priceResolver, $authGuard);
+$dashboardController = new DashboardController(new DashboardService($operationalQueries, $invoiceService, $valuationService), $authGuard);
 $reportController = new ReportController(new ReportService($operationalQueries), $authGuard);
 $availabilityController = new ProductAvailabilityController(new ProductAvailabilityService($operationalQueries), $authGuard);
 
@@ -211,11 +259,14 @@ $router->get('/audit-trail', [$auditTrailController, 'index']);
 $router->get('/inventory-operations', [$businessController, 'index']);
 $router->get('/inventory-operations/create', [$businessController, 'create']);
 $router->get('/inventory-operations/show', [$businessController, 'show']);
+$router->get('/inventory-operations/in-transit', [$businessController, 'inTransit']);
 $router->get('/inventory-operations/balance', [$businessController, 'balance']);
 $router->get('/inventory-operations/source', [$businessController, 'source']);
 $router->post('/inventory-operations', [$businessController, 'store']);
 $router->post('/inventory-operations/decide', [$businessController, 'decide']);
 $router->post('/inventory-operations/post', [$businessController, 'post']);
+$router->post('/inventory-operations/dispatch', [$businessController, 'dispatch']);
+$router->post('/inventory-operations/receive', [$businessController, 'receive']);
 $workQueueController = new \App\Controller\WorkQueueController(new \App\Service\WorkQueueService(new \App\Repository\MySql\MySqlWorkQueueRepository($pdo)), $authGuard);
 $draftCheckController = new \App\Controller\DraftCheckController(new \App\Service\DraftCheckService($productRepository, $warehouseRepository, $stockRepository), $authGuard);
 $timelineController = new \App\Controller\DocumentTimelineController(new \App\Service\DocumentTimelineService(new \App\Repository\MySql\MySqlDocumentTimelineRepository($pdo)), $authGuard);
@@ -226,10 +277,51 @@ $router->get('/replenishment', [$businessController, 'recommendations']);
 $router->post('/purchase-orders/close-remainder', [$purchaseOrderController, 'closeRemainder']);
 $router->post('/sales-orders/reject', [$salesOrderController, 'reject']);
 $router->get('/reports', [$reportController, 'index']);
+$lotController = new \App\Controller\LotController($lotService, $authGuard, $warehouseRepository);
+$router->get('/reports/expiry', [$lotController, 'expiry']);
+$router->get('/reports/expiry.csv', [$lotController, 'expiryCsv']);
+$router->get('/lots', [$lotController, 'index']);
+$router->get('/lots/show', [$lotController, 'show']);
+$router->post('/inventory-operations/expired-write-off', [$businessController, 'writeOffExpired']);
 $router->get('/reports/stock-ledger.csv', [$reportController, 'stockLedger']);
 $router->get('/reports/orders.csv', [$reportController, 'orders']);
 $router->get('/reports/outstanding.csv', [$reportController, 'outstanding']);
 $router->get('/api/products/{sku}/availability', [$availabilityController, 'show']);
+// Barcode lookup and stock count sessions (D-18, ADR-024).
+$barcodeController = new \App\Controller\Api\BarcodeController(new \App\Service\BarcodeService($productUnitRepository, $productRepository), $authGuard);
+$router->get('/api/barcodes/{code}', [$barcodeController, 'show']);
+$stockCountController = new \App\Controller\StockCountController(
+    new \App\Service\StockCountService(
+        new \App\Repository\MySql\MySqlStockCountRepository($pdo),
+        $stockService,
+        $stockRepository,
+        $auditLogRepository,
+        $productRepository,
+        $userRepository,
+        $warehouseRepository,
+        $categoryRepository,
+        $productUnits,
+        \App\Support\CountTolerance::fromConfig($config->int('COUNT_RECOUNT_TOLERANCE_PERCENT'), $config->int('COUNT_RECOUNT_TOLERANCE_UNITS')),
+    ),
+    $authGuard,
+    $warehouseRepository,
+    $categoryRepository,
+    $productRepository,
+);
+$router->get('/stock-counts', [$stockCountController, 'index']);
+$router->get('/stock-counts/create', [$stockCountController, 'create']);
+$router->get('/stock-counts/show', [$stockCountController, 'show']);
+$router->post('/stock-counts', [$stockCountController, 'store']);
+$router->post('/stock-counts/start', [$stockCountController, 'start']);
+$router->post('/stock-counts/count', [$stockCountController, 'count']);
+$router->post('/stock-counts/found-lot', [$stockCountController, 'foundLot']);
+$router->post('/stock-counts/submit', [$stockCountController, 'submit']);
+$router->post('/stock-counts/recount', [$stockCountController, 'recount']);
+$router->post('/stock-counts/approve', [$stockCountController, 'approve']);
+$router->post('/stock-counts/post', [$stockCountController, 'post']);
+$router->post('/stock-counts/cancel', [$stockCountController, 'cancel']);
+$router->get('/reports/stock-counts', [$stockCountController, 'report']);
+$router->get('/reports/stock-counts.csv', [$stockCountController, 'reportCsv']);
 $router->get($loginPath, [$authController, 'showLogin']);
 $router->post($loginPath, [$authController, 'login']);
 $router->post('/logout', [$authController, 'logout']);
@@ -266,6 +358,9 @@ $router->get('/products/edit', [$productController, 'edit']);
 $router->post('/products/update', [$productController, 'update']);
 $router->post('/products/activate', [$productController, 'activate']);
 $router->post('/products/deactivate', [$productController, 'deactivate']);
+$router->post('/products/reorder-point', [$productController, 'reorderPoint']);
+$router->post('/products/units', [$productController, 'addUnit']);
+$router->post('/products/units/update', [$productController, 'updateUnit']);
 $router->get($purchaseOrdersPath, [$purchaseOrderController, 'index']);
 $router->get('/purchase-orders/show', [$purchaseOrderController, 'show']);
 $router->get('/purchase-orders/create', [$purchaseOrderController, 'create']);
@@ -281,6 +376,7 @@ $router->post('/sales-orders/submit', [$salesOrderController, 'submit']);
 $router->post('/sales-orders/approve', [$salesOrderController, 'approve']);
 $router->post('/sales-orders/cancel', [$salesOrderController, 'cancel']);
 $router->post('/sales-orders/issue', [$salesOrderController, 'issue']);
+$router->post('/sales-orders/close-remaining', [$salesOrderController, 'closeRemaining']);
 $router->get('/suppliers', [$supplierController, 'index']);
 $router->get('/suppliers/create', [$supplierController, 'create']);
 $router->post('/suppliers', [$supplierController, 'store']);
@@ -289,6 +385,46 @@ $router->get('/suppliers/edit', [$supplierController, 'edit']);
 $router->post('/suppliers/update', [$supplierController, 'update']);
 $router->post('/suppliers/activate', [$supplierController, 'activate']);
 $router->post('/suppliers/deactivate', [$supplierController, 'deactivate']);
+$router->get('/api/price-resolution', [$priceResolutionController, 'show']);
+$router->get('/price-lists', [$priceListController, 'index']);
+$router->get('/price-lists/show', [$priceListController, 'show']);
+$router->post('/price-lists', [$priceListController, 'store']);
+$router->post('/price-lists/update', [$priceListController, 'update']);
+$router->post('/price-lists/items', [$priceListController, 'addItem']);
+$router->post('/price-lists/items/update', [$priceListController, 'updateItem']);
+$router->post('/price-lists/items/delete', [$priceListController, 'deleteItem']);
+$router->post('/price-lists/assign', [$priceListController, 'assign']);
+$router->get('/quotations', [$quotationController, 'index']);
+$router->get('/quotations/create', [$quotationController, 'create']);
+$router->get('/quotations/show', [$quotationController, 'show']);
+$router->get('/quotations/print', [$quotationController, 'print']);
+$router->post('/quotations', [$quotationController, 'store']);
+$router->post('/quotations/send', [$quotationController, 'send']);
+$router->post('/quotations/accept', [$quotationController, 'accept']);
+$router->post('/quotations/reject', [$quotationController, 'reject']);
+$router->post('/quotations/cancel', [$quotationController, 'cancel']);
+$router->post('/quotations/convert', [$quotationController, 'convert']);
+$router->get('/delivery-notes', [$deliveryNoteController, 'index']);
+$router->get('/delivery-notes/show', [$deliveryNoteController, 'show']);
+$router->get('/invoices', [$invoiceController, 'index']);
+$router->get('/invoices/show', [$invoiceController, 'show']);
+$router->get('/invoices/print', [$invoiceController, 'print']);
+$router->post('/invoices', [$invoiceController, 'store']);
+$router->post('/invoices/payments', [$invoiceController, 'payment']);
+$router->post('/invoices/void', [$invoiceController, 'void']);
+$router->get('/reports/receivables', [$invoiceController, 'receivables']);
+$router->get('/reports/receivables.csv', [$invoiceController, 'receivablesCsv']);
+$router->get('/reports/sales-by-customer', [$invoiceController, 'salesByCustomer']);
+$router->get('/reports/sales-by-customer.csv', [$invoiceController, 'salesByCustomerCsv']);
+// D-20 / ADR-026: inventory valuation FIFO per batch, period reconciliation, gross margin and losses (Admin only).
+$router->get('/reports/valuation', [$valuationController, 'valuation']);
+$router->get('/reports/valuation.csv', [$valuationController, 'valuationCsv']);
+$router->get('/reports/valuation-reconciliation', [$valuationController, 'reconciliation']);
+$router->get('/reports/valuation-reconciliation.csv', [$valuationController, 'reconciliationCsv']);
+$router->get('/reports/gross-margin', [$valuationController, 'margin']);
+$router->get('/reports/gross-margin.csv', [$valuationController, 'marginCsv']);
+$router->get('/reports/inventory-losses', [$valuationController, 'losses']);
+$router->get('/reports/inventory-losses.csv', [$valuationController, 'lossesCsv']);
 $router->get('/customers', [$customerController, 'index']);
 $router->get('/customers/create', [$customerController, 'create']);
 $router->post('/customers', [$customerController, 'store']);

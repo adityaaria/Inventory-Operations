@@ -11,3 +11,7 @@ Date: 7 October 2026. Optional scope: user target list item 5 ("Replenishment be
 **Follow-up (same day).** Checked recommendations persist per warehouse across pagination in the tab's sessionStorage and are submitted as hidden `pick[]` (limit 100, cleared on submit); the submit guard runs in the capture phase so a blocked empty submit never leaves the page loader on. SO create uses the same component and the shared `OrderItemsInput` parser (`views/partials/order-item.php`). The clone template's controls are unnamed so parsers and non-browser clients see only real fields (this fixed a regression caught by the business HTTP suite).
 
 Suggested quantities are a snapshot; stock and open supply may change before the draft is saved or ordered, and no reservation is implied (as in ADR-009).
+
+Note 10 October 2026 (D-12, ADR-018, user decision): the former "no reservation" limitation is resolved for sales orders, which reserve stock at approval; suggested quantities now use available stock (on hand − reserved). A replenishment selection still reserves nothing.
+
+Note 12 October 2026 (D-16, ADR-022, user decision): suggestions are computed in base units and shown and prefilled as whole purchase-default units, rounded up; a pick is `productId:units[:unit]`.

@@ -12,8 +12,9 @@ final class WorkQueueService
     public function types(AuthContext $actor): array
     {
         return match($actor->role()) {
-            'Admin'=>['SOApproval'=>'SO approval','OperationApproval'=>'Stock proposal approval','Receipt'=>'PO receipt','Issue'=>'SO issue','Posting'=>'Stock posting'],
-            'WarehouseStaff'=>['Receipt'=>'PO receipt','Issue'=>'SO issue','Posting'=>'Stock posting'],
+            // D-18/ADR-024: counts to do (assigned counter), to review (Admin who did not count) and to post.
+            'Admin'=>['SOApproval'=>'SO approval','OperationApproval'=>'Stock proposal approval','Receipt'=>'PO receipt','Issue'=>'SO issue','Posting'=>'Stock posting','TransferDispatch'=>'Transfer dispatch','TransferReceive'=>'Transfer receipt','CountToDo'=>'Count to do','CountReview'=>'Count to review','CountPosting'=>'Count to post'],
+            'WarehouseStaff'=>['Receipt'=>'PO receipt','Issue'=>'SO issue','Posting'=>'Stock posting','TransferDispatch'=>'Transfer dispatch','TransferReceive'=>'Transfer receipt','CountToDo'=>'Count to do','CountPosting'=>'Count to post'],
             'Sales'=>['SalesDraft'=>'My draft SO','SalesFollowUp'=>'My SO follow-up'],
             default=>throw new HttpException(403,'Forbidden'),
         };
@@ -30,7 +31,7 @@ final class WorkQueueService
     {
         $filters=$this->filters($actor,$input);$types=$this->types($actor);$counts=$this->queues->counts($actor->role(),$actor->userId(),$filters['type'],$filters['q']);$total=array_sum($counts);$pagination=Pagination::fromArray($input);
         $rows=$this->queues->page($actor->role(),$actor->userId(),$filters['type'],$filters['q'],10,$pagination->offsetForTotal($total));
-        foreach($rows as &$row){$path=match($row['task_type']){'Receipt'=>'/purchase-orders/show','Posting','OperationApproval'=>'/inventory-operations/show',default=>'/sales-orders/show'};$row['url']=$path.'?id='.(int)$row['id'];}unset($row);
+        foreach($rows as &$row){$path=match($row['task_type']){'Receipt'=>'/purchase-orders/show','Posting','OperationApproval','TransferDispatch','TransferReceive'=>'/inventory-operations/show','CountToDo','CountReview','CountPosting'=>'/stock-counts/show',default=>'/sales-orders/show'};$row['url']=$path.'?id='.(int)$row['id'];}unset($row);
         return ['result'=>new PaginatedResult($rows,$total,$pagination->pageForTotal($total),10),'counts'=>$counts,'filters'=>$filters,'types'=>$types];
     }
 }

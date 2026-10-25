@@ -55,16 +55,21 @@ final class InMemorySalesOrderRepository implements SalesOrderRepositoryInterfac
         return $this->findById($id);
     }
 
-    public function createDraft(string $orderNumber, int $customerId, int $warehouseId, int $createdBy, array $items): SalesOrder
+    public function createDraft(string $orderNumber, int $customerId, int $warehouseId, int $createdBy, array $items, ?int $quotationId = null): SalesOrder
     {
         $this->assertUniqueProducts($items);
+        foreach ($this->orders as $existing) {
+            if ($quotationId !== null && $existing->quotationId() === $quotationId) {
+                throw new InvalidArgumentException('A record with that unique value already exists.');
+            }
+        }
         $orderId = $this->nextOrderId++;
         $entityItems = [];
         foreach ($items as $item) {
-            $entityItems[] = new SalesOrderItem($this->nextItemId++, $orderId, $item['product_id'], $item['quantity'], $item['selling_price']);
+            $entityItems[] = new SalesOrderItem($this->nextItemId++, $orderId, $item['product_id'], $item['quantity'], $item['selling_price'], $item['list_price'] ?? $item['selling_price'], $item['price_reason'] ?? null, 0, $item['unit_code'] ?? null, $item['unit_factor'] ?? 1, $item['price_source'] ?? SalesOrderItem::SOURCE_MASTER, $item['price_list_id'] ?? null, $item['quotation_item_id'] ?? null);
         }
 
-        $order = new SalesOrder($orderId, $orderNumber, $customerId, $warehouseId, SalesOrder::STATUS_DRAFT, date('Y-m-d'), $createdBy, null, null, $entityItems);
+        $order = new SalesOrder($orderId, $orderNumber, $customerId, $warehouseId, SalesOrder::STATUS_DRAFT, date('Y-m-d'), $createdBy, null, null, $entityItems, $quotationId);
         $this->orders[$orderId] = $order;
 
         return $order;
@@ -94,12 +99,39 @@ final class InMemorySalesOrderRepository implements SalesOrderRepositoryInterfac
         if ($order->status() === SalesOrder::STATUS_FULFILLED) {
             throw new InvalidArgumentException('Fulfilled sales orders cannot be cancelled.');
         }
+        if ($order->status() === SalesOrder::STATUS_PARTIALLY_FULFILLED) {
+            throw new InvalidArgumentException('Partially fulfilled sales orders cannot be cancelled.');
+        }
         $this->orders[$id] = $order->withStatus(SalesOrder::STATUS_CANCELLED);
     }
 
     public function markFulfilled(int $id): void
     {
-        $this->orders[$id] = $this->findRequired($id)->withStatus(SalesOrder::STATUS_FULFILLED);
+        $order = $this->findRequired($id);
+        $items = array_map(static fn (SalesOrderItem $item): SalesOrderItem => $item->withIssuedQuantity($item->quantity()), $order->items());
+        $this->orders[$id] = $order->withItems($items)->withStatus(SalesOrder::STATUS_FULFILLED);
+    }
+
+    public function recordIssue(int $id, array $issuedQuantitiesByItemId, string $status): void
+    {
+        $order = $this->findRequired($id);
+        if (!in_array($order->status(), SalesOrder::ISSUABLE_STATUSES, true)) {
+            throw new InvalidArgumentException('Only Approved or PartiallyFulfilled sales orders can record an issue.');
+        }
+        $known = [];
+        $items = [];
+        foreach ($order->items() as $item) {
+            $quantity = $issuedQuantitiesByItemId[$item->id()] ?? 0;
+            if ($item->issuedQuantity() + $quantity > $item->quantity()) {
+                throw new InvalidArgumentException('Issued quantity cannot exceed the ordered quantity.');
+            }
+            $known[$item->id()] = true;
+            $items[] = $item->withIssuedQuantity($item->issuedQuantity() + $quantity);
+        }
+        if (array_diff_key($issuedQuantitiesByItemId, $known) !== []) {
+            throw new InvalidArgumentException('Sales order line could not record the issued quantity.');
+        }
+        $this->orders[$id] = $order->withItems($items)->withStatus($status);
     }
 
     private function findRequired(int $id): SalesOrder

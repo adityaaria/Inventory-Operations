@@ -1,0 +1,58 @@
+{
+    "migration": "20261012-multi-unit",
+    "destructive": false,
+    "status": "applied",
+    "products_converted": 485,
+    "invariants_before": {
+        "ledger_mismatches": 0,
+        "reserved_above_quantity": 0,
+        "reservation_mismatches": 0,
+        "sequence_mismatches": 0,
+        "issued_ledger_mismatches": 0,
+        "fulfilment_status_mismatches": 0,
+        "closure_mismatches": 0,
+        "transfer_dispatch_ledger_mismatches": 0,
+        "transfer_receipt_ledger_mismatches": 0,
+        "transfer_status_mismatches": 0,
+        "in_transit_equation_mismatch": 0,
+        "transfer_discrepancy_without_reason": 0
+    },
+    "invariants_after": {
+        "ledger_mismatches": 0,
+        "reserved_above_quantity": 0,
+        "reservation_mismatches": 0,
+        "sequence_mismatches": 0,
+        "issued_ledger_mismatches": 0,
+        "fulfilment_status_mismatches": 0,
+        "closure_mismatches": 0,
+        "transfer_dispatch_ledger_mismatches": 0,
+        "transfer_receipt_ledger_mismatches": 0,
+        "transfer_status_mismatches": 0,
+        "in_transit_equation_mismatch": 0,
+        "transfer_discrepancy_without_reason": 0,
+        "price_override_without_reason": 0,
+        "line_unit_mismatches": 0,
+        "whole_unit_mismatches": 0,
+        "base_unit_mismatches": 0
+    },
+    "stock_value": {
+        "before": 37362314400,
+        "after": 37362316027.2,
+        "difference": 1627.2,
+        "rounding_bound": 29976.78
+    },
+    "line_totals_changed": {
+        "purchase_order_items": 0,
+        "sales_order_items": 0
+    },
+    "line_totals": {
+        "purchase_orders": 50052533000,
+        "sales_orders": 11150352040
+    },
+    "unit_checks": {
+        "line_unit_mismatches": 0,
+        "whole_unit_mismatches": 0,
+        "base_unit_mismatches": 0
+    },
+    "product_units": 986
+}

@@ -12,8 +12,9 @@ final class OperationalReportSql
 {
     /**
      * Open documents per role scope. Age counts whole days since creation using the database clock;
-     * closed PO remainders and terminal statuses are excluded. DaysSinceApproval is filled only where an approval
-     * time is recorded and still current (Approved SO and stock proposals); POs record no ordered-at time. Stock proposals carry no unit total
+     * closed PO and SO remainders and terminal statuses are excluded. DaysSinceApproval is filled only where an approval
+     * time is recorded and still current (Approved/PartiallyFulfilled SO and stock proposals); POs record no ordered-at
+     * time. SO outstanding quantity is Σ (ordered − issued) since SOs may ship in parts (D-14, ADR-020). Stock proposals carry no unit total
      * because adjustment counts, transfers and returns do not share one direction.
      *
      * @return array{0: string, 1: array<string, int|string>}
@@ -21,9 +22,9 @@ final class OperationalReportSql
     public function outstanding(OutstandingCriteria $criteria): array
     {
         $statuses = match ($criteria->scope) {
-            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_ALL => ['PO' => ['Draft', 'Ordered', 'PartiallyReceived'], 'SO' => ['Draft', 'PendingApproval', 'Approved'], 'OP' => ['PendingApproval', 'Approved']],
-            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_FULFILMENT => ['PO' => ['Ordered', 'PartiallyReceived'], 'SO' => ['Approved'], 'OP' => ['Approved']],
-            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_SALES => ['SO' => ['Draft', 'PendingApproval', 'Approved']],
+            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_ALL => ['PO' => ['Draft', 'Ordered', 'PartiallyReceived'], 'SO' => ['Draft', 'PendingApproval', 'Approved', 'PartiallyFulfilled'], 'OP' => ['PendingApproval', 'Approved', 'Dispatched']],
+            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_FULFILMENT => ['PO' => ['Ordered', 'PartiallyReceived'], 'SO' => ['Approved', 'PartiallyFulfilled'], 'OP' => ['Approved', 'Dispatched']],
+            OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_SALES => ['SO' => ['Draft', 'PendingApproval', 'Approved', 'PartiallyFulfilled']],
             default => throw new \LogicException('Unknown outstanding scope.'),
         };
         if ($criteria->scope === OperationalQueryRepositoryInterface::OUTSTANDING_SCOPE_SALES && $criteria->owner === null) { throw new \LogicException('Sales outstanding scope requires an owner.'); }
@@ -39,14 +40,16 @@ final class OperationalReportSql
         }
         if (isset($statuses['SO'])) {
             $owner = $criteria->owner === null ? '' : ' AND so.created_by = :created_by';
-            $parts[] = "SELECT 'SO' AS Type, so.id AS SortId, so.order_number AS OrderNumber, cu.name AS Party, so.status AS Status, so.created_at, CASE WHEN so.status = 'Approved' THEN so.approved_at END AS ApprovedAt,
-                COALESCE((SELECT SUM(soi.quantity) FROM sales_order_items soi WHERE soi.sales_order_id = so.id), 0) AS OutstandingQty
+            $parts[] = "SELECT 'SO' AS Type, so.id AS SortId, so.order_number AS OrderNumber, cu.name AS Party, so.status AS Status, so.created_at, CASE WHEN so.status IN ('Approved', 'PartiallyFulfilled') THEN so.approved_at END AS ApprovedAt,
+                COALESCE((SELECT SUM(CAST(soi.quantity AS SIGNED) - CAST(soi.issued_quantity AS SIGNED)) FROM sales_order_items soi WHERE soi.sales_order_id = so.id), 0) AS OutstandingQty
                 FROM sales_orders so INNER JOIN customers cu ON cu.id = so.customer_id
-                WHERE so.status IN ({$list($statuses['SO'])}){$owner}";
+                LEFT JOIN sales_order_closures soc ON soc.sales_order_id = so.id
+                WHERE so.status IN ({$list($statuses['SO'])}) AND soc.sales_order_id IS NULL{$owner}";
         }
         if (isset($statuses['OP'])) {
             $parts[] = "SELECT 'OP' AS Type, io.id AS SortId, CONCAT(io.kind, ' #', io.id) AS OrderNumber,
-                CASE WHEN d.id IS NULL THEN w.name ELSE CONCAT(w.name, ' → ', d.name) END AS Party, io.status AS Status, io.created_at, CASE WHEN io.status = 'Approved' THEN io.approved_at END AS ApprovedAt, NULL AS OutstandingQty
+                CASE WHEN d.id IS NULL THEN w.name ELSE CONCAT(w.name, ' → ', d.name) END AS Party, io.status AS Status, io.created_at, CASE WHEN io.status IN ('Approved', 'Dispatched') THEN io.approved_at END AS ApprovedAt,
+                CASE WHEN io.status = 'Dispatched' THEN (SELECT SUM(ioi.dispatched_quantity) FROM inventory_operation_items ioi WHERE ioi.operation_id = io.id) END AS OutstandingQty
                 FROM inventory_operations io INNER JOIN warehouses w ON w.id = io.warehouse_id LEFT JOIN warehouses d ON d.id = io.destination_id
                 WHERE io.status IN ({$list($statuses['OP'])})";
         }

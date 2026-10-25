@@ -15,7 +15,8 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
 
     private readonly OperationalReportSql $sql;
 
-    public function __construct(private readonly PDO $pdo)
+    /** @param int $nearExpiryDays NEAR_EXPIRY_DAYS (D-17, ADR-023) for the dashboard expiry card */
+    public function __construct(private readonly PDO $pdo, private readonly int $nearExpiryDays = 30)
     {
         $this->sql = new OperationalReportSql();
     }
@@ -24,10 +25,21 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
     {
         return [
             'inventory_value' => $this->scalarFloat('SELECT COALESCE(SUM(ps.quantity * p.purchase_price), 0) FROM product_stocks ps INNER JOIN products p ON p.id = ps.product_id'),
-            'low_stock_count' => $this->scalarInt('SELECT COUNT(*) FROM product_stocks ps INNER JOIN products p ON p.id=ps.product_id INNER JOIN warehouses w ON w.id=ps.warehouse_id WHERE ps.quantity < p.reorder_point AND p.is_active=1 AND w.is_active=1'),
+            'low_stock_count' => $this->scalarInt('SELECT COUNT(*) FROM product_stocks ps INNER JOIN products p ON p.id=ps.product_id INNER JOIN warehouses w ON w.id=ps.warehouse_id WHERE ' . LowStockSql::isLow() . ' AND p.is_active=1 AND w.is_active=1'),
             'purchase_orders_by_status' => $this->countsByStatus('purchase_orders', null),
             'sales_orders_by_status' => $this->countsByStatus('sales_orders', null),
-        ];
+        ] + $this->expiryCounts();
+    }
+
+    /** Lots with stock near expiry (0..window days left) and expired (D-17, ADR-023), for Admin and Warehouse. @return array<string, int> */
+    private function expiryCounts(): array
+    {
+        $statement = $this->pdo->prepare('SELECT COALESCE(SUM(d < 0), 0) AS expired, COALESCE(SUM(d BETWEEN 0 AND :near_days), 0) AS near
+            FROM (SELECT DATEDIFF(expiry_date, ' . ExpirySql::today() . ') AS d FROM stock_lots WHERE quantity > 0 AND expiry_date IS NOT NULL) lots');
+        $statement->execute(['near_days' => $this->nearExpiryDays]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        return ['near_expiry_lots' => (int) ($row['near'] ?? 0), 'expired_lots' => (int) ($row['expired'] ?? 0), 'near_expiry_days' => $this->nearExpiryDays];
     }
 
     public function salesDashboard(int $salesUserId): array
@@ -36,7 +48,7 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
             'sales_user_id' => $salesUserId,
             'sales_orders_by_status' => $this->countsByStatus('sales_orders', $salesUserId),
             'sales_order_value' => $this->scalarFloat(
-                'SELECT COALESCE(SUM(soi.quantity * soi.selling_price), 0)
+                'SELECT COALESCE(SUM(soi.unit_quantity * soi.selling_price), 0)
                  FROM sales_order_items soi INNER JOIN sales_orders so ON so.id = soi.sales_order_id
                  WHERE so.created_by = :created_by',
                 ['created_by' => $salesUserId],
@@ -48,19 +60,23 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
     {
         return [
             'po_receipt_queue' => $this->scalarInt("SELECT COUNT(*) FROM purchase_orders po LEFT JOIN purchase_order_closures c ON c.purchase_order_id=po.id WHERE po.status IN ('Ordered', 'PartiallyReceived') AND c.purchase_order_id IS NULL"),
-            'so_issue_queue' => $this->scalarInt("SELECT COUNT(*) FROM sales_orders WHERE status = 'Approved'"),
+            // D-14/ADR-020: PartiallyFulfilled orders with an open (unclosed) remainder still await issue.
+            'so_issue_queue' => $this->scalarInt("SELECT COUNT(*) FROM sales_orders so LEFT JOIN sales_order_closures soc ON soc.sales_order_id = so.id WHERE so.status IN ('Approved', 'PartiallyFulfilled') AND soc.sales_order_id IS NULL"),
             'low_stock_rows' => $this->lowStockRows(),
-        ];
+        ] + $this->expiryCounts();
     }
 
     public function lowStockRows(): array
     {
+        // reorder_point is the effective threshold (warehouse override, else product default; D-10). Low compares the
+        // available quantity (quantity − reserved, D-12); quantity stays the physical stock for backward compatibility.
         $statement = $this->pdo->query(
-            'SELECT p.sku, p.name AS product_name, w.name AS warehouse_name, ps.quantity, p.reorder_point
+            'SELECT p.sku, p.name AS product_name, w.name AS warehouse_name, ps.quantity, ps.reserved_quantity, ' . LowStockSql::available() . ' AS available_quantity, ' . LowStockSql::EFFECTIVE . ' AS reorder_point,
+                    p.reorder_point AS product_reorder_point, ps.reorder_point_override
              FROM product_stocks ps
              INNER JOIN products p ON p.id = ps.product_id
              INNER JOIN warehouses w ON w.id = ps.warehouse_id
-             WHERE ps.quantity < p.reorder_point AND p.is_active = 1 AND w.is_active = 1
+             WHERE ' . LowStockSql::isLow() . ' AND p.is_active = 1 AND w.is_active = 1
              ORDER BY p.sku ASC, w.name ASC'
         );
 
@@ -180,10 +196,10 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
     public function productAvailability(string $sku): ?array
     {
         $statement = $this->pdo->prepare(
-            'SELECT p.id, p.sku, p.name, COALESCE(SUM(ps.quantity), 0) AS total_quantity
+            'SELECT p.id, p.sku, p.name, p.unit, COALESCE(SUM(ps.quantity), 0) AS total_quantity, COALESCE(SUM(ps.reserved_quantity), 0) AS total_reserved
              FROM products p LEFT JOIN product_stocks ps ON ps.product_id = p.id
              WHERE p.sku = :sku AND p.is_active = 1
-             GROUP BY p.id, p.sku, p.name'
+             GROUP BY p.id, p.sku, p.name, p.unit'
         );
         $statement->execute(['sku' => $sku]);
         $product = $statement->fetch(PDO::FETCH_ASSOC);
@@ -192,13 +208,52 @@ final class MySqlOperationalQueryRepository implements OperationalQueryRepositor
         }
 
         $stocks = $this->pdo->prepare(
-            'SELECT w.name AS warehouse, ps.quantity
+            'SELECT w.name AS warehouse, ps.quantity, ps.reserved_quantity, ' . ExpirySql::expiredQuantity('ps') . ' AS expired_quantity, ' . ExpirySql::nearestExpiry('ps') . ' AS nearest_expiry
              FROM product_stocks ps INNER JOIN warehouses w ON w.id = ps.warehouse_id
              WHERE ps.product_id = :product_id ORDER BY w.name ASC'
         );
         $stocks->execute(['product_id' => (int) $product['id']]);
+        // Existing fields keep their meaning (quantity = physical stock); reserved/available are additive (D-12).
+        $warehouses = array_map(static fn (array $row): array => [
+            'warehouse' => (string) $row['warehouse'],
+            'quantity' => (int) $row['quantity'],
+            'reserved_quantity' => (int) $row['reserved_quantity'],
+            'available_quantity' => (int) $row['quantity'] - (int) $row['reserved_quantity'],
+            // D-17 / ADR-023 (additive): expired lots are never sellable.
+            'expired_quantity' => (int) $row['expired_quantity'],
+            'available_excluding_expired' => (int) $row['quantity'] - (int) $row['expired_quantity'] - (int) $row['reserved_quantity'],
+            'nearest_expiry' => $row['nearest_expiry'] === null ? null : (string) $row['nearest_expiry'],
+        ], $stocks->fetchAll(PDO::FETCH_ASSOC));
 
-        return ['sku' => (string) $product['sku'], 'name' => (string) $product['name'], 'total_quantity' => (int) $product['total_quantity'], 'warehouses' => $stocks->fetchAll(PDO::FETCH_ASSOC)];
+        // D-16 / ADR-022 (additive): every quantity above stays in the base unit; base_unit names it and units lists the
+        // active units with their factor to base so clients can convert.
+        $units = $this->pdo->prepare('SELECT unit_code, factor_to_base, barcode, is_base, is_purchase_default, is_sales_default FROM product_units WHERE product_id = :product_id AND is_active = 1 ORDER BY factor_to_base DESC, id');
+        $units->execute(['product_id' => (int) $product['id']]);
+        $unitRows = array_map(static fn (array $row): array => [
+            'unit' => (string) $row['unit_code'],
+            'factor_to_base' => (int) $row['factor_to_base'],
+            'barcode' => $row['barcode'] === null ? null : (string) $row['barcode'],
+            'is_base' => (bool) $row['is_base'],
+            'is_purchase_default' => (bool) $row['is_purchase_default'],
+            'is_sales_default' => (bool) $row['is_sales_default'],
+        ], $units->fetchAll(PDO::FETCH_ASSOC));
+        if ($unitRows === []) {
+            $unitRows = [['unit' => (string) $product['unit'], 'factor_to_base' => 1, 'barcode' => null, 'is_base' => true, 'is_purchase_default' => false, 'is_sales_default' => false]];
+        }
+
+        return [
+            'sku' => (string) $product['sku'],
+            'name' => (string) $product['name'],
+            'total_quantity' => (int) $product['total_quantity'],
+            'total_reserved' => (int) $product['total_reserved'],
+            'total_available' => (int) $product['total_quantity'] - (int) $product['total_reserved'],
+            'warehouses' => $warehouses,
+            'base_unit' => (string) $product['unit'],
+            'units' => $unitRows,
+            'total_expired' => array_sum(array_column($warehouses, 'expired_quantity')),
+            'total_available_excluding_expired' => array_sum(array_column($warehouses, 'available_excluding_expired')),
+            'nearest_expiry' => ($dates = array_filter(array_column($warehouses, 'nearest_expiry'))) === [] ? null : min($dates),
+        ];
     }
 
     /** @param array<string, int|string> $params */

@@ -13,9 +13,94 @@
         }, []);
     }
 
-    /** Master price carried by the selected product option; the line price is display-only. */
+    /** Master price carried by the selected product option (`data-price`); the default line price. */
     function masterPrice(select) {
         return select.selectedOptions[0]?.dataset.price ?? '';
+    }
+
+    /** Units of a product option (`data-units`, D-16/ADR-022): [{code, factor, base, purchase_price, selling_price}]. */
+    function parseUnits(json) {
+        try {
+            const units = JSON.parse(json || '[]');
+            return Array.isArray(units) ? units.filter(unit => unit && typeof unit.code === 'string' && Number.isInteger(unit.factor) && unit.factor >= 1) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    /** Base quantity of a whole unit quantity, or null when the quantity is not a positive whole number. */
+    function baseQuantity(quantity, factor) {
+        const text = String(quantity ?? '').trim();
+        if (!/^\d+$/.test(text) || Number(text) <= 0) return null;
+        return Number(text) * (Number(factor) || 1);
+    }
+
+    function groupNumber(value) {
+        const digits = String(Math.abs(value));
+        let grouped = '';
+        for (let end = digits.length; end > 0; end -= 3) grouped = digits.slice(Math.max(0, end - 3), end) + (grouped ? '.' + grouped : '');
+        return (value < 0 ? '-' : '') + grouped;
+    }
+
+    /**
+     * Same display as App\Support\QuantityFormatter: "101 pcs", "2 karton (96 pcs)", "2 karton + 5 pcs (101 pcs)".
+     * Greedy over the units, largest factor first; the base total is always shown.
+     */
+    function formatQuantity(base, units, baseCode) {
+        const total = groupNumber(base) + ' ' + baseCode;
+        let remaining = Math.abs(base);
+        const parts = [];
+        for (const unit of [...units].filter(unit => !unit.base && unit.factor > 1).sort((a, b) => b.factor - a.factor)) {
+            const count = Math.floor(remaining / unit.factor);
+            if (count > 0) {
+                parts.push(groupNumber(count) + ' ' + unit.code);
+                remaining -= count * unit.factor;
+            }
+        }
+        if (parts.length === 0) return total;
+        if (remaining > 0) parts.push(groupNumber(remaining) + ' ' + baseCode);
+        return (base < 0 ? '-' : '') + parts.join(' + ') + ' (' + total + ')';
+    }
+
+    /** Rebuilds a line's unit select from the product option; selects the form's default unit (or keeps a valid choice). */
+    function fillUnits(unitSelect, productOption, sales, keep) {
+        if (!unitSelect || !productOption) return;
+        const units = parseUnits(productOption.dataset.units);
+        if (units.length === 0) return;
+        const baseCode = productOption.dataset.baseUnit || units.find(unit => unit.base)?.code || '';
+        const wanted = keep && units.some(unit => unit.code === keep) ? keep : (productOption.dataset.defaultUnit || baseCode);
+        unitSelect.replaceChildren(...units.map(unit => {
+            const option = unitSelect.ownerDocument.createElement('option');
+            option.value = unit.code;
+            option.textContent = unit.base ? unit.code : unit.code + ' (' + unit.factor + ' ' + baseCode + ')';
+            option.dataset.factor = String(unit.factor);
+            option.dataset.price = sales ? unit.selling_price : unit.purchase_price;
+            option.selected = unit.code === wanted;
+            return option;
+        }));
+    }
+
+    /** Whole cents of a plain decimal, or null when empty/invalid (the server treats empty as the master price). */
+    function cents(value) {
+        const text = String(value ?? '').trim();
+        if (text === '' || !/^\d+(\.\d+)?$/.test(text)) return null;
+        return Math.round(Number(text) * 100);
+    }
+
+    /** True when a typed price differs from the master price (D-13, ADR-019); then a reason is required. */
+    function priceDiffers(price, master) {
+        const typed = cents(price);
+        const base = cents(master);
+        return typed !== null && base !== null && typed !== base;
+    }
+
+    /** Hint shown under the price: difference to master in % and Rupiah per unit; empty when equal or unknown. */
+    function differenceLabel(price, master) {
+        if (!priceDiffers(price, master)) return '';
+        const delta = cents(price) - cents(master);
+        const base = cents(master);
+        const percent = base === 0 ? 'n/a' : (delta < 0 ? '-' : '+') + Math.abs(delta * 100 / base).toFixed(2).replace('.', ',') + '%';
+        return ' · differs by ' + percent + ' (' + (delta > 0 ? '+' : '') + formatRupiah(delta / 100) + ' per unit); reason required';
     }
 
     /** Same display as App\Support\Money::rupiah(): "Rp 20.000,00"; empty when there is no price. */
@@ -38,6 +123,65 @@
         const add = form.querySelector('[data-order-add]');
         const rows = () => [...form.querySelectorAll('[data-order-items] [data-order-item]')];
         let next = rows().length;
+        const sales = Boolean(form.querySelector('[data-order-input="selling_price"]'));
+        const productOption = row => row.querySelector('[data-order-input="product_id"]').selectedOptions[0];
+        const unitSelect = row => row.querySelector('[data-order-unit]');
+
+        /** Master price of the line: the selected unit's price (D-16), else the product option's base price. */
+        function lineMaster(row) {
+            return unitSelect(row)?.selectedOptions[0]?.dataset.price ?? masterPrice(row.querySelector('[data-order-input="product_id"]'));
+        }
+
+        /** "= 96 pcs" under the quantity: what the line takes from or adds to stock, in base units. */
+        function updateBaseHint(row) {
+            const hint = row.querySelector('[data-order-base-hint]');
+            const option = productOption(row);
+            if (!hint || !option) return;
+            const unit = unitSelect(row)?.selectedOptions[0];
+            const factor = Number(unit?.dataset.factor || 1);
+            const base = baseQuantity(row.querySelector('[data-order-input="quantity"]')?.value, factor);
+            const units = parseUnits(option.dataset.units);
+            hint.textContent = base === null || factor === 1 ? '' : '= ' + formatQuantity(base, units, option.dataset.baseUnit || '');
+        }
+
+        /** Updates the master hint, difference and reason requirement; never overwrites a typed price. */
+        function updatePrice(row) {
+            const price = row.querySelector('[data-order-price]');
+            if (!price) return;
+            const master = lineMaster(row);
+            const differs = priceDiffers(price.value, master);
+            const masterText = row.querySelector('[data-order-master]');
+            if (masterText) masterText.textContent = formatRupiah(master) || '-';
+            const masterUnit = row.querySelector('[data-order-master-unit]');
+            const unit = unitSelect(row)?.value;
+            if (masterUnit) masterUnit.textContent = unit ? ' per ' + unit : '';
+            updateBaseHint(row);
+            const diff = row.querySelector('[data-order-price-diff]');
+            if (diff) diff.textContent = differenceLabel(price.value, master);
+            const reason = row.querySelector('[data-order-reason]');
+            const field = row.querySelector('[data-order-reason-field]');
+            if (reason) {
+                reason.required = differs;
+                if (differs) reason.minLength = 3; else reason.removeAttribute('minlength');
+            }
+            if (field) field.hidden = !differs && (!reason || reason.value.trim() === '');
+        }
+
+        /** Product change or reset: the line goes back to the product's master price and needs no reason. */
+        function useMasterPrice(row) {
+            const price = row.querySelector('[data-order-price]');
+            if (!price) return;
+            price.value = lineMaster(row);
+            const reason = row.querySelector('[data-order-reason]');
+            if (reason) reason.value = '';
+            updatePrice(row);
+        }
+
+        /** Product change: the unit list follows the product and starts at the form's default unit. */
+        function useProduct(row) {
+            fillUnits(unitSelect(row), productOption(row), sales, null);
+            useMasterPrice(row);
+        }
 
         function refresh() {
             const items = rows();
@@ -45,7 +189,10 @@
                 row.querySelector('legend').textContent = 'Product item ' + (index + 1);
                 row.querySelector('[data-order-item-message]').textContent = '';
                 const price = row.querySelector('[data-order-price]');
-                if (price) price.value = formatRupiah(masterPrice(row.querySelector('[data-order-input="product_id"]')));
+                const units = unitSelect(row);
+                if (units && units.options.length === 0) fillUnits(units, productOption(row), sales, null);
+                if (price && price.value.trim() === '') price.value = lineMaster(row);
+                updatePrice(row);
             });
             const duplicates = duplicateIndexes(items.map(row => row.querySelector('[data-order-input="product_id"]').value));
             for (const index of duplicates) items[index].querySelector('[data-order-item-message]').textContent = 'Choose a different product; duplicate products are not allowed.';
@@ -64,6 +211,14 @@
             row.querySelector('[data-order-input="product_id"]').focus();
         });
         form.addEventListener('click', event => {
+            const reset = event.target.closest('[data-order-price-reset]');
+            if (reset) {
+                const row = reset.closest('[data-order-item]');
+                useMasterPrice(row);
+                // Lets form drafts save the reset value like a typed one.
+                row.querySelector('[data-order-price]').dispatchEvent(new Event('input', { bubbles: true }));
+                return;
+            }
             const remove = event.target.closest('[data-order-remove]');
             if (!remove || remove.disabled) return;
             remove.closest('[data-order-item]').remove();
@@ -71,7 +226,24 @@
             refresh();
         });
         form.addEventListener('change', event => {
-            if (event.target.dataset.orderInput === 'product_id') refresh();
+            if (event.target.dataset.orderInput === 'product_id') {
+                useProduct(event.target.closest('[data-order-item]'));
+                refresh();
+            } else if (event.target.dataset.orderInput === 'unit_code') {
+                useMasterPrice(event.target.closest('[data-order-item]')); // the master price is per unit
+            } else if (event.target.dataset.orderInput === 'quantity') {
+                updateBaseHint(event.target.closest('[data-order-item]'));
+            } else if (event.target.matches?.('[data-order-price], [data-order-reason]')) {
+                updatePrice(event.target.closest('[data-order-item]')); // e.g. a restored form draft
+            }
+        });
+        form.addEventListener('input', event => {
+            const row = event.target.closest?.('[data-order-item]');
+            if (!row) return;
+            // Some browsers and scripted input fire only `input` for a select; the new product's master price applies.
+            if (event.target.dataset.orderInput === 'product_id') { useProduct(row); refresh(); }
+            else if (event.target.dataset.orderInput === 'quantity') updateBaseHint(row);
+            else if (event.target.matches('[data-order-price], [data-order-reason]')) updatePrice(row);
         });
         refresh();
     }
@@ -143,7 +315,7 @@
         document.querySelectorAll('[data-replenishment-selection]').forEach(enhanceSelection);
     }
 
-    const api = { MAX_ITEMS, duplicateIndexes, formatRupiah, itemName, masterPrice, offPagePicks, enhanceAll };
+    const api = { MAX_ITEMS, baseQuantity, cents, differenceLabel, duplicateIndexes, fillUnits, formatQuantity, formatRupiah, itemName, masterPrice, offPagePicks, parseUnits, priceDiffers, enhanceAll };
 
     if (typeof module === 'object' && module.exports) {
         module.exports = api;

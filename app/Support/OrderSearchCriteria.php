@@ -8,7 +8,7 @@ final class OrderSearchCriteria
 {
     private const SORT_COLUMNS = ['order_number', 'order_date', 'status', 'party', 'warehouse'];
     private const DIRECTIONS = ['asc', 'desc'];
-    private const STATUSES = ['Draft', 'Ordered', 'PartiallyReceived', 'Received', 'PendingApproval', 'Approved', 'Fulfilled', 'Cancelled'];
+    private const STATUSES = ['Draft', 'Ordered', 'PartiallyReceived', 'Received', 'PendingApproval', 'Approved', 'PartiallyFulfilled', 'Fulfilled', 'Cancelled'];
 
     private function __construct(
         private readonly string $term,

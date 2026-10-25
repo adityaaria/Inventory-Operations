@@ -25,11 +25,11 @@
     <main class="page" id="main-content">
         <header class="page-header"><div><p class="app-title">Inventory Operations</p><h1>Create Sales Order</h1><p class="page-subtitle">Create a draft sales order for fulfillment. Add one line per product.</p></div><nav class="toolbar" aria-label="Page actions"><a href="/sales-orders">Sales Orders</a></nav></header>
         <?php if ($error !== ''): ?><p class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
-        <form method="post" action="/sales-orders" class="form" data-order-form <?= \App\Support\Html::draftAttributes('sales-order') ?>>
+        <form method="post" action="/sales-orders" class="form" data-order-form<?= !empty($priceResolution) ? ' data-price-resolution="/api/price-resolution"' : '' ?> <?= \App\Support\Html::draftAttributes('sales-order') ?>>
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string) ($GLOBALS['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-            <label class="field"><span class="field-label">Order Number</span><input name="order_number" required value="<?= htmlspecialchars($formState->value('order_number', 'SO-' . date('YmdHis')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"></label>
+            <div class="field" data-order-number-note><span class="field-label">Order Number</span><p class="field-hint">Order number is assigned when the draft is saved (SO-YYMM-NNNN, e.g. SO-2610-0001).</p></div>
             <label class="field"><span class="field-label">Customer</span>
-                <select name="customer_id" required>
+                <select name="customer_id" required<?= !empty($priceResolution) ? ' data-price-customer' : '' ?>>
                     <?php foreach ($customers as $customer): ?>
                         <?php if ($customer->isActive()): ?>
                             <option value="<?= $customer->id() ?>" <?= $formState->selected('customer_id', $customer->id(), false) ?>><?= htmlspecialchars($customer->name(), ENT_QUOTES, 'UTF-8') ?></option>
@@ -47,6 +47,11 @@
                 </select>
             </label>
             <?php $priceField = 'selling_price'; $priceLabel = 'Selling Price'; ?>
+            <?php if (!empty($priceResolution)): ?>
+            <p class="field-hint" data-price-policy>Each line starts at the customer's list price: the tier of the customer's price list for the product, unit and quantity, else the master selling price (prices exclude PPN). A different price needs a reason; it may not be below the product's purchase price, and Sales may discount at most <?= (int) ($maxDiscountPercent ?? 10) ?>% below the list price (Admin has no discount cap). The server re-checks the price list when the draft is saved.</p>
+            <?php else: ?>
+            <p class="field-hint" data-price-policy>Each line starts at the product master selling price. A different price needs a reason; it may not be below the product's purchase price, and Sales may discount at most <?= (int) ($maxDiscountPercent ?? 10) ?>% below master (Admin has no discount cap).</p>
+            <?php endif; ?>
             <div data-order-items>
                 <?php $orderItem = dirname(__DIR__) . '/partials/order-item.php'; $itemState = $formState; $prefix = ''; require $orderItem; ?>
                 <?php $next = 1; foreach (is_array($old['items'] ?? null) ? array_slice($old['items'], 0, 99, true) : [] as $line): if (!is_array($line)) { continue; } $itemState = new \App\Support\FormState($line); $prefix = 'items[' . $next++ . ']['; require $orderItem; endforeach; ?>

@@ -1,0 +1,32 @@
+PASS login admin@example.test
+PASS login sales1@example.test
+PASS login warehouse1@example.test
+PASS Admin page /price-lists renders
+PASS Admin page /quotations renders
+PASS Admin page /quotations/create renders
+PASS Admin page /delivery-notes renders
+PASS Admin page /invoices renders
+PASS Admin page /reports/receivables renders
+PASS Admin page /reports/sales-by-customer renders
+PASS Admin page /sales-orders/create renders
+PASS Admin dashboard has the receivables card
+PASS SO form resolves list prices live
+PASS Migrated surat jalan prints (origin Migration)
+PASS Role checks: Sales /price-lists 403, Warehouse /invoices 403, Warehouse /quotations 403
+PASS Smoke customer with NPWP created
+PASS Price API resolves the smoke tier
+PASS Quantity 1 stays on master
+PASS Quotation created
+PASS Quotation converted to an SO draft
+PASS Quotation prints
+PASS SO approved
+PASS Shipment issued
+PASS New surat jalan with vehicle and driver
+PASS Invoice created
+PASS Invoice PPN recomputes (12 % of DPP 11/12, whole Rupiah)
+PASS Overpayment refused
+PASS Invoice paid in full
+PASS Invoice prints with NPWP
+PASS All D-19, lot and fulfilment invariants are 0 after the smoke
+CREATED {"customer": {"id": 67, "name": "Smoke D-19 Toko Uji 2026-10-12"}, "price_list": {"id": 1, "name": "Smoke D-19 2026-10-12", "tier": {"product_id": 96, "unit": "karton", "min_quantity": 2, "price": 677642}}, "quotation": "QT-2610-0001", "sales_order": "SO-2610-0043", "delivery_note": "DO-2610-0039", "invoice": "INV-2610-0001", "payment": "1504365.00"}
+{"checks": 30, "passed": 30, "failed": 0}

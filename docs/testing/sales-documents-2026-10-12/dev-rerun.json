@@ -1,0 +1,64 @@
+{
+    "migration": "20261012-sales-documents",
+    "destructive": false,
+    "status": "ready",
+    "already_applied": true,
+    "tables_created": [],
+    "delivery_notes": {
+        "status": "ready",
+        "delivery_notes_created": 0,
+        "issue_rows_linked": 0,
+        "orders": 0,
+        "checks": {
+            "issue_rows_without_delivery_note": 0,
+            "delivery_note_line_mismatches": 0,
+            "delivery_note_issue_mismatches": 0,
+            "invoice_line_mismatches": 0,
+            "invoice_total_mismatches": 0,
+            "invoice_payment_mismatches": 0,
+            "quotation_conversion_mismatches": 0,
+            "price_source_mismatches": 0
+        }
+    },
+    "sales_document_checks": {
+        "issue_rows_without_delivery_note": 0,
+        "delivery_note_line_mismatches": 0,
+        "delivery_note_issue_mismatches": 0,
+        "invoice_line_mismatches": 0,
+        "invoice_total_mismatches": 0,
+        "invoice_payment_mismatches": 0,
+        "quotation_conversion_mismatches": 0,
+        "price_source_mismatches": 0
+    },
+    "lot_checks": {
+        "lot_aggregate_mismatches": 0,
+        "lot_ledger_mismatches": 0,
+        "lot_count_mismatches": 0,
+        "ledger_rows_without_lot": 0,
+        "issue_from_expired_lot": 0,
+        "fefo_violations": 0,
+        "transfer_lot_mismatches": 0
+    },
+    "statistics": {
+        "price_lists": 0,
+        "price_list_items": 0,
+        "customers_with_price_list": 0,
+        "so_lines_from_price_list": 0,
+        "quotations": 0,
+        "quotations_by_status": [],
+        "quotations_converted": 0,
+        "delivery_notes": 529,
+        "delivery_notes_by_origin": {
+            "Migration": 529
+        },
+        "delivery_notes_with_vehicle": 0,
+        "invoices": 0,
+        "invoices_by_status": [],
+        "invoices_overdue": 0,
+        "delivery_notes_not_invoiced": 529,
+        "payments": 0,
+        "receivables_outstanding": "0.00",
+        "invoiced_total": "0.00",
+        "invoiced_vat": "0.00"
+    }
+}

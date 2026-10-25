@@ -32,11 +32,11 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     };
     // form.submit() skips the confirmation dialog, which is not part of what the screenshots show.
     const submit = async action => { await evaluate(`(() => { const f = document.querySelector('form[action="${action}"]'); if (!f) throw Error('missing form ${action}'); f.submit(); })()`); await sleep(300); await settle(); };
-    const salesOrder = async number => { await go('/sales-orders?q=' + number); return evaluate(`document.querySelector('a[href^="/sales-orders/show"]').getAttribute('href')`); };
-    const createSalesOrder = async (number, quantity) => {
+    // Order numbers are server-assigned (D-11, ADR-017): the newest order is first in the default date/id sort.
+    const newestSalesOrder = async () => { await go('/sales-orders?sort=order_date&direction=desc'); return evaluate(`document.querySelector('a[href^="/sales-orders/show"]').getAttribute('href')`); };
+    const createSalesOrder = async quantity => {
         await go('/sales-orders/create');
         await evaluate(`(() => { const f = document.querySelector('form[action="/sales-orders"]');
-            f.elements.order_number.value = ${JSON.stringify(number)};
             f.elements.warehouse_id.value = [...f.elements.warehouse_id.options].find(o => /Surabaya/.test(o.textContent)).value;
             f.elements.product_id.value = [...f.elements.product_id.options].find(o => /BIS-0001/.test(o.textContent)).value;
             f.elements.product_id.dispatchEvent(new Event('change', {bubbles: true}));
@@ -47,18 +47,15 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await call('Page.enable');
     await call('Runtime.enable');
     await call('Emulation.setDeviceMetricsOverride', { width: 1280, height: 860, deviceScaleFactor: 1, mobile: false });
-    const stamp = Date.now().toString().slice(-6);
-    const oversell = 'SO-DEMO-OVERSELL-' + stamp;
-    const fulfil = 'SO-DEMO-OK-' + stamp;
 
     await login('sales1@example.test');
     await go('/products?q=BIS-0001');
     const product = await evaluate(`document.querySelector('a[href^="/products/show"]').getAttribute('href')`);
     await go(product); await shot('01-stok-per-gudang-BIS-0001');
-    await createSalesOrder(oversell, 6); await shot('02-sales-membuat-SO-qty-6'); await submit('/sales-orders');
-    const overHref = await salesOrder(oversell); await go(overHref); await submit('/sales-orders/submit');
-    await createSalesOrder(fulfil, 2); await submit('/sales-orders');
-    const okHref = await salesOrder(fulfil); await go(okHref); await submit('/sales-orders/submit');
+    await createSalesOrder(6); await shot('02-sales-membuat-SO-qty-6'); await submit('/sales-orders');
+    const overHref = await newestSalesOrder(); await go(overHref); await submit('/sales-orders/submit');
+    await createSalesOrder(2); await submit('/sales-orders');
+    const okHref = await newestSalesOrder(); await go(okHref); await submit('/sales-orders/submit');
     await go('/purchase-orders'); await shot('03-sales-ditolak-akses-PO-403');
 
     await login('admin@example.test');

@@ -1,0 +1,30 @@
+{
+    "migration": "20261012-batch-expiry",
+    "destructive": false,
+    "mode": "dry-run",
+    "already_applied": false,
+    "pairs_to_convert": 1480,
+    "units_to_convert": 6000078,
+    "legacy_stock_value": 37362316027.2,
+    "pairs_with_zero_stock": 23,
+    "ledger_rows_kept_without_lot": 6421,
+    "food_beverage_categories": [
+        "Biskuit & Wafer",
+        "Bumbu & Saus",
+        "Kopi & Teh",
+        "Makanan Ringan",
+        "Mi & Makanan Instan",
+        "Minuman",
+        "Sembako",
+        "Susu & Olahan Susu"
+    ],
+    "products_to_track_expiry": 360,
+    "in_transit_transfers_without_lots": 0,
+    "approved_stock_proposals_pair_level": 0,
+    "unsafe": {
+        "ledger_mismatches": 0,
+        "reserved_above_quantity": 0,
+        "partial_lot_pairs": 0,
+        "ledger_rows_with_lot_before_migration": 0
+    }
+}

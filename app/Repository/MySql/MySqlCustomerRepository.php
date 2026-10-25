@@ -22,7 +22,7 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
         $count->execute();
         $total = (int) $count->fetchColumn();
         $statement = $this->pdo->prepare(
-            'SELECT id, name, email, phone, address, is_active FROM customers
+            'SELECT id, name, email, phone, address, is_active, price_list_id, npwp, nik, tax_name, tax_address FROM customers
              ORDER BY name ASC, id ASC LIMIT :limit OFFSET :offset'
         );
         $statement->bindValue('limit', Pagination::PER_PAGE, PDO::PARAM_INT);
@@ -39,7 +39,7 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
 
     public function all(): array
     {
-        $statement = $this->pdo->query('SELECT id, name, email, phone, address, is_active FROM customers ORDER BY name ASC');
+        $statement = $this->pdo->query('SELECT id, name, email, phone, address, is_active, price_list_id, npwp, nik, tax_name, tax_address FROM customers ORDER BY name ASC');
         if ($statement === false) {
             throw new PersistenceException('Unable to query customers.');
         }
@@ -48,7 +48,7 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
 
     public function findById(int $id): ?Customer
     {
-        $statement = $this->pdo->prepare('SELECT id, name, email, phone, address, is_active FROM customers WHERE id = :id');
+        $statement = $this->pdo->prepare('SELECT id, name, email, phone, address, is_active, price_list_id, npwp, nik, tax_name, tax_address FROM customers WHERE id = :id');
         $statement->execute(['id' => $id]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         return is_array($row) ? $this->hydrate($row) : null;
@@ -80,10 +80,37 @@ final class MySqlCustomerRepository implements CustomerRepositoryInterface
         $statement->execute(['id' => $id, 'is_active' => $isActive ? 1 : 0]);
     }
 
+    public function updateTaxProfile(int $id, ?string $npwp, ?string $nik, ?string $taxName, ?string $taxAddress): Customer
+    {
+        return PersistenceErrors::write(function () use ($id, $npwp, $nik, $taxName, $taxAddress): Customer {
+            $statement = $this->pdo->prepare('UPDATE customers SET npwp = :npwp, nik = :nik, tax_name = :tax_name, tax_address = :tax_address WHERE id = :id');
+            $statement->execute(['id' => $id, 'npwp' => $npwp, 'nik' => $nik, 'tax_name' => $taxName, 'tax_address' => $taxAddress]);
+
+            return $this->findRequired($id);
+        });
+    }
+
+    public function assignPriceList(int $customerId, ?int $priceListId): void
+    {
+        $statement = $this->pdo->prepare('UPDATE customers SET price_list_id = :price_list_id WHERE id = :id');
+        $statement->execute(['id' => $customerId, 'price_list_id' => $priceListId]);
+    }
+
+    public function forPriceList(int $priceListId): array
+    {
+        $statement = $this->pdo->prepare('SELECT id, name, email, phone, address, is_active, price_list_id, npwp, nik, tax_name, tax_address FROM customers WHERE price_list_id = :id ORDER BY name ASC, id ASC');
+        $statement->execute(['id' => $priceListId]);
+
+        return array_map(fn (array $row): Customer => $this->hydrate($row), $statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     /** @param array<string, mixed> $row */
     private function hydrate(array $row): Customer
     {
-        return new Customer((int) $row['id'], (string) $row['name'], (string) $row['email'], (string) $row['phone'], (string) $row['address'], (bool) $row['is_active']);
+        $text = static fn (string $key): ?string => isset($row[$key]) ? (string) $row[$key] : null;
+
+        return new Customer((int) $row['id'], (string) $row['name'], (string) $row['email'], (string) $row['phone'], (string) $row['address'], (bool) $row['is_active'],
+            isset($row['price_list_id']) ? (int) $row['price_list_id'] : null, $text('npwp'), $text('nik'), $text('tax_name'), $text('tax_address'));
     }
 
     private function findRequired(int $id): Customer

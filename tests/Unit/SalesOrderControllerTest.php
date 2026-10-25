@@ -62,18 +62,22 @@ final class SalesOrderControllerTest extends TestCase
         $form = $controller->create(new Request('GET', '/sales-orders/create', [], [], []))->body();
         self::assertSame(1, substr_count($form, 'name="product_id"'), 'The clone template must not add a second product field.');
         self::assertStringContainsString('data-order-template', $form);
+        self::assertStringNotContainsString('name="order_number"', $form, 'The order number is assigned by the server.');
+        self::assertStringContainsString('Order number is assigned when the draft is saved', $form);
 
         $response = $controller->store(new Request('POST', '/sales-orders', [], [
             'order_number' => 'SO-MULTI', 'customer_id' => '1', 'warehouse_id' => '1',
             'product_id' => '10', 'quantity' => '2', 'selling_price' => '1500',
-            'items' => [3 => ['product_id' => '11', 'quantity' => '4', 'selling_price' => '90.25']],
+            'items' => [3 => ['product_id' => '11', 'quantity' => '4', 'selling_price' => '90.25', 'price_reason' => 'Biaya kemasan khusus']],
         ], []));
 
         self::assertSame(302, $response->statusCode());
         $created = array_values($orders->all())[0];
         self::assertSame(7, $created->createdBy());
-        // The posted 90.25 is ignored: each line uses the product master selling price.
-        self::assertSame([[10, 2, 1500.0], [11, 4, 90.0]], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->sellingPrice()], $created->items()));
+        // The posted order_number is ignored (D-11, ADR-017): the server assigns SO-YYMM-NNNN.
+        self::assertMatchesRegularExpression('/^SO-\d{4}-0001$/', $created->orderNumber());
+        // D-13 / ADR-019: 1500 equals the master; 90.25 is above master with a reason (allowed for Sales).
+        self::assertSame([[10, 2, 1500.0, 1500.0, null], [11, 4, 90.25, 90.0, 'Biaya kemasan khusus']], array_map(static fn ($item): array => [$item->productId(), $item->quantity(), $item->sellingPrice(), $item->listPrice(), $item->priceReason()], $created->items()));
     }
 
     public function testDuplicateSalesLinesAreRejectedAndRetainedForCorrection(): void
@@ -182,7 +186,7 @@ final class SalesOrderControllerTest extends TestCase
         $stock = new StockService(new InMemoryStockRepository(), new InMemoryStockLedgerRepository());
 
         return new SalesOrderController(
-            new SalesOrderService($orders, $products, $customers, $warehouses, $stock),
+            new SalesOrderService($orders, new \App\Repository\InMemory\InMemoryDocumentSequenceRepository(), $products, $customers, $warehouses, $stock),
             $orders,
             $products,
             $customers,

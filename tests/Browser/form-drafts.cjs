@@ -53,7 +53,6 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     }
     const draftKeys = () => evaluate(`Object.keys(localStorage).filter(k => k.startsWith('ioms-draft:')).sort()`);
     const results = [];
-    const poNumber = 'PO-DRAFT-' + Date.now(); // unique per run so reruns on the same stack stay valid
     const pass = name => { results.push(name); console.log('ok - ' + name); };
 
     await call('Page.enable');
@@ -65,23 +64,39 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await navigate('/purchase-orders/create');
     await evaluate(`localStorage.clear()`);
     const products = await evaluate(`[...document.querySelector('[name=product_id]').options].map(o => o.value).slice(0, 3)`);
+    // Order numbers are server-assigned (D-11, ADR-017): the form has no order number field, only a note.
+    assert.equal(await evaluate(`document.querySelector('form[data-draft]').elements.namedItem('order_number')`), null);
+    assert.match(await evaluate(`document.querySelector('[data-order-number-note]').textContent`), /assigned when the draft is saved/);
+    const newestPo = () => evaluate(`fetch('/purchase-orders?sort=order_date&direction=desc').then(r => r.text()).then(t => Math.max(0, ...[...t.matchAll(/\\/purchase-orders\\/show\\?id=(\\d+)/g)].map(m => Number(m[1]))))`);
+    const poBefore = await newestPo();
     assert.equal(products.length, 3);
     await evaluate(`(() => {
         const form = document.querySelector('form[data-draft]');
         const set = (el, v) => { el.value = v; el.dispatchEvent(new Event('input', {bubbles: true})); };
-        set(form.elements.order_number, ${JSON.stringify(poNumber)});
         set(form.elements.product_id, ${JSON.stringify(products[0])}); set(form.elements.quantity, '4');
         form.querySelector('[data-order-add]').click(); form.querySelector('[data-order-add]').click();
         const rows = form.querySelectorAll('[data-order-item]');
         const line = (row, f) => row.querySelector('[data-order-input="' + f + '"]');
         set(line(rows[1], 'product_id'), ${JSON.stringify(products[1])}); set(line(rows[1], 'quantity'), '7');
         set(line(rows[2], 'product_id'), ${JSON.stringify(products[2])}); set(line(rows[2], 'quantity'), '2');
+        // Units (D-16, ADR-022): the third line switches from the purchase default unit to the base unit (last option).
+        const unit = line(rows[2], 'unit_code'); unit.value = unit.options[unit.options.length - 1].value; unit.dispatchEvent(new Event('change', {bubbles: true}));
+        // Negotiated supplier price on the second line (D-13, ADR-019): 90% of the master price of its unit, with a reason.
+        set(line(rows[1], 'purchase_price'), (Number(line(rows[1], 'unit_code').selectedOptions[0].dataset.price) * 0.9).toFixed(2));
+        set(line(rows[1], 'price_reason'), 'Diskon principal uji browser');
     })()`);
     await wait(`!!localStorage.getItem('ioms-draft:v1:1:Admin:purchase-order')`, 'draft saved');
     const stored = JSON.parse(await evaluate(`localStorage.getItem('ioms-draft:v1:1:Admin:purchase-order')`));
     assert.ok(!stored.values.some(([name]) => name === 'csrf_token'), 'CSRF token never stored');
+    assert.ok(!stored.values.some(([name]) => name === 'order_number'), 'no order number in the draft');
     assert.equal(stored.ttl, 8 * 60 * 60 * 1000, 'draft lifetime follows SESSION_ABSOLUTE_SECONDS (D-08)');
     assert.equal(stored.values.filter(([name]) => /^items\[\d+\]\[product_id\]$/.test(name)).length, 2);
+    // Typed price and reason are kept; the master list price never is (D-13, ADR-019).
+    assert.ok(stored.values.some(([name, value]) => name === 'items[1][price_reason]' && value === 'Diskon principal uji browser'), 'price reason stored');
+    assert.ok(stored.values.some(([name, value]) => name === 'items[1][purchase_price]' && value !== ''), 'negotiated price stored');
+    assert.ok(!stored.values.some(([name]) => /list_price/.test(name)), 'list price never stored');
+    const storedUnits = stored.values.filter(([name]) => /(^|\])?unit_code\]?$/.test(name)).map(([, value]) => value);
+    assert.equal(storedUnits.length, 3, 'every line stores its unit');
     pass('PO draft saved per user/role without CSRF token, with 8-hour session-bound lifetime');
 
     await navigate('/purchase-orders/create');
@@ -90,18 +105,28 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await evaluate(`[...document.querySelectorAll('[data-draft-banner] button')].find(b => b.textContent === 'Restore draft').click()`);
     await wait(`/checked|Review the items/.test(document.querySelector('[data-draft-banner] p').textContent)`, 'server revalidation');
     const restored = await evaluate(`(() => { const f = document.querySelector('form[data-draft]'); return {
-        number: f.elements.order_number.value,
         lines: [...f.querySelectorAll('[data-order-item]')].map(r => ['product_id', 'quantity'].map(n => r.querySelector('[data-order-input="' + n + '"]').value)),
-        // Display-only price: read-only, never submitted, equal to the selected product's master price.
-        prices: [...f.querySelectorAll('[data-order-item]')].map(r => { const p = r.querySelector('[data-order-price]'); const o = r.querySelector('[data-order-input="product_id"]').selectedOptions[0]; return p.readOnly && !p.name && p.value !== '' && p.value === window.InventoryOrderItems.formatRupiah(o.dataset.price) && p.value.startsWith('Rp '); }),
+        // Editable, submitted price (D-13, ADR-019): master price on lines 1 and 3, the negotiated price plus a visible,
+        // required reason on line 2.
+        units: [...f.querySelectorAll('[data-order-item] [data-order-unit]')].map(u => u.value),
+        unitCounts: [...f.querySelectorAll('[data-order-item] [data-order-unit]')].map(u => u.options.length),
+        // "= 4 karton (192 pcs)" under a line entered in a larger unit; nothing for a base-unit line.
+        hints: [...f.querySelectorAll('[data-order-item]')].map(r => { const factor = Number(r.querySelector('[data-order-unit]').selectedOptions[0].dataset.factor); const hint = r.querySelector('[data-order-base-hint]').textContent;
+            return factor === 1 ? hint === '' : hint.startsWith('= ') && hint.includes('(' + (Number(r.querySelector('[data-order-input="quantity"]').value) * factor).toLocaleString('id-ID') + ' '); }),
+        // The master price of each line is the price of its selected unit (D-16, ADR-022).
+        prices: [...f.querySelectorAll('[data-order-item]')].map(r => { const p = r.querySelector('[data-order-price]'); const reason = r.querySelector('[data-order-reason]'); const o = r.querySelector('[data-order-unit]').selectedOptions[0];
+            const named = !p.readOnly && /purchase_price\]?$/.test(p.name);
+            return named && (p.value === o.dataset.price ? 'master' : (reason.required && !r.querySelector('[data-order-reason-field]').hidden && reason.value === 'Diskon principal uji browser' && Number(p.value) === Number((Number(o.dataset.price) * 0.9).toFixed(2)) ? 'negotiated' : 'wrong:' + p.value)); }),
         names: [...f.querySelectorAll('[data-order-item] [data-order-input="quantity"]')].map(i => i.name),
         banner: document.querySelector('[data-draft-banner]').textContent }; })()`);
-    assert.equal(restored.number, poNumber);
     assert.deepEqual(restored.lines, [[products[0], '4'], [products[1], '7'], [products[2], '2']]);
-    assert.deepEqual(restored.prices, [true, true, true], 'each line shows its product master price, read-only and unsubmitted');
+    assert.deepEqual(restored.units, storedUnits, 'each line restores its unit');
+    assert.ok(restored.unitCounts.every(count => count >= 1), 'unit lists follow the restored products');
+    assert.deepEqual(restored.hints, [true, true, true], 'base-unit equivalents shown for larger units');
+    assert.deepEqual(restored.prices, ['master', 'negotiated', 'master'], 'restored prices: master by default, negotiated line with its reason');
     assert.deepEqual(restored.names, ['quantity', 'items[1][quantity]', 'items[2][quantity]']);
     assert.match(restored.banner, /permissions, status and current stock are fine/);
-    pass('restore rebuilds three PO lines and server check passes');
+    pass('restore rebuilds three PO lines with their units and server check passes');
 
     // Cancelling the confirmation must keep the draft; confirming sends it and clears it.
     await evaluate(`document.querySelector('form[data-draft] [type=submit]').click()`);
@@ -116,8 +141,12 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await wait(`location.pathname === '/purchase-orders' && document.readyState === 'complete'`, 'redirect after create');
     assert.equal(await evaluate(`!!document.querySelector('.alert-danger')`), false, 'create succeeded without a validation error');
     assert.deepEqual(await draftKeys(), []);
-    const created = await evaluate(`fetch('/purchase-orders?q=' + ${JSON.stringify(poNumber)}).then(r => r.text()).then(t => (t.match(/\\/purchase-orders\\/show\\?id=(\\d+)/) || [])[1])`);
-    assert.ok(created, 'restored draft was created');
+    const created = await newestPo();
+    assert.ok(created > poBefore, 'restored draft was created');
+    const heading = await evaluate(`fetch('/purchase-orders/show?id=${created}').then(r => r.text()).then(t => (t.match(/<h1>([^<]+)<\\/h1>/) || [])[1])`);
+    assert.match(heading, /^PO-\d{4}-\d{4,}$/, 'server assigned PO-YYMM-NNNN');
+    const detail = await evaluate(`fetch('/purchase-orders/show?id=${created}').then(r => r.text())`);
+    assert.ok(detail.includes('Diskon principal uji browser') && detail.includes('Negotiated') && detail.includes('data-price-override-notice'), 'PO detail shows the negotiated line and the Draft notice');
     pass('confirmed submit sends the restored draft once and clears it');
 
     // Modal create from the list: multi-item controls and draft saving work inside the dialog.
@@ -151,6 +180,30 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     assert.deepEqual(proposal, { kind: 'Transfer', reason: 'Rebalance before promotion', rows: 2 });
     pass('stock proposal kind, reason and items restored');
 
+    // D-17 / ADR-023: an adjustment counts one lot; the lot list comes from the balance endpoint, the baseline follows
+    // the chosen lot, and "new lot" asks for a code and expiry.
+    await navigate('/inventory-operations/create');
+    await evaluate(`(() => { const f = document.querySelector('form[data-stock-proposal]'); f.elements.kind.value = 'Adjustment'; f.elements.warehouse_id.value = '1'; f.elements.kind.dispatchEvent(new Event('change', {bubbles: true})); })()`);
+    // Seed warehouse 1 holds lots of every received product (other runs may add empty warehouses that sort first).
+    await wait(`document.querySelector('[data-stock-input="lot_id"]').options.length > 2`, 'lot list loaded');
+    const lotChoice = await evaluate(`(() => { const s = document.querySelector('[data-stock-input="lot_id"]'); s.selectedIndex = 1; s.dispatchEvent(new Event('change', {bubbles: true}));
+        return { baseline: document.querySelector('[data-stock-input="baseline"]').value, quantity: s.selectedOptions[0].dataset.quantity, label: s.selectedOptions[0].textContent }; })()`);
+    assert.equal(lotChoice.baseline, lotChoice.quantity);
+    assert.match(lotChoice.label, / · /);
+    const newLot = await evaluate(`(() => { const s = document.querySelector('[data-stock-input="lot_id"]'); s.value = 'new'; s.dispatchEvent(new Event('change', {bubbles: true}));
+        return { hidden: document.querySelector('[data-stock-new-lot]').hidden, required: document.querySelector('[data-stock-input="lot_code"]').required, baseline: document.querySelector('[data-stock-input="baseline"]').value }; })()`);
+    assert.deepEqual(newLot, { hidden: false, required: true, baseline: '0' });
+    pass('adjustment lot choice sets the lot baseline; a new lot asks for code and expiry');
+
+    // PO receipt: "Add another lot" adds a lot row and makes every lot quantity required.
+    const orderedPo = await evaluate(`fetch('/purchase-orders?status=Ordered').then(r => r.text()).then(t => parseInt((t.split('/purchase-orders/show?id=')[1] || ''), 10) || null)`);
+    assert.ok(orderedPo, 'an Ordered seed PO exists');
+    await navigate('/purchase-orders/show?id=' + orderedPo);
+    const split = await evaluate(`(() => { const f = document.querySelector('[data-lot-splits]'); f.querySelector('[data-lot-split-add]').click();
+        return { rows: f.querySelectorAll('[data-lot-split]').length, required: [...f.querySelectorAll('input[name="lot_quantity[]"]')].every(i => i.required), empty: f.querySelectorAll('[data-lot-split]')[1].querySelector('input').value }; })()`);
+    assert.deepEqual(split, { rows: 2, required: true, empty: '' });
+    pass('PO receipt adds a second lot row');
+
     // Logout clears every draft on this device.
     await navigate('/dashboard');
     await evaluate(`document.querySelector('form[action="/logout"]').requestSubmit()`);
@@ -161,7 +214,7 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     // Sales: draft is not visible to another user, and restore warns when stock is now short.
     await login('sales1@example.test');
     await navigate('/sales-orders/create');
-    await evaluate(`localStorage.setItem('ioms-draft:v1:1:Admin:sales-order', JSON.stringify({savedAt: Date.now(), values: [['order_number', 'SO-OTHER-USER']]}))`);
+    await evaluate(`localStorage.setItem('ioms-draft:v1:1:Admin:sales-order', JSON.stringify({savedAt: Date.now(), values: [['customer_id', '1']]}))`);
     await navigate('/sales-orders/create');
     assert.equal(await evaluate(`!!document.querySelector('[data-draft-banner]')`), false);
     pass("another user's draft is never offered");
@@ -171,7 +224,7 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await navigate('/sales-orders/create');
     await wait(`!!document.querySelector('[data-draft-banner]')`, 'sales banner');
     await evaluate(`[...document.querySelectorAll('[data-draft-banner] button')].find(b => b.textContent === 'Restore draft').click()`);
-    await wait(`/Only \\d+ unit\\(s\\)/.test(document.querySelector('[data-draft-banner]').textContent)`, 'stock warning');
+    await wait(`/Only \\d+ base unit\\(s\\)/.test(document.querySelector('[data-draft-banner]').textContent)`, 'stock warning');
     pass('restored SO warns that current stock is below the requested quantity');
 
     // Sales multi-item SO: every line restored and warned individually against current stock.
@@ -189,7 +242,7 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await evaluate(`[...document.querySelectorAll('[data-draft-banner] button')].find(b => b.textContent === 'Restore draft').click()`);
     await wait(`document.querySelectorAll('[data-draft-banner] li').length >= 2`, 'two stock warnings');
     const so = await evaluate(`(() => { const f = document.querySelector('form[data-draft]'); return { rows: f.querySelectorAll('[data-order-item]').length, second: f.elements['items[1][product_id]'].value, qty: f.elements['items[1][quantity]'].value,
-        warnings: [...document.querySelectorAll('[data-draft-banner] li')].filter(li => /Only \\d+ unit/.test(li.textContent)).length }; })()`);
+        warnings: [...document.querySelectorAll('[data-draft-banner] li')].filter(li => /Only \\d+ base unit/.test(li.textContent)).length }; })()`);
     assert.deepEqual(so, { rows: 2, second: soProducts[1], qty: '999997', warnings: 2 });
     pass('multi-item SO restored with a stock warning per line');
 
@@ -222,7 +275,7 @@ if (!/^http:\/\/localhost:180\d\d$/.test(url)) throw Error('Refusing to write ou
     await login('admin@example.test');
     for (const width of [360, 390, 768, 1440]) {
         await call('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
-        for (const path of ['/reports?type=outstanding', '/replenishment?warehouse_id=2', '/purchase-orders/create', '/sales-orders/create', '/inventory-operations/create']) {
+        for (const path of ['/reports?type=outstanding', '/replenishment?warehouse_id=2', '/purchase-orders/create', '/sales-orders/create', '/inventory-operations/create', '/products/show?id=1', '/sales-orders/show?id=1']) {
             await navigate(path);
             const overflow = await evaluate(`document.documentElement.scrollWidth > innerWidth`);
             assert.equal(overflow, false, `${path} overflows at ${width}px`);

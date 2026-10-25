@@ -57,7 +57,8 @@ final class DraftCheckService
             $items[] = [
                 'product_id' => $productId,
                 'active' => $product !== null && $product->isActive(),
-                'available' => $product !== null && $stockWarehouse !== null ? $this->stocks->quantity($productId, $stockWarehouse) : null,
+                // Sellable stock: physical minus expired lots (D-17) minus reserved for Approved sales orders (D-12).
+                'available' => $product !== null && $stockWarehouse !== null ? max(0, $this->stocks->quantity($productId, $stockWarehouse) - $this->stocks->expiredQuantity($productId, $stockWarehouse) - $this->stocks->reservedQuantity($productId, $stockWarehouse)) : null,
             ];
         }
 

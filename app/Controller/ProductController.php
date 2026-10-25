@@ -28,7 +28,47 @@ final class ProductController
         private readonly CategoryRepositoryInterface $categories,
         private readonly AuthGuard $guard,
         private readonly ?\App\Service\CsvImportService $imports = null,
+        private readonly ?\App\Service\ReorderPointService $reorderPoints = null,
+        private readonly ?\App\Service\ProductUnitService $unitService = null,
+        private readonly ?\App\Service\ProductUnitCatalog $units = null,
+        private readonly ?\App\Service\LotService $lots = null,
     ) {
+    }
+
+    /** Admin adds a unit of measure to a product (D-16, ADR-022); the service authorizes (403) and validates (422). */
+    public function addUnit(Request $request): Response
+    {
+        return $this->changeUnit($request, false);
+    }
+
+    /** Admin edits, deactivates or reactivates a unit, sets defaults, barcode and per-unit prices (D-16, ADR-022). */
+    public function updateUnit(Request $request): Response
+    {
+        return $this->changeUnit($request, true);
+    }
+
+    private function changeUnit(Request $request, bool $update): Response
+    {
+        $actor = $this->guard->requireAuth();
+        if ($this->unitService === null) { throw new \LogicException('Product unit service is not configured.'); }
+        $this->unitService->assertCanManage($actor); // 403 before any input parsing for non-Admin roles
+        $post = $request->post();
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
+        $unitId = $update ? InputValidator::positiveInt('unit_id', $post['unit_id'] ?? '') : 0;
+        try {
+            if ($update) {
+                $this->unitService->update($actor, $id, $unitId, $post);
+            } else {
+                $this->unitService->add($actor, $id, $post);
+            }
+        } catch (InvalidArgumentException $exception) {
+            $product = $this->products->detail($actor, $id);
+
+            return $this->renderShow($product, true, '', 0, '', 422, ['error' => $exception->getMessage(), 'unit_id' => $unitId, 'input' => array_filter($post, 'is_string')]);
+        }
+        $this->units?->forget($id);
+
+        return new Response('', 302, ['Location' => '/products/show?id=' . $id]);
     }
 
     public function index(Request $request): Response
@@ -62,12 +102,56 @@ final class ProductController
     {
         $actor = $this->guard->requireAuth();
         $product = $this->products->detail($actor, InputValidator::positiveInt('id', $request->query()['id'] ?? ''));
+        return $this->renderShow($product, $actor->role() === \App\Entity\User::ROLE_ADMIN);
+    }
+
+    /** Sets or clears one warehouse's reorder point override; the service enforces Admin-only access (403). */
+    public function reorderPoint(Request $request): Response
+    {
+        $actor = $this->guard->requireAuth();
+        if ($this->reorderPoints === null) { throw new \LogicException('Reorder point service is not configured.'); }
+        $this->reorderPoints->assertCanManage($actor); // 403 before any input parsing for non-Admin roles
+        $post = $request->post();
+        $id = InputValidator::positiveInt('id', $post['id'] ?? '');
+        $warehouseId = InputValidator::positiveInt('warehouse_id', $post['warehouse_id'] ?? '');
+        try {
+            $override = \App\Support\ReorderThreshold::parseOverride($post['reorder_point_override'] ?? '');
+            $this->reorderPoints->setOverride($actor, $id, $warehouseId, $override);
+        } catch (InvalidArgumentException $exception) {
+            $product = $this->products->detail($actor, $id);
+
+            return $this->renderShow($product, true, $exception->getMessage(), $warehouseId, $post['reorder_point_override'] ?? '', 422);
+        }
+
+        return new Response('', 302, ['Location' => '/products/show?id=' . $id]);
+    }
+
+    /** @param array{error?: string, unit_id?: int, input?: array<string, string>} $unitForm */
+    private function renderShow(Product $product, bool $canWrite, string $error = '', int $errorWarehouseId = 0, mixed $attempted = '', int $status = 200, array $unitForm = []): Response
+    {
+        $units = ($this->units ?? new \App\Service\ProductUnitCatalog($this->repository))->forProduct($product);
+        $usage = [];
+        foreach ($units->all() as $unit) {
+            $usage[$unit->id()] = $unit->id() > 0 && ($this->units?->repository()?->isUsed($product->id(), $unit->code()) ?? false);
+        }
+
         return $this->render('products/show.php', [
+            'units' => $units,
+            'unitUsage' => $usage,
+            'unitForm' => $unitForm,
+            'canManageUnits' => $canWrite && $this->unitService !== null,
             'product' => $product,
             'category' => $this->categories->findById($product->categoryId()),
             'stocks' => $this->repository->stocksForProduct($product->id()),
-            'canWrite' => $actor->role() === \App\Entity\User::ROLE_ADMIN,
-        ]);
+            'canWrite' => $canWrite,
+            'error' => $error,
+            'errorWarehouseId' => $errorWarehouseId,
+            'attemptedOverride' => is_string($attempted) ? $attempted : '',
+            // Lots with stock per warehouse (D-17, ADR-023); unit cost only for Admin/WarehouseStaff.
+            'lots' => $this->lots?->productLots($this->guard->requireAuth(), $product->id()) ?? [],
+            'lotNearDays' => $this->lots?->nearDays() ?? 30,
+            'canTraceLots' => in_array($this->guard->requireAuth()->role(), [\App\Entity\User::ROLE_ADMIN, \App\Entity\User::ROLE_WAREHOUSE_STAFF], true),
+        ], $status);
     }
 
     public function store(Request $request): Response
@@ -84,6 +168,7 @@ final class ProductController
                 InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
                 InputValidator::nonNegativeInt('reorder_point', $post['reorder_point'] ?? ''),
                 InputValidator::positiveInt('category_id', $post['category_id'] ?? ''),
+                ($post['tracks_expiry'] ?? '') === '1', // D-17 / ADR-023
             ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/create.php', [
@@ -160,6 +245,7 @@ final class ProductController
                 InputValidator::nonNegativeMoney('selling_price', $post['selling_price'] ?? ''),
                 InputValidator::nonNegativeInt('reorder_point', $post['reorder_point'] ?? ''),
                 InputValidator::positiveInt('category_id', $post['category_id'] ?? ''),
+                ($post['tracks_expiry'] ?? '') === '1', // D-17 / ADR-023
             ));
         } catch (InvalidArgumentException $exception) {
             return $this->render('products/edit.php', [
@@ -199,6 +285,10 @@ final class ProductController
     /** @param array<string, mixed> $data */
     private function render(string $view, array $data = [], int $status = 200): Response
     {
+        if (isset($data['result']) && $data['result'] instanceof \App\Support\PaginatedResult) {
+            // Stock shown with the unit breakdown (D-16, ADR-022).
+            $data['unitSets'] = ($this->units ?? new \App\Service\ProductUnitCatalog($this->repository))->forProducts(array_values(array_filter($data['result']->items(), static fn ($item): bool => $item instanceof Product)));
+        }
         extract($data, EXTR_SKIP);
         ob_start();
         require dirname(__DIR__, 2) . '/views/' . $view;

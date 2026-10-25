@@ -17,3 +17,7 @@ Stock proposals (ADR-009 adjustment/transfer/return) are listed as `<Kind> #<id>
 **Outstanding quantity**: PO = Σ(ordered − received) per document; SO = Σ ordered quantity (issue is all-or-nothing). Inbound (PO) and outbound (SO) units are reported separately and never summed. Ordering is oldest first, with type/id tie-breakers.
 
 Read-only GET; no stock, ledger, transaction or state change. Existing CSV formula-injection escaping applies. Verification: docs/testing/outstanding-aging-2026-10-07.md.
+
+Note 11 October 2026 (D-14, ADR-020, user decision): SO outstanding quantity is now Σ(ordered − issued) because sales orders may ship in parts; PartiallyFulfilled orders are open in every scope unless their remainder is closed (`sales_order_closures`), and DaysSinceApproval is also shown for them.
+
+Note 12 October 2026 (D-15, ADR-021, user decision): Dispatched transfers are open OP documents in the Admin and fulfilment scopes until received, with OutstandingQty = units in transit.

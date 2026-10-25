@@ -31,6 +31,8 @@
             </div>
             <nav class="toolbar" aria-label="Report actions">
                 <?php if ($report !== null): ?><a class="button" href="<?= htmlspecialchars($exportUrl, ENT_QUOTES, 'UTF-8') ?>" download>Export CSV</a><?php endif; ?>
+                <?php if (in_array($actor->role(), [\App\Entity\User::ROLE_ADMIN, \App\Entity\User::ROLE_WAREHOUSE_STAFF], true)): ?><a class="button" href="/reports/stock-counts">Stock Count Report</a><?php endif; ?>
+                <?php if ($actor->role() === \App\Entity\User::ROLE_ADMIN): // D-20 / ADR-026 ?><a class="button" href="/reports/valuation">Inventory Valuation</a><a class="button" href="/reports/gross-margin">Gross Margin</a><?php endif; ?>
             </nav>
         </header>
         <?php if ($error !== ''): ?><p class="alert alert-danger" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
@@ -88,11 +90,12 @@
                                                 $statusClass = match ($reportRowStatus) {
                                                     'PartiallyReceived' => 'partial',
                                                     'PendingApproval' => 'pending',
+                                                    'PartiallyFulfilled' => 'partially-fulfilled',
                                                     default => strtolower(str_replace([' ', '_'], '-', $reportRowStatus)),
                                                 };
                                                 $statusTone = match ($reportRowStatus) {
                                                     'Received', 'Approved', 'Fulfilled' => 'status-success',
-                                                    'Ordered', 'PartiallyReceived', 'PendingApproval' => 'status-warning',
+                                                    'Ordered', 'PartiallyReceived', 'PendingApproval', 'PartiallyFulfilled' => 'status-warning',
                                                     'Cancelled' => 'status-danger',
                                                     default => 'status-normal',
                                                 };

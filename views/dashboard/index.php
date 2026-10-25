@@ -57,9 +57,13 @@
             </article>
         <?php endif; ?>
         <?php if (isset($dashboard['inventory_value'])): ?>
-            <article class="metric-card">
+            <article class="metric-card" data-inventory-value="<?= (int) round((float) $dashboard['inventory_value'] * 100) ?>">
                 <span>Inventory Value</span>
-                <strong><?= \App\Support\Money::rupiah((float) $dashboard['inventory_value']) ?></strong>
+                <strong><?php if (isset($dashboard['inventory_value_on_hand'])): ?><a href="/reports/valuation"><?= \App\Support\Money::rupiah((float) $dashboard['inventory_value']) ?></a><?php else: ?><?= \App\Support\Money::rupiah((float) $dashboard['inventory_value']) ?><?php endif; ?></strong>
+                <?php if (isset($dashboard['inventory_value_on_hand'])): ?>
+                <small class="field-hint" data-inventory-value-split>At lot cost (FIFO per batch): on hand <?= \App\Support\Money::rupiah((float) $dashboard['inventory_value_on_hand']) ?> + in transit <?= \App\Support\Money::rupiah((float) $dashboard['inventory_value_in_transit']) ?><?= (int) ($dashboard['inventory_value_unvalued_transit_units'] ?? 0) > 0 ? ' (+ ' . (int) $dashboard['inventory_value_unvalued_transit_units'] . ' units in transit dispatched before the valuation start, not valued)' : '' ?></small>
+                <small class="field-hint" data-inventory-value-master>Reference: on hand at today's master purchase price <?= \App\Support\Money::rupiah((float) $dashboard['inventory_value_master']) ?></small>
+                <?php endif; ?>
             </article>
         <?php endif; ?>
         <?php if (isset($dashboard['low_stock_count'])): ?>
@@ -79,6 +83,20 @@
                     <strong><?= (int) $dashboard['so_issue_queue'] ?></strong>
                 </article>
             <?php endif; ?>
+        <?php endif; ?>
+        <?php if (isset($dashboard['receivables_outstanding'])): ?>
+            <article class="metric-card" data-receivables-card>
+                <span>Outstanding Receivables</span>
+                <strong><a href="/reports/receivables"><?= \App\Support\Money::rupiah((float) $dashboard['receivables_outstanding']) ?></a></strong>
+                <small class="field-hint"><?= (int) $dashboard['receivables_open_invoices'] ?> open invoices · overdue <?= \App\Support\Money::rupiah((float) $dashboard['receivables_overdue']) ?></small>
+            </article>
+        <?php endif; ?>
+        <?php if (isset($dashboard['expired_lots'])): ?>
+            <article class="metric-card" data-expiry-card>
+                <span>Near Expiry / Expired Lots</span>
+                <strong><a href="/reports/expiry?status=near"><?= (int) $dashboard['near_expiry_lots'] ?></a> / <a href="/reports/expiry?status=expired"><?= (int) $dashboard['expired_lots'] ?></a></strong>
+                <small class="field-hint">within <?= (int) ($dashboard['near_expiry_days'] ?? 30) ?> days · expired lots are not sellable</small>
+            </article>
         <?php endif; ?>
         </section>
         <section class="dashboard-grid">

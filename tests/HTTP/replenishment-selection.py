@@ -30,13 +30,14 @@ for email in ['warehouse1@example.test','admin@example.test']:
     code,body,_=req('/purchase-orders/create?'+query);assert code==200 and 'name="items[1][product_id]"' in body and 'data-order-form' in body
     first,second=[p.split(':') for p in picks[:2]]
     assert re.search(r'name="items\[1\]\[quantity\]"[^>]*value="'+second[1]+'"',body);checks.append(role+' selection prefills reviewable lines')
-    before=req('/purchase-orders')[1].count('PO-MULTI-')
+    newest=lambda:max([int(i) for i in re.findall(r'/purchase-orders/show\?id=(\d+)',req('/purchase-orders?sort=order_date&direction=desc')[1])] or [0])
+    before=newest()
     assert req('/purchase-orders/create?warehouse_id='+wid+'&pick[]=1:1&pick[]=1:2')[0]==422;checks.append(role+' duplicate selection rejected')
-    token=re.search(r'name="csrf_token" value="([^"]+)"',body).group(1);number='PO-MULTI-'+role.upper()+'-'+str(int(time.time()*1000))
-    code,_,headers=req('/purchase-orders',{'csrf_token':token,'order_number':number,'supplier_id':'1','warehouse_id':wid,'product_id':first[0],'quantity':first[1],'purchase_price':'1000','items[1][product_id]':second[0],'items[1][quantity]':second[1],'items[1][purchase_price]':'250'})
+    token=re.search(r'name="csrf_token" value="([^"]+)"',body).group(1);number='PO-MULTI-'+role.upper()+'-'+str(int(time.time()*1000))  # posted but ignored (D-11)
+    code,_,headers=req('/purchase-orders',{'csrf_token':token,'order_number':number,'supplier_id':'1','warehouse_id':wid,'product_id':first[0],'quantity':first[1],'items[1][product_id]':second[0],'items[1][quantity]':second[1]})  # empty price = master (D-13)
     assert code==302,code
-    code,body,_=req('/purchase-orders?q='+number);ids=re.findall(r'/purchase-orders/show\?id=(\d+)',body);assert ids
-    detail=req('/purchase-orders/show?id='+ids[0])[1];assert number in detail
+    created=newest();assert created>before,(created,before)
+    detail=req('/purchase-orders/show?id='+str(created))[1];assert number not in detail and re.search(r'<h1>PO-\d{4}-\d{4,}</h1>',detail)
     checks.append(role+' one draft PO saved with reviewed items')
     code,body,_=req('/purchase-orders',{'csrf_token':token,'order_number':number+'-DUP','supplier_id':'1','warehouse_id':'1','product_id':first[0],'quantity':'1','purchase_price':'1','items[1][product_id]':first[0],'items[1][quantity]':'1','items[1][purchase_price]':'1'})
     assert code==422 and 'items[1][product_id]' in body;checks.append(role+' duplicate items rejected with lines retained')

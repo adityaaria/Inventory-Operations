@@ -1,0 +1,84 @@
+{
+    "po": 400,
+    "so": 600,
+    "approve_short": 0,
+    "issue_skipped": 0,
+    "price_override_without_reason": 0,
+    "reorder_overrides": 15,
+    "rows": {
+        "users": 17,
+        "warehouses": 3,
+        "categories": 12,
+        "suppliers": 15,
+        "customers": 66,
+        "products": 500,
+        "product_stocks": 1500,
+        "purchase_orders": 400,
+        "purchase_order_items": 3350,
+        "sales_orders": 600,
+        "sales_order_items": 3324,
+        "stock_ledger": 6586,
+        "audit_logs": 3567,
+        "purchase_order_closures": 6,
+        "sales_order_rejections": 28,
+        "document_sequences": 14
+    },
+    "status": {
+        "purchase_orders": {
+            "Draft": 6,
+            "Ordered": 11,
+            "PartiallyReceived": 13,
+            "Received": 353,
+            "Cancelled": 17
+        },
+        "sales_orders": {
+            "Draft": 6,
+            "PendingApproval": 4,
+            "Approved": 7,
+            "Fulfilled": 532,
+            "Cancelled": 51
+        }
+    },
+    "ledger_mismatches": 0,
+    "negative_stock": 0,
+    "low_stock_pairs": 34,
+    "low_stock_pairs_physical_quantity": 34,
+    "low_stock_pairs_product_default_only": 33,
+    "reservation_mismatches": 0,
+    "reserved_above_quantity": 0,
+    "reserved_pairs": 45,
+    "reserved_units": 600,
+    "order_numbers_off_pattern": 0,
+    "order_number_duplicates": 0,
+    "sequence_mismatches": 0,
+    "document_sequences": {
+        "PO-2604": 61,
+        "PO-2605": 57,
+        "PO-2606": 65,
+        "PO-2607": 63,
+        "PO-2608": 81,
+        "PO-2609": 55,
+        "PO-2610": 18,
+        "SO-2604": 25,
+        "SO-2605": 79,
+        "SO-2606": 103,
+        "SO-2607": 105,
+        "SO-2608": 128,
+        "SO-2609": 122,
+        "SO-2610": 38
+    },
+    "price_overrides": {
+        "purchase_order_items": 12,
+        "sales_order_items": 16
+    },
+    "price_overrides_above_master": {
+        "purchase_order_items": 0,
+        "sales_order_items": 1
+    },
+    "so_lines_below_purchase_price": 0,
+    "sales_discount_above_cap": 0,
+    "date_range": [
+        "2026-04-10",
+        "2026-10-08"
+    ]
+}

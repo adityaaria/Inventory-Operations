@@ -202,6 +202,9 @@ classDiagram
     StockService --> StockCatalogRepositoryInterface : catalog mutex + sorted IDs
     StockService --> TransactionManagerInterface : shared transaction owner
     StockService --> StockRepositoryInterface : lock existing or insert zero
+    SalesOrderService --> StockService : reserve on approve, issueReserved on issue, release on cancel (ADR-018)
+    StockService --> StockRepositoryInterface : reservedQuantity / reserve / release / issueReserved (ADR-018)
+    StockReservationReconciler ..> StockRepositoryInterface : migration + invariant check only (ADR-018)
     MySqlStockCatalogRepository ..|> StockCatalogRepositoryInterface
     InMemoryStockCatalogRepository ..|> StockCatalogRepositoryInterface
     MySqlTransactionManager ..|> TransactionManagerInterface
@@ -260,19 +263,65 @@ classDiagram
 - Stock proposal posting is replay-safe through its state transition (only Approved can be Posted, under lock), not through `OperationIdempotency`.
 - Every repository interface has a MySQL implementation (prepared PDO) and, where services are unit-tested, an in-memory implementation; these remain grouped as `MySqlRepositories` / `InMemoryRepositories` above.
 
-Complete class inventory generated from `app/` on 2026-10-07 (151 files):
+## Refactoring additions — 9 October 2026
+
+```mermaid
+classDiagram
+    RuntimeException <|-- PersistenceException
+    PersistenceException <|-- EntityNotFoundException
+    RuntimeException <|-- InfrastructureException
+    AuditLogRepositoryInterface ..> RequestOrigin : ip address + user agent, none() outside HTTP
+    MySqlOperationalQueryRepository --> OperationalReportSql : builds report/outstanding SQL, no I/O
+    AuditTrailController ..> View
+    ReportController ..> View
+    WorkQueueController ..> View
+    DocumentTimelineController ..> View
+    AuthController ..> View
+    ApplicationBootstrap ..> Config : fromEnvironment()
+```
+
+- `ApplicationBootstrap::boot()` replaces the value returned by `config/bootstrap.php` (kept as a wrapper for shell one-liners) and installs the global exception handler; `Config::fromEnvironment()` replaces `config/config.php`.
+- `View::render()` includes a template with an explicit variable array instead of the controller's local scope.
+- The exception subclasses keep `RuntimeException` as parent, so existing handlers are unchanged.
+
+Complete class inventory generated from `app/` on 2026-10-09 (158 files):
 
 | Directory | Count | Classes and interfaces |
 |---|---|---|
 | `app/Controller/` | 17 | AuditTrailController, AuthController, BusinessOperationController, CategoryController, CustomerController, DashboardController, DocumentTimelineController, DraftCheckController, HomeController, ProductController, PurchaseOrderController, ReportController, SalesOrderController, SupplierController, UserController, WarehouseController, WorkQueueController |
 | `app/Controller/Api/` | 1 | ProductAvailabilityController |
 | `app/Entity/` | 12 | Category, Customer, Product, ProductStock, PurchaseOrder, PurchaseOrderItem, SalesOrder, SalesOrderItem, StockLedgerEntry, Supplier, User, Warehouse |
-| `app/Exception/` | 4 | ForbiddenException, HttpException, UnauthenticatedException, ValidationException |
-| `app/Http/` | 4 | ErrorResponder, Request, Response, Router |
+| `app/Exception/` | 7 | EntityNotFoundException, ForbiddenException, HttpException, InfrastructureException, PersistenceException, UnauthenticatedException, ValidationException |
+| `app/Http/` | 5 | ErrorResponder, Request, Response, Router, View |
 | `app/Repository/Contract/` | 23 | AdjustmentLedgerRepositoryInterface, AuditLogRepositoryInterface, AuditQueryRepositoryInterface, BusinessOperationRepositoryInterface, CategoryRepositoryInterface, CustomerRepositoryInterface, DocumentTimelineRepositoryInterface, LoginAttemptRepositoryInterface, OperationRequestRepositoryInterface, OperationalHealthRepositoryInterface, OperationalQueryRepositoryInterface, OrderExceptionRepositoryInterface, ProductRepositoryInterface, PurchaseOrderRepositoryInterface, SalesOrderRepositoryInterface, StockCatalogRepositoryInterface, StockLedgerRepositoryInterface, StockRepositoryInterface, SupplierRepositoryInterface, TransactionManagerInterface, UserRepositoryInterface, WarehouseRepositoryInterface, WorkQueueRepositoryInterface |
 | `app/Repository/InMemory/` | 15 | InMemoryAuditLogRepository, InMemoryAuditQueryRepository, InMemoryBusinessOperationRepository, InMemoryCategoryRepository, InMemoryLoginAttemptRepository, InMemoryOperationRequestRepository, InMemoryOperationalQueryRepository, InMemoryOrderExceptionRepository, InMemoryProductRepository, InMemoryPurchaseOrderRepository, InMemorySalesOrderRepository, InMemoryStockCatalogRepository, InMemoryStockLedgerRepository, InMemoryStockRepository, InMemoryUserRepository |
-| `app/Repository/MySql/` | 23 | MySqlAuditLogRepository, MySqlAuditQueryRepository, MySqlBusinessOperationRepository, MySqlCategoryRepository, MySqlCustomerRepository, MySqlDocumentTimelineRepository, MySqlLoginAttemptRepository, MySqlOperationRequestRepository, MySqlOperationalHealthRepository, MySqlOperationalQueryRepository, MySqlOrderExceptionRepository, MySqlProductRepository, MySqlPurchaseOrderRepository, MySqlSalesOrderRepository, MySqlStockCatalogRepository, MySqlStockLedgerRepository, MySqlStockRepository, MySqlSupplierRepository, MySqlTransactionManager, MySqlUserRepository, MySqlWarehouseRepository, MySqlWorkQueueRepository, PersistenceErrors |
+| `app/Repository/MySql/` | 24 | MySqlAuditLogRepository, MySqlAuditQueryRepository, MySqlBusinessOperationRepository, MySqlCategoryRepository, MySqlCustomerRepository, MySqlDocumentTimelineRepository, MySqlLoginAttemptRepository, MySqlOperationRequestRepository, MySqlOperationalHealthRepository, MySqlOperationalQueryRepository, MySqlOrderExceptionRepository, MySqlProductRepository, MySqlPurchaseOrderRepository, MySqlSalesOrderRepository, MySqlStockCatalogRepository, MySqlStockLedgerRepository, MySqlStockRepository, MySqlSupplierRepository, MySqlTransactionManager, MySqlUserRepository, MySqlWarehouseRepository, MySqlWorkQueueRepository, OperationalReportSql, PersistenceErrors |
 | `app/Security/` | 7 | AuthContext, AuthGuard, Authorization, Csrf, NativeSessionManager, SessionManager, SessionPolicy |
 | `app/Service/` | 28 | AuditLogger, AuditTrailService, AuthService, BusinessOperationInput, BusinessOperationService, CategoryService, CsvImportService, CustomerService, DashboardService, DocumentTimelineService, DraftCheckService, LoginRateLimiter, LowStockService, MasterDataAuthorizationService, OperationIdempotency, OrderExceptionService, ProductAvailabilityService, ProductService, PurchaseOrderService, ReportService, SalesOrderService, StockDelta, StockMovement, StockService, SupplierService, UserService, WarehouseService, WorkQueueService |
-| `app/Support/` | 15 | Config, CsvImport, CsvResponse, DatabaseFactory, FormState, Html, JsonFileLogger, LogRetention, OrderSearchCriteria, OutstandingCriteria, PaginatedResult, Pagination, ProductInput, ProductSearchCriteria, RequestAuditRecorder |
+| `app/Support/` | 17 | ApplicationBootstrap, Config, CsvImport, CsvResponse, DatabaseFactory, FormState, Html, JsonFileLogger, LogRetention, OrderSearchCriteria, OutstandingCriteria, PaginatedResult, Pagination, ProductInput, ProductSearchCriteria, RequestAuditRecorder, RequestOrigin |
 | `app/Validation/` | 2 | InputValidator, OrderItemsInput |
+
+## Server-assigned order numbers — 10 October 2026 (ADR-017)
+
+```mermaid
+classDiagram
+    class DocumentSequenceRepositoryInterface {
+        <<interface>>
+        currentPeriod() string
+        next(prefix, period) int
+    }
+    DocumentSequenceRepositoryInterface <|.. MySqlDocumentSequenceRepository
+    DocumentSequenceRepositoryInterface <|.. InMemoryDocumentSequenceRepository
+    PurchaseOrderService --> DocumentSequenceRepositoryInterface : claim in draft transaction
+    SalesOrderService --> DocumentSequenceRepositoryInterface : claim in draft transaction
+    PurchaseOrderService ..> OrderNumber : format PO-YYMM-NNNN
+    SalesOrderService ..> OrderNumber : format SO-YYMM-NNNN
+    MySqlPurchaseOrderRepository ..> MySqlTransactionManager : joins active transaction
+    MySqlSalesOrderRepository ..> MySqlTransactionManager : joins active transaction
+```
+
+- New files: `app/Support/OrderNumber.php`, `app/Repository/Contract/DocumentSequenceRepositoryInterface.php`, `app/Repository/MySql/MySqlDocumentSequenceRepository.php`, `app/Repository/InMemory/InMemoryDocumentSequenceRepository.php`. The class inventory table above is dated 2026-10-09 and does not include these or the 10 October reorder-point classes.
+
+Update 10 October 2026 (ADR-018): `App\Repository\MySql\StockReservationReconciler` (migration step and reservation invariant query) was added; `StockRepositoryInterface` gained `reservedQuantity()`, `reserve()`, `release()` and `issueReserved()`; `ProductStock` carries `reservedQuantity()`/`availableQuantity()`. The per-directory counts above predate the 10 October 2026 additions.
+
+Update 12 October 2026 (ADR-021): `StockService` gained `dispatchTransfer()` and `receiveTransfer()`; `BusinessOperationService` gained `dispatch()`, `receive()` and `inTransit()` (and `post()` on a transfer delegates to `dispatch()`); `BusinessOperationRepositoryInterface` gained `dispatched()`, `received()`, `inTransit()` and `inTransitCount()` (MySQL + in-memory); `BusinessOperationController` gained `dispatch()`, `receive()` and `inTransit()`; `ProductStock` gained `inTransitInbound()`. New read-only `App\Repository\MySql\TransferTransitChecks` (migration runner, seed summary, tests). Dependency direction is unchanged.

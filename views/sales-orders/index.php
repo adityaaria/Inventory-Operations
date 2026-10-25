@@ -37,7 +37,7 @@
             <label class="field"><span class="field-label">Search</span><input name="q" placeholder="Search order or customer" value="<?= htmlspecialchars($criteria->term(), ENT_QUOTES, 'UTF-8') ?>"></label>
             <label class="field"><span class="field-label">Status</span><select name="status">
                 <option value="">All statuses</option>
-                <?php foreach (['Draft', 'PendingApproval', 'Approved', 'Fulfilled', 'Cancelled'] as $status): ?>
+                <?php foreach (['Draft', 'PendingApproval', 'Approved', 'PartiallyFulfilled', 'Fulfilled', 'Cancelled'] as $status): ?>
                     <option value="<?= $status ?>" <?= $criteria->status() === $status ? 'selected' : '' ?>><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></option>
                 <?php endforeach; ?>
             </select></label>
@@ -58,12 +58,14 @@
                 <?php endif; ?>
                 <?php foreach ($result->items() as $order): ?>
                     <?php
-                    $statusClass = $order->status() === 'PendingApproval'
-                        ? 'pending'
-                        : strtolower(str_replace([' ', '_'], '-', $order->status()));
+                    $statusClass = match ($order->status()) {
+                        'PendingApproval' => 'pending',
+                        'PartiallyFulfilled' => 'partially-fulfilled',
+                        default => strtolower(str_replace([' ', '_'], '-', $order->status())),
+                    };
                     $statusTone = match ($order->status()) {
                         'Approved', 'Fulfilled' => 'status-success',
-                        'PendingApproval' => 'status-warning',
+                        'PendingApproval', 'PartiallyFulfilled' => 'status-warning',
                         'Cancelled' => 'status-danger',
                         default => 'status-normal',
                     };

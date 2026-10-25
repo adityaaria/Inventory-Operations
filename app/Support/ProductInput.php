@@ -14,6 +14,7 @@ final class ProductInput
         public readonly float $sellingPrice,
         public readonly int $reorderPoint,
         public readonly int $categoryId,
+        public readonly bool $tracksExpiry = false,
     ) {
     }
 
@@ -27,6 +28,7 @@ final class ProductInput
             $this->sellingPrice,
             $this->reorderPoint,
             $this->categoryId,
+            $this->tracksExpiry,
         );
     }
 }

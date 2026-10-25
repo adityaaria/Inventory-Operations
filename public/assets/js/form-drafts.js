@@ -2,7 +2,7 @@
 
 // Browser-local recovery for long create forms. Drafts are scoped to one user and role, expire with the absolute
 // session limit (D-08, `data-draft-ttl` seconds, default 8 hours),
-// never hold CSRF tokens, operation keys, passwords or count baselines, and are removed once a submission is
+// never hold CSRF tokens, operation keys, passwords, count baselines or master list prices, and are removed once a submission is
 // actually sent (the `formdata` event, after client validation and confirmation) and on logout.
 // Restoring revalidates permissions, master-data status and current stock on the server before submit;
 // the submit itself is still fully validated by the services.
@@ -10,7 +10,9 @@
     const PREFIX = 'ioms-draft:v1:';
     const TTL_MS = 8 * 60 * 60 * 1000;
     const MAX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-    const EXCLUDED = /^(csrf_token|operation_key|password.*|(items\[\d+\]\[)?baseline\]?)$/;
+    // list_price is the server's master snapshot (D-13, ADR-019): never stored even if a client adds such a field.
+    // Line prices and price reasons are ordinary user input and are kept.
+    const EXCLUDED = /^(csrf_token|operation_key|password.*|(items\[\d+\]\[)?(baseline|list_price)\]?)$/;
     const ITEM = /^items\[(\d+)\]\[([a-z_]+)\]$/;
 
     function storageKey(owner, form) {
@@ -50,7 +52,7 @@
             if (!line) continue;
             if (!item.active) messages.push({ blocking: true, field: line.field, text: label(line) + ' is no longer active; choose another product.' });
             else if (line.outbound && item.available !== null && line.quantity > item.available) {
-                messages.push({ blocking: false, field: line.field, text: 'Only ' + item.available + ' unit(s) of ' + label(line) + ' are in stock in this warehouse now.' });
+                messages.push({ blocking: false, field: line.field, text: 'Only ' + item.available + ' base unit(s) of ' + label(line) + ' are available (not reserved) in this warehouse now.' });
             }
         }
         return messages;
@@ -104,7 +106,10 @@
             .filter(select => !select.disabled)
             .map(select => {
                 const quantity = form.elements.namedItem(select.name.replace('product_id', 'quantity'));
-                return { field: select, productId: Number(select.value), quantity: quantity ? Number(quantity.value) : 0, outbound, label: select.selectedOptions[0] ? select.selectedOptions[0].textContent.trim() : 'This product' };
+                // Quantities are entered per unit (D-16, ADR-022); stock availability is compared in base units.
+                const unit = form.elements.namedItem(select.name.replace('product_id', 'unit_code'));
+                const factor = Number(unit?.selectedOptions?.[0]?.dataset.factor || 1);
+                return { field: select, productId: Number(select.value), quantity: quantity ? Number(quantity.value) * factor : 0, outbound, label: select.selectedOptions[0] ? select.selectedOptions[0].textContent.trim() : 'This product' };
             });
     }
 
@@ -269,7 +274,7 @@
         if (root.MutationObserver) new root.MutationObserver(enhanceAll).observe(document.body, { childList: true, subtree: true });
     }
 
-    const api = { PREFIX, TTL_MS, ttlFrom, storageKey, draftable, isExpired, itemIndexes, remapName, checkMessages, clearAll, purgeExpired, start };
+    const api = { PREFIX, TTL_MS, ttlFrom, storageKey, draftable, isExpired, itemIndexes, remapName, checkMessages, productLines, clearAll, purgeExpired, start };
 
     if (typeof module === 'object' && module.exports) {
         module.exports = api;

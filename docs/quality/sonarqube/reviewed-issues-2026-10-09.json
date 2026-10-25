@@ -1,0 +1,22 @@
+[
+  {
+    "rule": "php:S2092",
+    "status": "ACCEPTED",
+    "file": "app/Security/NativeSessionManager.php",
+    "line": 35,
+    "message": "Make sure creating this cookie without the \"secure\" flag is safe here.",
+    "comments": [
+      "Secure flag is configuration-driven: SESSION_COOKIE_SECURE=auto sets it in production, and public/index.php refuses to start in production without secure cookies. It stays off only for local HTTP (Docker on localhost:8080), where a secure cookie would never be sent and login would fail."
+    ]
+  },
+  {
+    "rule": "php:S3699",
+    "status": "FALSE_POSITIVE",
+    "file": "app/Security/NativeSessionManager.php",
+    "line": 148,
+    "message": "Remove this use of the output from \"session_write_close\"; \"session_write_close\" doesn't return anything.",
+    "comments": [
+      "Since PHP 7.2 session_write_close() returns bool (true on success). The project targets PHP 8.2+, so checking the result is correct and reports a failed session write."
+    ]
+  }
+]

@@ -14,6 +14,6 @@
     "Sales does not receive global inventory metrics",
     "Stock and ledger remain unchanged by acceptance"
   ],
-  "low_stock_pairs": 7,
+  "low_stock_pairs": 22,
   "stock_mutations_performed": false
 }

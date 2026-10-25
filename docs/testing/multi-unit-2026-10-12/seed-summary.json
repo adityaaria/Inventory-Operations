@@ -1,0 +1,159 @@
+{
+ "po": 400,
+ "so": 600,
+ "approve_short": 0,
+ "issue_skipped": 0,
+ "so_shipments": 687,
+ "so_split_orders": 130,
+ "so_remainder_closed": 17,
+ "transfers": 40,
+ "transfer_skipped": 0,
+ "transfer_dispatched": 39,
+ "transfer_dispatch_refused": 0,
+ "transfer_received": 37,
+ "transfer_received_with_damage": 7,
+ "transfer_received_short": 5,
+ "price_override_without_reason": 0,
+ "reorder_overrides": 15,
+ "rows": {
+  "users": 17,
+  "warehouses": 3,
+  "categories": 12,
+  "suppliers": 15,
+  "customers": 66,
+  "products": 500,
+  "product_units": 1351,
+  "product_stocks": 1500,
+  "purchase_orders": 400,
+  "purchase_order_items": 3286,
+  "sales_orders": 600,
+  "sales_order_items": 3238,
+  "stock_ledger": 7376,
+  "audit_logs": 5230,
+  "purchase_order_closures": 2,
+  "sales_order_rejections": 24,
+  "sales_order_closures": 17,
+  "document_sequences": 14,
+  "inventory_operations": 40,
+  "inventory_operation_items": 118
+ },
+ "status": {
+  "purchase_orders": {
+   "Draft": 6,
+   "Ordered": 9,
+   "PartiallyReceived": 7,
+   "Received": 359,
+   "Cancelled": 19
+  },
+  "sales_orders": {
+   "Draft": 5,
+   "PendingApproval": 6,
+   "Approved": 7,
+   "PartiallyFulfilled": 23,
+   "Fulfilled": 513,
+   "Cancelled": 46
+  },
+  "inventory_operations": {
+   "Approved": 1,
+   "Dispatched": 2,
+   "Received": 37
+  }
+ },
+ "ledger_mismatches": 0,
+ "negative_stock": 0,
+ "low_stock_pairs": 8,
+ "low_stock_pairs_physical_quantity": 7,
+ "low_stock_pairs_product_default_only": 8,
+ "issued_ledger_mismatches": 0,
+ "fulfilment_status_mismatches": 0,
+ "closure_mismatches": 0,
+ "transfer_dispatch_ledger_mismatches": 0,
+ "transfer_receipt_ledger_mismatches": 0,
+ "transfer_status_mismatches": 0,
+ "in_transit_equation_mismatch": 0,
+ "transfer_discrepancy_without_reason": 0,
+ "in_transit_units": 5334,
+ "transfer_written_off_units": 673,
+ "so_lines_partially_issued": 96,
+ "so_with_multiple_shipments": 116,
+ "so_remainders_closed": 17,
+ "reservation_mismatches": 0,
+ "reserved_above_quantity": 0,
+ "reserved_pairs": 64,
+ "reserved_units": 27343,
+ "order_numbers_off_pattern": 0,
+ "order_number_duplicates": 0,
+ "sequence_mismatches": 0,
+ "document_sequences": {
+  "PO-2604": 61,
+  "PO-2605": 57,
+  "PO-2606": 65,
+  "PO-2607": 63,
+  "PO-2608": 81,
+  "PO-2609": 55,
+  "PO-2610": 18,
+  "SO-2604": 25,
+  "SO-2605": 79,
+  "SO-2606": 103,
+  "SO-2607": 105,
+  "SO-2608": 128,
+  "SO-2609": 122,
+  "SO-2610": 38
+ },
+ "price_overrides": {
+  "purchase_order_items": 12,
+  "sales_order_items": 16
+ },
+ "price_overrides_above_master": {
+  "purchase_order_items": 0,
+  "sales_order_items": 1
+ },
+ "so_lines_below_purchase_price": 0,
+ "line_unit_mismatches": 0,
+ "whole_unit_mismatches": 0,
+ "base_unit_mismatches": 0,
+ "line_list_price_mismatches": 0,
+ "product_units": {
+  "bal": 15,
+  "box": 319,
+  "galon": 2,
+  "jeriken": 3,
+  "karton": 470,
+  "pak": 15,
+  "pcs": 470,
+  "renceng": 47,
+  "sak": 10
+ },
+ "barcodes": 1351,
+ "barcode_check_digit_errors": 0,
+ "lines_by_unit": {
+  "purchase_order_items": {
+   "bal": 111,
+   "galon": 13,
+   "jeriken": 22,
+   "karton": 3085,
+   "sak": 55
+  },
+  "sales_order_items": {
+   "bal": 33,
+   "box": 874,
+   "galon": 11,
+   "jeriken": 21,
+   "karton": 1161,
+   "pak": 61,
+   "pcs": 905,
+   "renceng": 121,
+   "sak": 51
+  },
+  "inventory_operation_items": {
+   "jeriken": 1,
+   "karton": 109,
+   "sak": 8
+  }
+ },
+ "sales_discount_above_cap": 0,
+ "date_range": [
+  "2026-04-10",
+  "2026-10-08"
+ ]
+}

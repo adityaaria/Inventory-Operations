@@ -1,0 +1,30 @@
+{
+    "migration": "20261012-inventory-valuation",
+    "destructive": false,
+    "mode": "dry-run",
+    "already_applied": false,
+    "columns_present": false,
+    "watermark": 6421,
+    "ledger_rows_before_valuation_start": 6421,
+    "rows_to_backfill": 6,
+    "backfill_by_movement": [
+        {
+            "movement": "Receipt",
+            "reference": "PO",
+            "rows": 2,
+            "cost_cents": 5097915
+        },
+        {
+            "movement": "Issue",
+            "reference": "SO",
+            "rows": 4,
+            "cost_cents": -131997498
+        }
+    ],
+    "lot_value_now_cents": 3736104703137,
+    "lot_opening_value_cents": 3736231602720,
+    "ledger_cost_after_backfill_cents": -126899583,
+    "projected_rollforward_difference_cents": 0,
+    "master_price_value_cents": 3736104703137,
+    "projected_lot_rollforward_mismatches": 0
+}

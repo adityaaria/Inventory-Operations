@@ -1,0 +1,29 @@
+{
+    "migration": "20261012-multi-unit",
+    "destructive": false,
+    "status": "already-applied",
+    "checks": {
+        "ledger_mismatches": 0,
+        "reserved_above_quantity": 0,
+        "reservation_mismatches": 0,
+        "sequence_mismatches": 0,
+        "issued_ledger_mismatches": 0,
+        "fulfilment_status_mismatches": 0,
+        "closure_mismatches": 0,
+        "transfer_dispatch_ledger_mismatches": 0,
+        "transfer_receipt_ledger_mismatches": 0,
+        "transfer_status_mismatches": 0,
+        "in_transit_equation_mismatch": 0,
+        "transfer_discrepancy_without_reason": 0,
+        "price_override_without_reason": 0,
+        "line_unit_mismatches": 0,
+        "whole_unit_mismatches": 0,
+        "base_unit_mismatches": 0
+    },
+    "unit_checks": {
+        "line_unit_mismatches": 0,
+        "whole_unit_mismatches": 0,
+        "base_unit_mismatches": 0
+    },
+    "product_units": 986
+}

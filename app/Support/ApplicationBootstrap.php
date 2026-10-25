@@ -17,6 +17,10 @@ final class ApplicationBootstrap
         $logger = new JsonFileLogger($root . '/var/log/app.log');
 
         ini_set('display_errors', $config->bool('APP_DEBUG') ? '1' : '0');
+        // D-17 / ADR-023: the expiry rule uses the business date of APP_TIMEZONE; an invalid zone fails at boot.
+        BusinessDate::configure($config->string('APP_TIMEZONE'));
+        // D-19 / ADR-025: invalid PPN or payment-term settings stop the application instead of producing wrong invoices.
+        TaxSettings::fromConfig($config);
 
         set_exception_handler(static function (\Throwable $throwable) use ($config, $logger): void {
             $logger->error($throwable, ['handler' => 'global_exception']);

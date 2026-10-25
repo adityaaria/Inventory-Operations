@@ -1,0 +1,80 @@
+# ADR-023: batch/lot tracking, expiry and FEFO issue
+
+Date: 12 October 2026. Decision: project owner (user), D-17, approved with Series 2 on 2026-10-11 (feature #2). **Not a trainer decision and not an official brief requirement.** No PO, SO or operation status changes and no new ledger movement type (Receipt, Issue, Adjustment stay the brief's set). One new operation-document *purpose* (`ExpiredWriteOff`) reuses the existing Adjustment kind and flow. Requirement support: PRD-01, WH-01, PO-01, SO-01, DASH-01, REPORT-01, API-01, VAL-01, DB-01, ARCH-01, ARCH-02, TEST-01/02. Builds on ADR-002/003 (row locks, ledger), ADR-004 (document lock first), ADR-008 (replay), ADR-009 (stock operations and returns), ADR-016/018 (low stock on available, reservation), ADR-017 (UTC clock), ADR-020 (partial shipments), ADR-021 (transit) and ADR-022 (base units). Their invariants are unchanged and hold per lot as well.
+
+## Context
+
+A food and beverage distributor must know which supplier batch every unit came from and when it expires, ship the earliest-expiring stock first, never sell expired stock, and trace a batch for a recall. Until now `product_stocks` held one undifferentiated quantity per product and warehouse. The next stage (FIFO valuation) also needs the cost of every batch.
+
+## Decision
+
+### Model
+
+- **`stock_lots`** — one row per product + warehouse + lot identity: `lot_code` (1–60 printable characters), `expiry_date` (NULL = no expiry), `received_at` (first receipt), `unit_cost DECIMAL(14,2)` per **base** unit, `quantity` (base units), `opening_quantity` (only for migrated `LEGACY` lots), `source_type`/`source_id` (the document that created it) and `lot_seq`, the lot's number inside its pair (1, 2, 3 …).
+- **Identity (justified variant of UNIQUE(product, warehouse, lot_code, expiry))**: `UNIQUE(product_id, warehouse_id, lot_code, expiry_key, unit_cost)` with `expiry_key = COALESCE(expiry_date, '9999-12-31')` as a stored generated column. MySQL treats NULLs as distinct in a UNIQUE key, so without `expiry_key` two "no expiry" rows of the same code could coexist. `unit_cost` is part of the identity because the same supplier batch received at two different (negotiated, ADR-019) prices must stay two cost layers for the FIFO valuation stage; merging them would require averaging, which FIFO forbids. A receipt with the same code, expiry and cost merges into the existing lot (quantity +=, `received_at` keeps the first receipt).
+- **CHECKs**: quantity and opening are unsigned (≥ 0); `lot_seq ≥ 1`; a non-blank code; `unit_cost ≥ 0`; `opening_quantity = 0` unless `source_type = 'LEGACY'`; `source_type` in the known set. FK `(product_id, warehouse_id)` → `product_stocks`.
+- **No per-lot reservation.** Reservations stay on the aggregate (ADR-018): an approved order holds units of a product in a warehouse, not of a specific lot. Lots are picked at issue time.
+- **`product_stocks` stays the aggregate and the lock root.** New column `lot_count` (= highest `lot_seq` of the pair).
+- **`stock_ledger.lot_id`** (nullable FK): NULL only for movements written before the migration; every new movement has one. Rows that touch several lots are written once per lot.
+- **`products.tracks_expiry`**: a tracked product needs an expiry date on every new lot (except the migrated `LEGACY` lot); other products may leave it empty.
+- **Invariants** (new, `BatchLotChecks`): per pair Σ lot.quantity = product_stocks.quantity; per lot quantity = opening + Σ ledger rows with its `lot_id`; `lot_count` = number of lots of the pair; no ledger row without a lot after the migration watermark; no Issue row from a lot that was expired at the issue time; FEFO order respected for every Issue row; transfer lot lines add up to the transfer lines and to their ledger rows. The existing ones (stock = ledger, reservation, fulfilment, transit, units) are unchanged.
+
+### Lock protocol (deadlock-free)
+
+Document first (ADR-004), then every affected `product_stocks` row in the existing deterministic order, then — only after *all* pairs are locked — each pair's lots. Lots are locked with point lookups on `UNIQUE(product_id, warehouse_id, lot_seq)` for `lot_seq = 1 … lot_count` (read from the locked pair row, so it is current), never with a range scan. A unique-key equality on an existing row takes a record lock only, so no transaction holds a gap lock on `stock_lots`; a new lot is inserted at `lot_seq = lot_count + 1` while the pair is locked, and its insert can therefore never wait on another transaction's gap lock. (A range scan `WHERE product_id = ? AND warehouse_id = ? FOR UPDATE` would take next-key/gap locks that span into the neighbouring pair's index range; two receipts of adjacent pairs could then each wait for the other's gap lock on insert — a deadlock the pair locks cannot prevent.) Every lot change happens while its pair is locked, so the pair lock alone serializes all lot changes of a pair; FEFO order is applied in PHP: `(expiry_date NULLS LAST, received_at, id)`.
+
+### Expiry policy and "today"
+
+- A lot is **expired** when `expiry_date < today`, where today is the calendar date in the application time zone `APP_TIMEZONE` (default `Asia/Jakarta`, UTC+7, no DST). A lot is still sellable on its expiry date.
+- **The UTC issue of ADR-017**: MySQL and PHP run in UTC; `CURRENT_DATE` would roll over at 07:00 WIB, so a lot expiring "yesterday" in Jakarta would still be sellable until 07:00. The expiry rule therefore never uses `CURRENT_DATE`: SQL uses `DATE(UTC_TIMESTAMP() + INTERVAL <offset> SECOND)` (offset from `APP_TIMEZONE`, computed in PHP, an integer, never user input) and PHP uses `App\Support\BusinessDate`. Order dates and numbers keep the ADR-017 UTC clock (unchanged). The seed generator's `SET TIMESTAMP` moves `UTC_TIMESTAMP()` as well, so historical issues are checked against the expiry at their own time.
+- **Sellable** = Σ quantity of non-expired lots = quantity − expired quantity. **Available** = sellable − reserved (may be below zero, see below). The single low-stock rule (`LowStockSql::isLow()`, `ReorderThreshold::isLow()` via `ProductStock::isLowStock()`) compares this available quantity, so badges, the Products filter, dashboards, the low-stock command and replenishment exclude expired stock.
+- **Approval** (ADR-018) requires available ≥ line quantity, computed from the locked lots.
+- **Reservations that outgrow sellable stock.** A reservation made while the lots were fresh can exceed sellable stock after lots expire. Nothing is cancelled automatically. The issue refuses with 422 ("Only N unit(s) … are not expired; M reserved unit(s) expired after approval. Write off the expired stock and receive fresh stock, or close/cancel the remainder.") and the Expiry report lists every pair whose reservation exceeds sellable stock with the affected orders. The DB CHECK reserved ≤ quantity is unchanged.
+- **Near expiry**: `0 ≤ days left ≤ NEAR_EXPIRY_DAYS` (config, default 30, 1–365).
+
+### Receipt (PO receive, including partial)
+
+Per line the user enters one or more splits (lot code, expiry date, quantity in the line unit) that must add up to the received quantity (422 otherwise). Without splits a non-tracked line becomes one lot whose code is the PO number; a tracked line without splits is refused. Expiry: valid `YYYY-MM-DD`, required for tracked products, refused when already expired. Duplicate splits (same code and expiry) on one line are refused. **Unit cost** per base = the line's effective unit price (ADR-019/022, per entered unit) ÷ `unit_factor`, rounded half-up to whole cents (`DECIMAL(14,2)`); the stock value of a lot may therefore differ from the line total by at most quantity × Rp 0,005. One Receipt ledger row per lot. The idempotency hash (ADR-008) includes the splits only when present, so earlier keys and payloads hash as before.
+
+### Issue (SO shipment, FEFO)
+
+`StockService::issue()` allocates each line automatically over the non-expired lots with stock, in FEFO order, after all locks; it writes one Issue ledger row per lot and lowers the lots and the aggregate (one statement for quantity and reservation, as ADR-018). The allocation is stored **in the ledger** (Issue rows carry `reference SO`, product and `lot_id`; an SO has one line per product), which recall, the SO detail and customer returns read; no extra table duplicates it. Optional override of the allocation by Warehouse was **not implemented** (FEFO only); the FEFO check therefore expects zero exceptions.
+
+### Transfers (ADR-021)
+
+Dispatch picks FEFO non-expired lots at the source; each picked lot gets one negative TRANSFER Adjustment row and one `inventory_operation_lots` row (source lot, code, expiry, cost, dispatched units). Receipt distributes each line's good units over its lots in dispatch order, then the damaged units, then the short units (deterministic; the form stays per line), records per lot received/damaged/short and creates or merges a destination lot with the **same code, expiry and unit cost** (one positive TRANSFER row per lot). Lots that expired in transit arrive as expired lots (not sellable). Transfers dispatched before the migration have no lot rows; their good units enter the destination `LEGACY` lot.
+
+### Adjustments, returns and expired write-off (ADR-009)
+
+- **Count adjustment per lot**: a line names an existing lot (baseline = the lot's quantity, 409 when it changed) or a new lot (code and, for tracked products, expiry; units found; cost = current product purchase price per base). A line without a lot keeps the former pair-level count (baseline = pair quantity): a shortfall is taken in FEFO order (expired lots first, since they expire first), a surplus becomes a new lot `ADJUSTMENT-<id>` (refused for tracked products). One line per product and lot (`UNIQUE(operation_id, product_id, lot_key)` replaces `UNIQUE(operation_id, product_id)`; transfers and returns still have one line per product).
+- **Supplier return** takes the units from the original Receipt row's lot (422 when that lot no longer has them); a pre-migration Receipt row (no lot) takes them from the pair's `LEGACY` lot first and any rest FEFO over the other lots.
+- **Customer return** goes back to the original Issue row's lot. If that lot has expired, the units stay in it: an expired lot is the not-sellable quarantine state (it appears in the Expiry report and can be written off). A pre-migration Issue row returns into the `LEGACY` lot.
+- **Decreases respect reservations**: after the lock, quantity after ≥ reserved (unchanged) and, for a non-expired lot, sellable after ≥ reserved.
+- **Expired write-off** (`purpose = 'ExpiredWriteOff'`, kind Adjustment): Admin or Warehouse proposes from the Expiry report for one warehouse with a reason; one line per expired lot (count 0, baseline = lot quantity, at most 100 lots per document); another Admin approves; posting re-checks after the lock that each lot is still expired and unchanged (409 otherwise) and writes one negative ADJUSTMENT row per lot. The reservation guard applies: if write-off would leave quantity below the reservation, posting is refused (422) until the affected orders are closed or cancelled.
+
+### Read models
+
+Product detail lists the lots per warehouse (quantity, expiry, days left, status OK/Near/Expired/No expiry, received, unit cost for Admin/Warehouse). New **Expiry** report (`/reports/expiry`, CSV `/reports/expiry.csv`, Admin/Warehouse) with warehouse, status and search filters, the over-reservation list and the write-off form. Dashboard cards (Admin, Warehouse): near-expiry and expired lot counts. **Recall/trace** (`/lots`, `/lots/show`, Admin/Warehouse): lot code search; for a lot, its receipt (PO, supplier), transfers (source/destination lots), issues (SO, customer, quantities), adjustments and returns, plus every lot with the same code. SO and PO detail list the lots shipped/received; timeline ledger rows name the lot. API availability adds per warehouse `expired_quantity`, `available_excluding_expired`, `nearest_expiry` and the totals `total_expired`, `total_available_excluding_expired`, `nearest_expiry`; existing fields keep their meaning.
+
+### Migration
+
+`database/migrations/20261012-batch-expiry.sql` (additive, idempotent DDL) and `scripts/migrate-batch-expiry.php [--dry-run]` with the data step `BatchExpiryMigration` in one transaction: lock every pair; each pair with quantity > 0 and no lot gets one `LEGACY` lot (expiry NULL, opening = quantity, cost = current purchase price per base); `tracks_expiry` is set for products of food and beverage categories (only on the first run, so later Admin choices survive a re-run); the ledger watermark records the last pre-migration ledger id. Every invariant (old and new) is re-checked before commit; any failure rolls back and exits 2 without recording `batch-expiry-1`. Re-running is a no-op that re-verifies. The dry run changes nothing and prints the pairs, units, legacy stock value, flagged categories and products, in-transit transfers without lots and the invariant counts.
+
+## Seed
+
+Food and beverage products track expiry. Every PO receipt carries batch codes `L<production yymmdd>-<nnn>` with expiry = production date (5–40 days before delivery) + shelf life of the category (snacks and UHT milk ~150 days, coffee/sauces ~365, detergent and personal care ~900 days without tracking, baby care none; ±15 % per product); one line in five is split into an older and a newer batch. Warehouse staff propose an expired write-off on the first working day of each month and another Admin approves it. Rebuilt once: 4,466 lots, 730 split receipt lines, 9 write-offs (7 posted, 2 refused by the reservation guard), 2 issues refused because the reservation outgrew non-expired stock, 169 near-expiry and 121 expired lots at the build date; every invariant (old and new) 0 — see the evidence file.
+
+## Consequences
+
+Every unit has a lot and a cost; expired stock can never be shipped, transferred or counted as available; recalls trace a lot from supplier to customer. Costs: lot rows per receipt, one more lock round per pair (all lots of the pair, including empty ones, are locked — the pair lock already serialized them, so this adds row locks, not contention), per-lot ledger rows (a shipment of one line may write several Issue rows), migrated stock has no expiry (`LEGACY`, permissive), the FEFO override and per-lot transfer receipt input are not implemented, adjustments count one lot per line, and a reservation can outgrow sellable stock (reported, refused at issue, never auto-cancelled).
+
+## Tests
+
+`BatchExpiryTest` (unit, 19), `BatchExpiryIntegrationTest` (MySQL, 7: invariants, lifecycle, over-reservation, DB guards, read models and recall, FEFO checker, migration dry run/apply/idempotency), `ParallelStockIntegrationTest` (+2 real-process races: two issues for the last non-expired lot; issue vs transfer dispatch), HTTP and browser scenarios. Evidence and the list of intentionally changed tests: `docs/testing/batch-expiry-2026-10-12.md`.
+
+Note 12 October 2026 (D-18, ADR-024, user decision): stock count sessions lock pairs then lots in this order, count per lot, and may create a found lot (`source_type = 'STOCK_COUNT'`, cost = current purchase price per base). The seed generator's follow-up events (transfers, write-offs) now run at their own scheduled time instead of the first step's clock (generator bug found in this stage).
+
+Note 12 October 2026 (D-19, ADR-025, user decision): the FEFO allocation of each shipment is also recorded on its delivery note (`delivery_note_lots`, linked to the Issue ledger rows) and printed on the surat jalan.
+
+
+Note 12 October 2026 (D-20, ADR-026, user decision): the lot unit cost is the valuation layer of FIFO per batch. Every ledger row with a lot stores the lot's cost and `cost_amount`; outbound quantities take the cost of the FEFO-allocated lot (cost follows the physical lot). The migration watermark is the valuation start: rows before it have no cost; the `LEGACY` lots' opening quantity × cost is the opening value.

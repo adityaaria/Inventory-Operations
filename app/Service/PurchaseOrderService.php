@@ -10,9 +10,11 @@ use App\Entity\Supplier;
 use App\Entity\User;
 use App\Entity\Warehouse;
 use App\Exception\HttpException;
+use App\Repository\Contract\DocumentSequenceRepositoryInterface;
 use App\Repository\Contract\ProductRepositoryInterface;
 use App\Repository\Contract\PurchaseOrderRepositoryInterface;
 use App\Security\AuthContext;
+use App\Support\OrderNumber;
 use App\Exception\ValidationException;
 
 final class PurchaseOrderService
@@ -23,27 +25,48 @@ final class PurchaseOrderService
      */
     public function __construct(
         private readonly PurchaseOrderRepositoryInterface $orders,
+        private readonly DocumentSequenceRepositoryInterface $sequences,
         private readonly ProductRepositoryInterface $products,
         private readonly array $suppliers,
         private readonly array $warehouses,
         private readonly StockService $stockService,
         private readonly ?OperationIdempotency $idempotency = null,
         private readonly ?\App\Repository\Contract\OrderExceptionRepositoryInterface $exceptions = null,
+        private readonly OrderLinePricing $pricing = new OrderLinePricing(),
+        private readonly ?ProductUnitCatalog $units = null,
     ) {
     }
 
+    private function units(): ProductUnitCatalog
+    {
+        return $this->units ?? new ProductUnitCatalog($this->products);
+    }
+
     /**
-     * Line prices always come from the product master (purchase_price); any price sent by the client is ignored.
+     * The order number is assigned by the server (D-11, ADR-017); clients cannot choose it.
+     * Line prices default to the product master purchase_price; a different `price` needs a `price_reason` (D-13,
+     * ADR-019, see OrderLinePricing). The master snapshot (list_price) is always taken here, never from the client.
      *
-     * @param list<array{product_id: int, quantity: int}> $items
+     * Units (D-16, ADR-022): `quantity` is in the line's `unit_code` (empty = base unit); the line stores the unit snapshot
+     * (code, factor, quantity as entered) and the base quantity; the price is per entered unit.
+     *
+     * @param list<array{product_id: int, quantity: int, unit_code?: string|null, price?: mixed, price_reason?: mixed}> $items
      */
-    public function createDraft(AuthContext $actor, string $orderNumber, int $supplierId, int $warehouseId, array $items): PurchaseOrder
+    public function createDraft(AuthContext $actor, int $supplierId, int $warehouseId, array $items): PurchaseOrder
     {
         $this->assertCanCreate($actor);
-        $this->assertHeader($orderNumber, $supplierId, $warehouseId);
+        $this->assertHeader($supplierId, $warehouseId);
         $lines = $this->pricedItems($items);
 
-        return $this->orders->createDraft(trim($orderNumber), $supplierId, $warehouseId, $actor->userId(), $lines);
+        // The number is claimed in the same transaction as the draft insert, after validation: invalid input never
+        // touches the sequence, and a failed insert rolls the claim back (no gap, never a duplicate).
+        return $this->stockService->transaction(function () use ($supplierId, $warehouseId, $actor, $lines): PurchaseOrder {
+            $period = $this->sequences->currentPeriod();
+            $number = OrderNumber::format(OrderNumber::PURCHASE, $period, $this->sequences->next(OrderNumber::PURCHASE, $period));
+            $this->units()->confirmSnapshots($lines);
+
+            return $this->orders->createDraft($number, $supplierId, $warehouseId, $actor->userId(), $lines);
+        });
     }
 
     public function markOrdered(AuthContext $actor, int $id): void
@@ -61,20 +84,28 @@ final class PurchaseOrderService
     }
 
     /**
-     * @param array<int, int> $receivedQuantitiesByItemId
+     * Receipt quantities are whole line units (D-16, ADR-022: a karton line receives karton); stock moves in base units.
+     *
+     * Lots (D-17, ADR-023): $lotsByItemId maps an item id to its splits [{lot_code, expiry_date, quantity in line units}]
+     * that must add up to the received quantity. Without splits a line enters one lot named after the order number
+     * (refused for products that track expiry). Unit cost per base = effective line price ÷ unit factor, in whole cents.
+     *
+     * @param array<int, int> $receivedQuantitiesByItemId item id => quantity in the line unit
+     * @param array<int, list<array{lot_code: string, expiry_date: string|null, quantity: int}>>|null $lotsByItemId
      */
-    public function receive(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey = null): void
+    public function receive(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey = null, ?array $lotsByItemId = null): void
     {
-        $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId, $requestKey): void {
+        $lotsByItemId = $this->normalizedLots($lotsByItemId ?? []);
+        $this->stockService->transaction(function () use ($actor, $id, $receivedQuantitiesByItemId, $requestKey, $lotsByItemId): void {
             $this->assertCanReceive($actor);
             $order = $this->findOrder($id);
-            if ($this->isReplayedReceipt($actor, $id, $receivedQuantitiesByItemId, $requestKey)) { return; }
+            if ($this->isReplayedReceipt($actor, $id, $receivedQuantitiesByItemId, $requestKey, $lotsByItemId)) { return; }
             if ($this->exceptions?->closure($id)!==null) { throw new ValidationException('This PO remainder is closed.'); }
             if (!in_array($order->status(), PurchaseOrder::RECEIVABLE_STATUSES, true)) {
                 throw new ValidationException('Purchase order is not receivable.');
             }
 
-            [$acceptedReceipts, $movements] = $this->acceptedReceipts($order, $receivedQuantitiesByItemId);
+            [$acceptedReceipts, $movements] = $this->acceptedReceipts($order, $receivedQuantitiesByItemId, $lotsByItemId);
             $status = $this->statusAfterReceipt($order, $acceptedReceipts);
             $this->stockService->receive(
                 $order->destinationWarehouseId(),
@@ -90,29 +121,60 @@ final class PurchaseOrderService
     }
 
     /**
+     * @param array<int, mixed> $lots
+     * @return array<int, list<array{lot_code: string, expiry_date: string|null, quantity: int}>>
+     */
+    private function normalizedLots(array $lots): array
+    {
+        $result = [];
+        foreach ($lots as $itemId => $splits) {
+            if (!is_array($splits) || count($splits) > 50) {
+                throw new ValidationException('Invalid lot splits.');
+            }
+            foreach ($splits as $split) {
+                if (!is_array($split) || !is_int($split['quantity'] ?? null) || $split['quantity'] <= 0) {
+                    throw new ValidationException('Enter a whole quantity above zero for every lot.');
+                }
+                $result[(int) $itemId][] = [
+                    'lot_code' => \App\Validation\LotInput::code($split['lot_code'] ?? null),
+                    'expiry_date' => \App\Validation\LotInput::expiry($split['expiry_date'] ?? null),
+                    'quantity' => $split['quantity'],
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * A repeated request key with the same payload is a completed replay; a different payload is rejected by the repository.
+     * Lot splits join the fingerprint only when present, so keys from before D-17 hash as before.
      *
      * @param array<int, int> $receivedQuantitiesByItemId
+     * @param array<int, list<array{lot_code: string, expiry_date: string|null, quantity: int}>> $lots
      */
-    private function isReplayedReceipt(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey): bool
+    private function isReplayedReceipt(AuthContext $actor, int $id, array $receivedQuantitiesByItemId, ?string $requestKey, array $lots = []): bool
     {
         if ($requestKey === null) {
             return false;
         }
         if ($this->idempotency === null) { throw new \LogicException('Idempotency repository is required.'); }
 
-        return $this->idempotency->replay($actor->userId(), $requestKey, 'receipt', $id, $receivedQuantitiesByItemId);
+        return $this->idempotency->replay($actor->userId(), $requestKey, 'receipt', $id, $receivedQuantitiesByItemId, $lots);
     }
 
     /**
      * @param array<int, int> $receivedQuantitiesByItemId
-     * @return array{0: array<int, int>, 1: list<StockMovement>} accepted quantity per item id and the matching stock movements
+     * @param array<int, list<array{lot_code: string, expiry_date: string|null, quantity: int}>> $lotsByItemId
+     * @return array{0: array<int, int>, 1: list<StockMovement>} accepted base quantity per item id and the matching stock movements
      */
-    private function acceptedReceipts(PurchaseOrder $order, array $receivedQuantitiesByItemId): array
+    private function acceptedReceipts(PurchaseOrder $order, array $receivedQuantitiesByItemId, array $lotsByItemId = []): array
     {
         $acceptedReceipts = [];
         $movements = [];
+        $known = [];
         foreach ($order->items() as $item) {
+            $known[$item->id()] = true;
             $quantity = $receivedQuantitiesByItemId[$item->id()] ?? 0;
             if ($quantity === 0) {
                 continue;
@@ -120,11 +182,25 @@ final class PurchaseOrderService
             if ($quantity < 0) {
                 throw new ValidationException('Receipt quantity must be positive.');
             }
-            if ($quantity > $item->remainingQuantity()) {
+            if ($quantity > $item->remainingUnitQuantity()) {
                 throw new ValidationException('Receipt quantity cannot exceed remaining quantity.');
             }
-            $acceptedReceipts[$item->id()] = $quantity;
-            $movements[] = new StockMovement($item->productId(), $quantity);
+            $base = $quantity * $item->unitFactor();
+            $cost = \App\Validation\LotInput::costPerBase($item->purchasePrice(), $item->unitFactor());
+            $splits = [];
+            $sum = 0;
+            foreach ($lotsByItemId[$item->id()] ?? [] as $split) {
+                $sum += $split['quantity'];
+                $splits[] = new LotSplit($split['lot_code'], $split['expiry_date'], $split['quantity'] * $item->unitFactor(), $cost);
+            }
+            if ($splits !== [] && $sum !== $quantity) {
+                throw new ValidationException('Lot quantities (' . $sum . ') must add up to the received quantity (' . $quantity . ').');
+            }
+            $acceptedReceipts[$item->id()] = $base;
+            $movements[] = new StockMovement($item->productId(), $base, $splits, $order->orderNumber(), $cost);
+        }
+        if (array_diff_key($lotsByItemId, $known) !== []) {
+            throw new ValidationException('Lot splits must refer to lines of this purchase order.');
         }
 
         if ($acceptedReceipts === []) {
@@ -169,12 +245,8 @@ final class PurchaseOrderService
         }
     }
 
-    private function assertHeader(string $orderNumber, int $supplierId, int $warehouseId): void
+    private function assertHeader(int $supplierId, int $warehouseId): void
     {
-        \App\Validation\InputValidator::requiredString('order_number', $orderNumber, 50);
-        if (trim($orderNumber) === '') {
-            throw new ValidationException('Order number is required.');
-        }
         $supplier = $this->suppliers[$supplierId] ?? null;
         if (!$supplier instanceof Supplier || !$supplier->isActive()) {
             throw new ValidationException('Active supplier is required.');
@@ -186,10 +258,10 @@ final class PurchaseOrderService
     }
 
     /**
-     * Validates the lines and prices each one from the active product's master purchase_price.
+     * Validates the lines and prices each one: master purchase_price by default, or a negotiated price with a reason.
      *
-     * @param list<array{product_id: int, quantity: int}> $items
-     * @return list<array{product_id: int, quantity: int, purchase_price: float}>
+     * @param list<array{product_id: int, quantity: int, unit_code?: string|null, price?: mixed, price_reason?: mixed}> $items
+     * @return list<array{product_id: int, quantity: int, unit_code: string, unit_factor: int, unit_quantity: int, purchase_price: float, list_price: float, price_reason: string|null}>
      */
     private function pricedItems(array $items): array
     {
@@ -211,7 +283,18 @@ final class PurchaseOrderService
                 throw new ValidationException('Quantity must be positive.');
             }
             $seenProducts[$item['product_id']] = true;
-            $lines[] = ['product_id' => $item['product_id'], 'quantity' => $item['quantity'], 'purchase_price' => $product->purchasePrice()];
+            $unit = $this->units()->forProduct($product)->resolve($item['unit_code'] ?? null, $product->sku());
+            $priced = $this->pricing->purchaseLine($product, $item['price'] ?? null, $item['price_reason'] ?? null, $unit);
+            $lines[] = [
+                'product_id' => $item['product_id'],
+                'quantity' => \App\Support\UnitSet::toBase($item['quantity'], $unit->factor()),
+                'unit_code' => $unit->code(),
+                'unit_factor' => $unit->factor(),
+                'unit_quantity' => $item['quantity'],
+                'purchase_price' => $priced['price'],
+                'list_price' => $priced['list_price'],
+                'price_reason' => $priced['price_reason'],
+            ];
         }
 
         return $lines;

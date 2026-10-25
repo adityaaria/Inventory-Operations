@@ -183,6 +183,19 @@ td form {
     display: inline;
 }
 
+/* Product detail: per-warehouse reorder point override (ADR-016). */
+.reorder-override-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reorder-override-form input[type="number"] {
+    width: 8.5rem;
+    max-width: 100%;
+}
+
 .toolbar a,
 .action-link {
     display: inline-flex;
@@ -570,6 +583,8 @@ td input[type="number"] {
 .status-partial,
 .status-partiallyreceived,
 .status-partially-received,
+.status-partiallyfulfilled,
+.status-partially-fulfilled,
 .stock-low {
     border-color: #fde68a;
     background: var(--warning-bg);
@@ -595,6 +610,8 @@ td input[type="number"] {
 }
 
 .status-active,
+.status-dispatched,
+.status-in-transit,
 .status-info {
     border-color: #bae6fd;
     background: var(--info-bg);
@@ -1794,6 +1811,8 @@ tbody tr:hover td {
 
 /* Tables scroll within their own named region, never the page. */
 .table-scroll {
+    /* Containing block for visually-hidden labels inside cells, so they scroll with the table instead of widening the page. */
+    position: relative;
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -1925,6 +1944,17 @@ tbody tr:hover td {
 .stock-proposal-item { min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; display: grid; gap: 12px; }
 .stock-proposal-item legend { padding: 0 6px; }
 .stock-proposal-item output { margin: 0; overflow-wrap: anywhere; }
+.order-price { min-width: 0; display: grid; gap: 6px; justify-items: start; }
+.order-price > .field { width: 100%; }
+.order-price .field-hint { margin: 0; overflow-wrap: anywhere; }
+/* Units of measure (D-16, ADR-022): quantity + unit side by side, base equivalent below; unit forms on product detail. */
+.order-quantity { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 12px; align-items: end; }
+.order-quantity .field-hint { grid-column: 1 / -1; margin: 0; overflow-wrap: anywhere; }
+.unit-form { display: grid; gap: 6px; min-width: 220px; }
+.unit-form .field { margin: 0; }
+.unit-add-form { margin-top: 16px; max-width: 640px; }
+@media (max-width: 480px) { .order-quantity { grid-template-columns: minmax(0, 1fr); } }
+.price-override-reason { overflow-wrap: anywhere; }
 
 .transaction-timeline { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 12px; }
 .transaction-timeline li, .transaction-timeline p, .transaction-timeline h2 { min-width: 0; overflow-wrap: anywhere; }
@@ -1948,3 +1978,54 @@ output[data-stock-source-summary] {
     display: block;
     line-height: 1.6;
 }
+
+/* Shipment history on the sales order detail (D-14, ADR-020). */
+.shipment + .shipment {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.shipment h3 {
+    margin: 0 0 6px;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semibold);
+}
+
+.shipment p {
+    margin: 2px 0;
+    overflow-wrap: anywhere;
+}
+/* D-17 / ADR-023: lot splits on the PO receipt form and lot status badges. */
+.lot-splits { min-width: 0; margin: 8px 0; padding: 8px 12px; border: 1px solid var(--border-color, #ddd); border-radius: 8px; display: grid; gap: 8px; }
+.lot-splits legend { padding: 0 6px; font-size: 0.875rem; }
+.lot-split { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.lot-split label { display: grid; gap: 4px; font-size: 0.875rem; min-width: 0; }
+.lot-split input { max-width: 12rem; }
+
+/* D-18 / ADR-024: barcode scan panel, pick badges and stock count sheet. */
+.scan-panel .card-body { display: grid; gap: var(--space-3); }
+.scan-panel-header { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: space-between; }
+.scan-panel-header h2 { margin: 0; font-size: var(--fs-lg); }
+.scan-panel-body { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; min-width: 0; }
+.scan-panel-body[hidden] { display: none; }
+.scan-panel-body .field { flex: 1 1 16rem; min-width: 0; }
+.scan-panel-body .field-hint { flex-basis: 100%; margin: 0; }
+.scan-video { width: min(100%, 22rem); border-radius: var(--radius-md); background: var(--surface-muted); }
+.scan-status { margin: 0; min-height: 1.4em; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-size: var(--fs-md); overflow-wrap: anywhere; }
+.scan-status:empty { padding: 0; }
+.scan-status[data-tone="success"] { background: var(--success-bg); color: var(--success); }
+.scan-status[data-tone="warning"] { background: var(--warning-bg); color: var(--warning); }
+.scan-status[data-tone="error"] { background: var(--danger-bg); color: var(--danger); }
+.scan-status[data-tone="info"] { background: var(--info-bg); color: var(--info); }
+.pick-badge { display: inline-block; margin-top: var(--space-1); padding: 2px 8px; border-radius: var(--radius-pill); font-size: var(--fs-xs); background: var(--info-bg); color: var(--info); }
+.pick-badge[data-tone="success"] { background: var(--success-bg); color: var(--success); }
+.pick-badge[data-tone="warning"] { background: var(--warning-bg); color: var(--warning); }
+tr.is-scanned > td { background: var(--success-bg); transition: background var(--motion-normal); }
+.count-sheet input[type="number"] { max-width: 8rem; }
+.count-sheet select { max-width: 9rem; }
+.count-quantity { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.variance-positive { color: var(--success); }
+.variance-negative { color: var(--danger); }
+.count-filter { max-width: 22rem; }
+@media (prefers-reduced-motion: reduce) { tr.is-scanned > td { transition: none; } }

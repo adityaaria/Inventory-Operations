@@ -14,6 +14,11 @@ import tempfile
 import time
 
 
+
+def manifest_path(path):
+    """Every archive keeps its checksum manifest next to it as <archive>.json."""
+    return Path(str(path) + '.json')
+
 def compose(args):
     command = [args.docker, 'compose']
     for filename in args.file: command += ['-f', filename]
@@ -31,7 +36,7 @@ def run(command, **kwargs):
 def database_info(args):
     command = compose(args) + ['exec', '-T', 'db', 'sh', '-c', 'printf "%s" "$MYSQL_DATABASE"']
     name = run(command, stdout=subprocess.PIPE).stdout.decode()
-    if not re.fullmatch(r'[A-Za-z0-9_]+', name): raise ValueError('Invalid database name.')
+    if not re.fullmatch(r'\w+', name, re.ASCII): raise ValueError('Invalid database name.')
     container = run(compose(args) + ['ps', '-q', 'db'], stdout=subprocess.PIPE).stdout.decode().strip()
     if not container: raise ValueError('Database service is not running.')
     label = run([args.docker, 'inspect', '--format', '{{ index .Config.Labels "com.docker.compose.project" }}', container], stdout=subprocess.PIPE).stdout.decode().strip()
@@ -56,19 +61,20 @@ def sha256(path):
 
 
 def verify_archive(path):
-    metadata = json.loads(Path(str(path) + '.json').read_text())
+    metadata = json.loads(manifest_path(path).read_text())
     if not isinstance(metadata, dict) or metadata.get('format') != 1 or metadata.get('sha256') != sha256(path):
         raise ValueError('Backup manifest/checksum mismatch.')
     # Validate gzip integrity before starting any database import.
     with gzip.open(path, 'rb') as source:
-        while source.read(1024 * 1024): pass
+        while source.read(1024 * 1024):
+            continue  # reading to the end is the integrity check
     return metadata
 
 
 def assert_restore_target(project, name, table_count):
     if not re.fullmatch(r'inventory-restore-[a-z0-9-]+', project):
         raise ValueError('Restore requires a disposable inventory-restore-* project.')
-    if not re.fullmatch(r'[A-Za-z0-9_]+_restore', name):
+    if not re.fullmatch(r'\w+_restore', name, re.ASCII):
         raise ValueError('Restore database must end in _restore.')
     if int(table_count) != 0: raise ValueError('Restore target must be empty; existing data is never overwritten.')
 
@@ -97,7 +103,7 @@ def backup(args):
             with gzip.GzipFile(fileobj=raw, mode='wb', mtime=0) as compressed:
                 shutil.copyfileobj(source, compressed)
         metadata = {'format':1, 'created_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'database':name, 'project':args.project, 'sha256':sha256(final), 'bytes':final.stat().st_size}
-        manifest = Path(str(final) + '.json')
+        manifest = manifest_path(final)
         descriptor = os.open(manifest, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         created_manifest = True
         with os.fdopen(descriptor, 'w') as output:
@@ -108,7 +114,7 @@ def backup(args):
         print(json.dumps({'status':'backed_up', 'archive':str(final), 'sha256':metadata['sha256']}))
     except BaseException:
         if created_archive: final.unlink(missing_ok=True)
-        if created_manifest: Path(str(final) + '.json').unlink(missing_ok=True)
+        if created_manifest: manifest_path(final).unlink(missing_ok=True)
         raise
     finally:
         if partial is not None: partial.unlink(missing_ok=True)
@@ -139,7 +145,7 @@ def prune(args):
     if args.apply:
         for path in expired:
             path.unlink()
-            Path(str(path) + '.json').unlink()
+            manifest_path(path).unlink()
     print(json.dumps({'status':'pruned' if args.apply else 'dry_run', 'expired':[p.name for p in expired], 'kept':len(archives)-len(expired)}))
 
 

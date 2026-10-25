@@ -26,3 +26,5 @@ Competing stock operations serialize per stock row. Oversell is prevented by MyS
 - `PurchaseOrderReceiptIntegrationTest` verifies rollback when ledger append fails.
 - `SalesOrderIssueIntegrationTest` verifies oversell prevention and no failed ledger row.
 - Verified by `composer test` and `composer analyse` on 2026-08-31.
+
+Note 12 October 2026 (D-17, ADR-023): stock locks now continue below the pair: after every pair of an operation is locked, each pair's lots are locked by point lookups on (pair, lot_seq); the pair stays the lock root.
